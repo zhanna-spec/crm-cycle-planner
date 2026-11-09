@@ -273,9 +273,18 @@ textarea.inp { resize: vertical; min-height: 70px; }
 .keystate { line-height: 1.35; }
 .ccards { display: grid; grid-template-columns: repeat(auto-fill, minmax(270px, 1fr)); gap: 14px; }
 .ccard { background: var(--surface); border-radius: 20px; box-shadow: var(--shadow); overflow: hidden; display: flex; flex-direction: column; min-width: 0; }
-.thumbs { display: flex; gap: 3px; height: 104px; background: var(--sunk); }
-.thumbs img { flex: 1 1 0; min-width: 0; height: 100%; object-fit: cover; object-position: top; }
-.thumbs .noimg { flex: 1; display: grid; place-items: center; color: var(--muted); font-size: 12px; }
+.thumbs { position: relative; display: block; width: 100%; height: 190px; padding: 0; border: 0; background: var(--sunk); cursor: zoom-in; overflow: hidden; }
+.thumbs img { width: 100%; height: 100%; object-fit: cover; object-position: top; display: block; }
+.thumbs .more { position: absolute; right: 10px; bottom: 10px; background: rgba(20, 17, 43, .72); color: #FFFFFF; font-size: 12px; font-weight: 600; padding: 4px 10px; border-radius: 999px; }
+.thumbs .loadimg { position: absolute; inset: 0; background: linear-gradient(90deg, var(--sunk) 25%, var(--accent-soft) 50%, var(--sunk) 75%); background-size: 200% 100%; animation: shimmer 1.3s linear infinite; }
+.thumbs:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; }
+.thumbs.none { cursor: default; height: 64px; display: grid; place-items: center; color: var(--muted); font-size: 12px; }
+.lightbox { position: fixed; inset: 0; z-index: 95; background: rgba(10, 8, 25, .88); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 12px; padding: calc(16px + env(safe-area-inset-top, 0px)) 16px calc(16px + env(safe-area-inset-bottom, 0px)); }
+.lightbox img { max-width: 100%; max-height: calc(100% - 70px); object-fit: contain; border-radius: 12px; background: #FFFFFF; }
+.lightbox .lbbar { display: flex; align-items: center; gap: 12px; color: #FFFFFF; }
+.lightbox button { border: 0; border-radius: 12px; padding: 9px 14px; background: rgba(255,255,255,.16); color: #FFFFFF; font-weight: 500; cursor: pointer; }
+.lightbox button:disabled { opacity: .35; cursor: default; }
+.lightbox button:focus-visible { outline: 2px solid #FFFFFF; }
 .cbody { padding: 14px 16px; display: flex; flex-direction: column; gap: 10px; flex: 1; }
 .cname { display: flex; align-items: center; gap: 10px; }
 .cname b { font-size: 16px; font-weight: 600; flex: 1; min-width: 0; overflow-wrap: anywhere; }
@@ -549,6 +558,7 @@ footer { color: var(--muted); font-size: 12px; margin-top: 24px; text-align: cen
   </form>
 </div>
 <div class="authwrap" id="authScreen" hidden><div class="authcard" id="authCard"></div></div>
+<div class="lightbox" id="lightbox" hidden role="dialog" aria-modal="true" aria-label="Screenshot"><img id="lbImg" alt=""><div class="lbbar"><button type="button" id="lbPrev">← Previous</button><span id="lbCount"></span><button type="button" id="lbNext">Next →</button><button type="button" id="lbClose">Close</button></div></div>
 <div class="modal" id="teamModal" hidden><div class="dialog" id="teamDialog" role="dialog" aria-modal="true" aria-labelledby="teamTitle"></div></div>
 <div class="toast" id="toast" hidden></div>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.118.0/dist/umd/supabase.js"></script>
@@ -1197,7 +1207,9 @@ footer { color: var(--muted); font-size: 12px; margin-top: 24px; text-align: cen
     if (!list.length) cards.innerHTML = '<div class="panel empty-c">' + (op ? "No offers for " + esc(op.name) + " yet. Add screenshots or terms above, or fill one in by hand." : state.operators.length ? "No offers yet. Select an operator on the left to add its offers." : "Start by adding an operator on the left.") + "</div>";
     else cards.innerHTML = list.map(function (x) {
       var o = findOp(x.opId) || { name: x.name || "?" };
-      var th = x.thumbs && x.thumbs.length ? x.thumbs.map(function (t) { return '<img src="' + t + '" alt="">'; }).join("") : '<div class="noimg">No screenshots</div>';
+      var pics = offerPics(x), first = pics[0];
+      var th = !pics.length ? '<div class="thumbs none">No screenshots</div>'
+        : '<button type="button" class="thumbs" data-lb="' + x.id + '" aria-label="View ' + pics.length + (pics.length === 1 ? " screenshot" : " screenshots") + '">' + (first ? '<img src="' + first + '" alt="">' : '<span class="loadimg"></span>') + (pics.length > 1 ? '<span class="more">' + pics.length + " screenshots</span>" : "") + "</button>";
       var body, title = x.title || (x.status === "reading" ? "" : "Offer");
       var nameRow = '<div class="cname"><span class="avatar" style="background:' + opColor(o) + '">' + esc((o.name || "?").charAt(0).toUpperCase()) + "</span><b>" + (op ? esc(title) : esc(o.name) + (title ? ' <small style="font-weight:400;color:var(--muted)">· ' + esc(title) + "</small>" : "")) + "</b></div>";
       if (x.status === "reading") body = '<div class="cname"><span class="avatar" style="background:' + opColor(o) + '">' + esc((o.name || "?").charAt(0).toUpperCase()) + '</span><b>Reading…</b></div><div class="reading"><div class="bar"></div><div class="bar" style="width:70%"></div><div class="bar" style="width:85%"></div></div><p class="small">This usually takes 10 to 40 seconds.</p>';
@@ -1214,9 +1226,9 @@ footer { color: var(--muted); font-size: 12px; margin-top: 24px; text-align: cen
           (uns.length ? '<p class="small" style="color:var(--warn)">Check: ' + esc(uns.map(function (u) { var f = FIELDS.filter(function (F) { return F[0] === u; })[0]; return f ? f[1] : u; }).join(", ")) + "</p>" : "");
       }
       var del = '<button class="btn danger" type="button" data-cdelete="' + x.id + '" style="margin-left:auto">' + svg('<path d="M4 6h12M8 6V4h4v2M6 6l1 10h6l1-10"/>') + "Delete</button>";
-      var canRetry = x.status === "error" && aiReady() && ((imageCache[x.id] || []).length || x.terms);
+      var canRetry = x.status === "error" && aiReady() && ((imageCache[x.id] || []).length || (x.images || []).length || x.terms);
       var foot = x.status === "reading" ? '<div class="cfoot">' + del + "</div>" : '<div class="cfoot" style="flex-wrap:wrap"><button class="btn" type="button" data-cedit="' + x.id + '">Edit</button><button class="btn" type="button" data-cmore="' + x.id + '">Add screenshots or terms</button>' + (canRetry ? '<button class="btn" type="button" data-cretry="' + x.id + '">Try again</button>' : "") + del + "</div>";
-      return '<article class="ccard"><div class="thumbs">' + th + '</div><div class="cbody">' + body + "</div>" + foot + "</article>";
+      return '<article class="ccard">' + th + '<div class="cbody">' + body + "</div>" + foot + "</article>";
     }).join("");
     document.getElementById("cmpH").textContent = op ? op.name + " compared with you" : "Offers side by side";
     renderCompare(list.filter(function (x) { return x.status !== "reading"; }));
@@ -1260,6 +1272,76 @@ footer { color: var(--muted); font-size: 12px; margin-top: 24px; text-align: cen
       }).join("") + "</tbody></table>";
   }
 
+  // ---------- screenshots in Supabase Storage ----------
+  var BUCKET = "offer-images", signed = {}, signing = {}, preview = {}, storageWarned = false, signTimer = null;
+  function b64ToBlob(b64, type) { var bin = atob(b64), arr = new Uint8Array(bin.length); for (var i = 0; i < bin.length; i++) arr[i] = bin.charCodeAt(i); return new Blob([arr], { type: type }); }
+  function blobToB64(blob) { return new Promise(function (res, rej) { var r = new FileReader(); r.onload = function () { res(String(r.result).split(",")[1]); }; r.onerror = rej; r.readAsDataURL(blob); }); }
+  async function uploadShots(offerId, images, thumbs) {
+    var wsId = curWs.id, paths = [], failed = 0;
+    for (var i = 0; i < images.length; i++) {
+      var path = wsId + "/" + offerId + "/" + uid() + uid() + ".jpg";
+      var r = await sb.storage.from(BUCKET).upload(path, b64ToBlob(images[i].data, images[i].media_type), { contentType: images[i].media_type, upsert: false });
+      if (r.error) failed++; else paths.push(path);
+    }
+    var x = findComp(offerId);
+    delete preview[offerId];
+    if (!x || !curWs || curWs.id !== wsId) return;
+    x.images = (x.images || []).concat(paths).slice(-MAX_SHOTS);
+    if (failed) {
+      x.thumbs = (x.thumbs || []).concat(thumbs.slice(-failed)).slice(-MAX_SHOTS);
+      if (!storageWarned) { storageWarned = true; setTimeout(function () { toast("Couldn't store full-size screenshots, so smaller copies were kept. Run supabase/storage.sql in Supabase to fix this."); }, 3200); }
+    }
+    save(); renderCompetitors();
+  }
+  function requestSign(paths) {
+    paths.forEach(function (p) { if (!signed[p] && !signing[p]) signing[p] = 1; });
+    clearTimeout(signTimer);
+    signTimer = setTimeout(async function () {
+      var todo = Object.keys(signing).filter(function (p) { return signing[p] === 1; }); if (!todo.length || !sb) return;
+      todo.forEach(function (p) { signing[p] = 2; });
+      var r = await sb.storage.from(BUCKET).createSignedUrls(todo, 3600);
+      (r.data || []).forEach(function (d) { if (d.path && d.signedUrl) signed[d.path] = d.signedUrl; });
+      setTimeout(function () { todo.forEach(function (p) { delete signed[p]; delete signing[p]; }); }, 50 * 60 * 1000); // refresh before links expire
+      renderCompetitors();
+    }, 30);
+  }
+  // Pictures for a card: stored screenshots (sharp), older small copies, and ones still uploading.
+  function offerPics(x) {
+    var paths = x.images || [], out = [], need = [];
+    paths.forEach(function (p) { if (signed[p]) out.push(signed[p]); else { out.push(""); need.push(p); } });
+    if (need.length && cloud) requestSign(need);
+    return out.concat(preview[x.id] || []).concat(x.thumbs || []);
+  }
+  async function downloadShots(paths) {
+    var out = [];
+    for (var i = 0; i < paths.length && out.length < MAX_SHOTS; i++) {
+      var r = await sb.storage.from(BUCKET).download(paths[i]);
+      if (!r.error && r.data) out.push({ media_type: "image/jpeg", data: await blobToB64(r.data) });
+    }
+    return out;
+  }
+  var lb = { pics: [], i: 0 };
+  function showLightbox() {
+    var el = document.getElementById("lightbox"), src = lb.pics[lb.i];
+    document.getElementById("lbImg").src = src || "";
+    document.getElementById("lbCount").textContent = (lb.i + 1) + " of " + lb.pics.length;
+    document.getElementById("lbPrev").disabled = lb.i === 0;
+    document.getElementById("lbNext").disabled = lb.i >= lb.pics.length - 1;
+    el.hidden = false; document.getElementById("lbClose").focus();
+  }
+  function openLightbox(id) { var x = findComp(id); if (!x) return; lb = { pics: offerPics(x).filter(Boolean), i: 0 }; if (lb.pics.length) showLightbox(); }
+  function closeLightbox() { document.getElementById("lightbox").hidden = true; }
+  document.getElementById("lbPrev").addEventListener("click", function () { if (lb.i > 0) { lb.i--; showLightbox(); } });
+  document.getElementById("lbNext").addEventListener("click", function () { if (lb.i < lb.pics.length - 1) { lb.i++; showLightbox(); } });
+  document.getElementById("lbClose").addEventListener("click", closeLightbox);
+  document.getElementById("lightbox").addEventListener("click", function (e) { if (e.target === this) closeLightbox(); });
+  document.addEventListener("keydown", function (e) {
+    if (document.getElementById("lightbox").hidden) return;
+    if (e.key === "Escape") closeLightbox();
+    if (e.key === "ArrowLeft") document.getElementById("lbPrev").click();
+    if (e.key === "ArrowRight") document.getElementById("lbNext").click();
+  });
+
   // image helpers
   function loadImage(file) {
     return new Promise(function (res, rej) {
@@ -1287,7 +1369,7 @@ footer { color: var(--muted); font-size: 12px; margin-top: 24px; text-align: cen
     try {
       for (var i = 0; i < files.length; i++) {
         var L = await loadImage(files[i]);
-        tray.images.push({ media_type: "image/jpeg", data: scaled(L.img, 1568, 0, 0.85).split(",")[1], thumb: scaled(L.img, 400, 220, 0.7) });
+        tray.images.push({ media_type: "image/jpeg", data: scaled(L.img, 1568, 0, 0.85).split(",")[1], thumb: scaled(L.img, 1200, 900, 0.82) });
         URL.revokeObjectURL(L.url);
       }
     } catch (err) { toast(err.message); }
@@ -1325,7 +1407,8 @@ footer { color: var(--muted); font-size: 12px; margin-top: 24px; text-align: cen
     var op = curOp(); if (!op) { toast("Select an operator first."); return; }
     var x = tray.targetId ? findComp(tray.targetId) : null, isNew = !x;
     if (isNew) { x = { id: uid(), opId: op.id, name: op.name, title: "", conditions: [], uncertain: [], thumbs: [], terms: "", status: "done", addedAt: new Date().toISOString() }; state.competitors.unshift(x); }
-    x.thumbs = (x.thumbs || []).concat(thumbs).slice(-MAX_SHOTS);
+    if (cloud && curWs && images.length) { preview[x.id] = (preview[x.id] || []).concat(thumbs); uploadShots(x.id, images, thumbs); }
+    else x.thumbs = (x.thumbs || []).concat(thumbs).slice(-MAX_SHOTS);
     if (terms) x.terms = ((x.terms ? x.terms + "\n\n" : "") + terms).slice(0, 40000);
     var known = isNew ? { competitor: op.name } : knownFields(x);
     // keep this session's screenshots so "Try again" can resend them
@@ -1337,7 +1420,11 @@ footer { color: var(--muted); font-size: 12px; margin-top: 24px; text-align: cen
 
   async function readOffer(id, input) {
     var x = findComp(id); if (!x) return;
-    input = input || { images: imageCache[id] || [], terms: x.terms || "", known: x.name || x.title ? knownFields(x) : null };
+    if (!input) {
+      var imgs = imageCache[id] || [];
+      if (!imgs.length && (x.images || []).length) { x.status = "reading"; x.error = ""; renderCompetitors(); imgs = await downloadShots(x.images); x = findComp(id); if (!x) return; }
+      input = { images: imgs, terms: x.terms || "", known: x.name || x.title ? knownFields(x) : null };
+    }
     if (!input.images.length && !input.terms) { toast("Add screenshots or terms text to read this offer again."); return; }
     x.status = "reading"; x.error = ""; renderCompetitors();
     try {
@@ -1443,6 +1530,7 @@ footer { color: var(--muted); font-size: 12px; margin-top: 24px; text-align: cen
     var t;
     if ((t = e.target.closest("[data-cedit]"))) { ui.sel = null; ui.compSel = t.getAttribute("data-cedit"); ui.armed = null; lastKey = null; renderCompDrawer(); }
     if ((t = e.target.closest("[data-cretry]"))) readOffer(t.getAttribute("data-cretry"));
+    if ((t = e.target.closest("[data-lb]"))) openLightbox(t.getAttribute("data-lb"));
     if ((t = e.target.closest("[data-cmore]"))) {
       tray.targetId = t.getAttribute("data-cmore"); renderTray();
       var panel = document.getElementById("upH"); panel.scrollIntoView({ behavior: "smooth", block: "start" });

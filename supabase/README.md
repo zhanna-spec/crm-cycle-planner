@@ -71,3 +71,7 @@ Set a monthly spend limit on the key at platform.claude.com. Every member of a w
 
 The same function also connects the research Gmail inbox: add `SCRIPT_URL` and `SCRIPT_TOKEN` as described in [`inbox-collector/README.md`](../inbox-collector/README.md#8-keep-the-token-on-the-server-signed-in-planner).
 
+## 9. Keep full-quality offer screenshots
+
+Run [`storage.sql`](storage.sql) once in **SQL Editor → New query → Run**. It creates a private `offer-images` storage bucket that only members of a workspace can read. Offer screenshots are then stored at full size: cards show them sharp, clicking opens them full screen, and **Try again** can re-read them later. Without it, the planner keeps small copies instead.
+

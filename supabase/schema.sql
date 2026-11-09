@@ -185,3 +185,21 @@ create policy "members use emails" on public.emails for all to authenticated usi
 -- You can then sign in, create your first workspace and invite everyone else from the planner.
 insert into public.invites (workspace_id, email) values (null, lower('you@yourcompany.com'))
 on conflict do nothing;
+
+-- ---------- offer screenshots (same as storage.sql) ----------
+
+insert into storage.buckets (id, name, public)
+values ('offer-images', 'offer-images', false)
+on conflict (id) do nothing;
+
+drop policy if exists "members read offer images" on storage.objects;
+create policy "members read offer images" on storage.objects for select to authenticated
+  using (bucket_id = 'offer-images' and public.is_member(((storage.foldername(name))[1])::uuid));
+
+drop policy if exists "members add offer images" on storage.objects;
+create policy "members add offer images" on storage.objects for insert to authenticated
+  with check (bucket_id = 'offer-images' and public.is_member(((storage.foldername(name))[1])::uuid));
+
+drop policy if exists "members delete offer images" on storage.objects;
+create policy "members delete offer images" on storage.objects for delete to authenticated
+  using (bucket_id = 'offer-images' and public.is_member(((storage.foldername(name))[1])::uuid));
