@@ -1043,7 +1043,7 @@ footer { color: var(--muted); font-size: 12px; margin-top: 24px; text-align: cen
   var UNSURE_MAP = { competitor: "name", offer_title: "title", free_bet_value: "free_bet", wagering_x: "wagering", wagering_on: "wager_on", eligible_games: "games" };
 
   function findComp(id) { return (state.competitors || []).filter(function (x) { return x.id === id; })[0]; }
-  function aiReady() { var ib = inbox(); return !!(ib.url && ib.token && ib.ai); }
+  function aiReady() { if (cloud) return !!(proxy.connected && proxy.ai); var ib = inbox(); return !!(ib.url && ib.token && ib.ai); }
   try { localStorage.removeItem("ccp2_api_key"); } catch (e) {} // keys no longer live in the browser
   function cur(x) { var c = (x.currency || "EUR").toUpperCase(); return c === "EUR" ? "€" : c === "GBP" ? "£" : c === "USD" ? "$" : c + " "; }
   function has(v) { return v !== null && v !== undefined && v !== ""; }
@@ -1068,6 +1068,7 @@ footer { color: var(--muted); font-size: 12px; margin-top: 24px; text-align: cen
 
   function renderKeyPanel() {
     var ib = inbox(), el = document.getElementById("keyPanel");
+    if (cloud) { renderProxyPanel(el, "ai"); return; }
     if (aiReady()) {
       el.innerHTML = '<div class="keystate"><i></i>AI is on. It runs through your Google script.</div>' +
         '<p class="small">Your Anthropic key stays in the script, not in this page. Each screenshot set costs about 2 to 5 cents.</p>';
@@ -1315,6 +1316,7 @@ footer { color: var(--muted); font-size: 12px; margin-top: 24px; text-align: cen
 
   function renderInboxPanel() {
     var ib = inbox(), el = document.getElementById("inboxPanel");
+    if (cloud) { renderProxyPanel(el, "inbox"); return; }
     if (ib.url && ib.token) {
       el.innerHTML = '<div class="keystate"><i></i>Connected' + (ib.account ? " to " + esc(ib.account) : "") + "</div>" +
         '<p class="small">' + state.emails.length + " emails stored · last synced " + ago(ib.lastSync) + " · AI " + (ib.ai ? "on" : "off (no key in the script)") + "</p>" +
@@ -1348,6 +1350,7 @@ footer { color: var(--muted); font-size: 12px; margin-top: 24px; text-align: cen
     }
   }
   async function backend(action, payload) {
+    if (cloud) { var pd = await proxyCall(action, payload); return pd.result; }
     var ib = inbox();
     if (!ib.url || !ib.token) throw new Error("Connect your Google script first.");
     var res;
@@ -1364,16 +1367,20 @@ footer { color: var(--muted); font-size: 12px; margin-top: 24px; text-align: cen
   async function syncInbox(url, token, quiet) {
     var btn = document.querySelector('#inboxPanel [data-act="sync"]'); if (btn) { btn.disabled = true; btn.textContent = "Syncing…"; }
     try {
-      var res;
-      try { res = await fetch(scriptUrl(url, "token=" + encodeURIComponent(token) + "&days=60"), { redirect: "follow" }); }
-      catch (err) { throw new Error("Couldn't reach the inbox script. Check the URL, and that it's deployed as a web app with access set to Anyone."); }
-      var data; try { data = await res.json(); } catch (err) { throw new Error("The URL answered, but not with emails. Make sure you copied the web app URL ending in /exec."); }
+      var res, data;
+      if (cloud) data = await proxyCall("emails", { days: 60 });
+      else {
+        try { res = await fetch(scriptUrl(url, "token=" + encodeURIComponent(token) + "&days=60"), { redirect: "follow" }); }
+        catch (err) { throw new Error("Couldn't reach the inbox script. Check the URL, and that it's deployed as a web app with access set to Anyone."); }
+        try { data = await res.json(); } catch (err) { throw new Error("The URL answered, but not with emails. Make sure you copied the web app URL ending in /exec."); }
+      }
       if (data.error === "unauthorized") throw new Error("The token doesn't match. Copy it again from the script's execution log.");
       if (data.error) throw new Error(data.message || "The inbox script returned an error.");
       if (!Array.isArray(data.emails)) throw new Error("The inbox script sent an unexpected answer.");
       commit();
       var added = mergeEmails(data.emails);
-      setInbox({ url: url, token: token, account: data.account || "", ai: data.ai === true, lastSync: new Date().toISOString() });
+      if (cloud) lsSet("ccp2_sync_" + curWs.id, new Date().toISOString());
+      else setInbox({ url: url, token: token, account: data.account || "", ai: data.ai === true, lastSync: new Date().toISOString() });
       // registration date defaults to the first email we see for that competitor
       state.trackers.forEach(function (t) { if (!t.registered) { var f = emailsOf(t)[0]; if (f) t.registered = localDate(f.date); } });
       save(); render();
@@ -1412,7 +1419,7 @@ footer { color: var(--muted); font-size: 12px; margin-top: 24px; text-align: cen
 
     var wrap = document.getElementById("ecards");
     if (!state.trackers.length) {
-      wrap.innerHTML = '<div class="panel empty-c">' + (inbox().url ? "Follow a competitor on the left to see its emails as a timeline." : "Connect your research inbox on the left, then follow the competitors you registered with.") + "</div>";
+      wrap.innerHTML = '<div class="panel empty-c">' + ((cloud ? proxy.connected : inbox().url) ? "Follow a competitor on the left to see its emails as a timeline." : "Connect your research inbox on the left, then follow the competitors you registered with.") + "</div>";
       return;
     }
     wrap.innerHTML = state.trackers.map(function (t, i) {
@@ -1490,6 +1497,7 @@ footer { color: var(--muted); font-size: 12px; margin-top: 24px; text-align: cen
     }
     if (act === "recheck") connectScript(ib.url, ib.token, b);
     if (act === "sync") syncInbox(ib.url, ib.token);
+    if (act === "proxycheck") loadProxyStatus();
     if (act === "disconnect") { setInbox({}); render(); toast("Disconnected. Stored emails and offers are kept."); }
   }
   ["inboxPanel", "keyPanel"].forEach(function (id) {
@@ -1716,7 +1724,7 @@ footer { color: var(--muted); font-size: 12px; margin-top: 24px; text-align: cen
       var fresh = state.fresh; delete state.fresh;
       state.emails = (e.data || []).map(rowToEmail).reverse();
       history = []; lastKey = null; closeDrawer(); ui.focusDay = null; ui.pickDay = null; ui.addingDay = false;
-      hideAuth(); renderAcct(); render(); setSaveState("Saved");
+      hideAuth(); renderAcct(); proxy.checked = false; render(); setSaveState("Saved"); loadProxyStatus();
       if (fresh) queueCloudSave();
       renderImportBanner();
     } catch (err) { showAuth("error", errText(err)); }
@@ -1868,6 +1876,59 @@ footer { color: var(--muted); font-size: 12px; margin-top: 24px; text-align: cen
       }
     }
   });
+
+  // Google script connection when signed in: everything goes through the
+  // planner-proxy function in Supabase, which holds the script URL and token.
+  var proxy = { loading: false, checked: false, connected: false, ai: false, account: "", canSync: false, problem: "" };
+  async function invokeProxy(action, payload) {
+    var r = await sb.functions.invoke("planner-proxy", { body: Object.assign({ workspace_id: curWs ? curWs.id : "", action: action }, payload || {}) });
+    if (r.error) {
+      var msg = errText(r.error);
+      if (/not found|404|failed to send|fetch/i.test(msg)) msg = "The planner-proxy function isn't set up in Supabase yet.";
+      throw new Error(msg);
+    }
+    var d = r.data || {};
+    if (typeof d === "string") { try { d = JSON.parse(d); } catch (e) { d = {}; } }
+    return d;
+  }
+  async function proxyCall(action, payload) {
+    var d = await invokeProxy(action, payload);
+    if (d.error === "no_ai_key") { proxy.ai = false; renderKeyPanel(); }
+    if (d.error) throw new Error(d.message || d.error);
+    return d;
+  }
+  async function loadProxyStatus() {
+    if (!curWs) return;
+    proxy.loading = true; renderKeyPanel(); renderInboxPanel();
+    try {
+      var d = await invokeProxy("status");
+      proxy = { loading: false, checked: true, connected: !!d.connected, ai: d.ai === true, account: d.account || "", canSync: d.canSync === true, problem: d.connected ? "" : (d.message || "") };
+    } catch (err) {
+      proxy = { loading: false, checked: true, connected: false, ai: false, account: "", canSync: false, problem: err.message, missingFn: true };
+    }
+    renderKeyPanel(); renderInboxPanel(); renderEmails();
+  }
+  function renderProxyPanel(el, kind) {
+    var guide = '<a href="' + SETUP_URL + '#8-keep-the-token-on-the-server-signed-in-planner" target="_blank" rel="noopener">Setup guide</a>';
+    var check = '<button class="btn" type="button" data-act="proxycheck">Check again</button>';
+    if (proxy.loading || !proxy.checked) { el.innerHTML = '<div class="row"><div class="spinner" role="status" aria-label="Checking"></div><p class="small">Checking the connection…</p></div>'; return; }
+    if (!proxy.connected) {
+      el.innerHTML = '<div class="keystate off"><i></i>' + (proxy.missingFn ? "Not set up yet" : "The Google script isn't connected yet") + "</div>" +
+        '<p class="small">The script\'s address and token are kept on the server, not in this page. ' + (curWs && curWs.role === "owner" ? "In Supabase, add the <b>planner-proxy</b> function and the <b>SCRIPT_URL</b> and <b>SCRIPT_TOKEN</b> secrets. " : "Ask your workspace owner to finish the setup. ") + guide + "</p>" +
+        (proxy.problem && !proxy.missingFn ? '<p class="small" style="color:var(--warn)">' + esc(proxy.problem) + "</p>" : "") + check;
+      return;
+    }
+    if (kind === "ai") {
+      el.innerHTML = proxy.ai
+        ? '<div class="keystate"><i></i>AI is on. It runs on the server.</div><p class="small">Your Anthropic key stays in the Google script. Each screenshot set costs about 2 to 5 cents.</p>'
+        : '<div class="keystate off"><i></i>The script is connected, but it has no Anthropic key yet.</div><p class="small">In Apps Script, open <b>Project Settings → Script properties</b>, add <b>ANTHROPIC_API_KEY</b>, then deploy a new version. ' + guide + "</p>" + check;
+      return;
+    }
+    var last = curWs ? lsGet("ccp2_sync_" + curWs.id) : "";
+    el.innerHTML = '<div class="keystate"><i></i>Connected' + (proxy.account ? " to " + esc(proxy.account) : "") + "</div>" +
+      '<p class="small">' + state.emails.length + " emails in this workspace · last synced from this browser " + ago(last) + " · AI " + (proxy.ai ? "on" : "off") + "</p>" +
+      (proxy.canSync ? '<button class="btn primary" type="button" data-act="sync">Sync emails now</button>' : '<p class="small">Only workspace owners can sync emails.</p>');
+  }
 
   async function boot() {
     setView();

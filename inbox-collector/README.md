@@ -33,7 +33,9 @@ Create a new Gmail account used only for this, for example `yourbrand.research@g
 
 ## 5. Connect the planner
 
-In the planner, open **Competitor emails**, paste the web app URL and the token, and click **Connect**.
+If you sign in to the planner, don't paste anything into it: follow step 8 so the URL and token stay on the server.
+
+(Only when the planner runs without login: open **Competitor emails**, paste the web app URL and the token, and click **Connect**.)
 
 ## 6. Register on competitor sites
 
@@ -50,6 +52,20 @@ Tick the marketing-email opt-in when registering, otherwise you won't receive th
 5. In the planner, open **Competitor offers** and click **Check again**. The box turns green: "AI is on".
 
 Set a monthly spend limit on the key at platform.claude.com. Anyone with the web app URL and token can use the two AI features (not the key itself), so the limit caps the cost if they ever leak.
+
+## 8. Keep the token on the server (signed-in planner)
+
+The signed-in planner never sees the script's URL or token. A small Supabase function holds them and checks that each request comes from a signed-in member of the workspace.
+
+1. In Supabase, open **Edge Functions** and click **Deploy a new function → Via Editor**.
+2. Name it exactly `planner-proxy`.
+3. Delete the sample code, paste everything from [`supabase/functions/planner-proxy/index.ts`](../supabase/functions/planner-proxy/index.ts), and click **Deploy function**. Leave **Verify JWT** switched on.
+4. Open **Edge Functions → Secrets** (sometimes under **Project Settings → Edge Functions**) and add two secrets:
+   - `SCRIPT_URL`: the web app URL from step 4
+   - `SCRIPT_TOKEN`: the token from step 3
+5. In the planner, open **Competitor emails** and click **Check again**. It should say "Connected".
+
+Only workspace owners can sync emails into a workspace; every member can use the AI features in their own workspace.
 
 ## Changing the code later
 
