@@ -193,6 +193,7 @@ textarea.inp { resize: vertical; min-height: 70px; }
 .lenrow input::-webkit-outer-spin-button, .lenrow input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
 .lenrow input:hover, .lenrow input:focus { background: var(--sunk); outline: none; }
 .lenrow span { font-weight: 700; font-size: 18px; }
+@media (max-width: 1000px) { .lenrow { gap: 4px; } .lenrow input { width: 3.4ch; font-size: 20px; } .lenrow span { font-size: 14px; } .lenrow button { width: 28px; height: 28px; } }
 .lenrow button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 .daybtn { display: inline-flex; align-items: center; gap: 6px; }
 .daybtn svg { width: 13px; height: 13px; opacity: .7; }
@@ -324,6 +325,38 @@ textarea.inp { resize: vertical; min-height: 70px; }
 details.guide summary { cursor: pointer; color: var(--accent); font-weight: 500; font-size: 13px; }
 details.guide ol { margin: 8px 0 0; padding-left: 18px; font-size: 12px; color: var(--muted); display: grid; gap: 4px; }
 
+/* Sign-in, workspaces, members */
+.authwrap { position: fixed; inset: 0; z-index: 90; background: var(--bg); display: grid; place-items: center; padding: 16px; padding-top: calc(16px + env(safe-area-inset-top, 0px)); overflow-y: auto; }
+.authcard { width: min(440px, 100%); background: var(--surface); border-radius: 28px; box-shadow: var(--shadow); padding: 28px; display: flex; flex-direction: column; gap: 16px; }
+.authcard .logo { box-shadow: none; background: var(--hero); }
+.authcard h2 { margin: 0; font-size: 22px; font-weight: 700; }
+.authcard p { margin: 0; color: var(--muted); }
+.authcard .btn { justify-content: center; padding: 12px 14px; font-size: 14px; }
+.authcard .inp.code { font-size: 22px; letter-spacing: .3em; text-align: center; font-variant-numeric: tabular-nums; }
+.autherr { background: var(--coral-soft); color: var(--coral); border-radius: 12px; padding: 10px 12px; font-size: 13px; }
+.spinner { width: 28px; height: 28px; border-radius: 50%; border: 3px solid var(--accent-soft); border-top-color: var(--accent); animation: spin .8s linear infinite; }
+@keyframes spin { to { transform: rotate(360deg); } }
+@media (prefers-reduced-motion: reduce) { .spinner { animation-duration: 3s; } }
+.acct { position: relative; }
+.wsbtn { background: #FFFFFF !important; color: #4B3DC8 !important; max-width: 240px; }
+.wsbtn span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.menu { position: absolute; right: 0; top: calc(100% + 8px); z-index: 50; width: 260px; background: var(--surface); color: var(--ink); border-radius: 18px; box-shadow: 0 16px 40px rgba(30, 20, 100, .22); padding: 8px; display: flex; flex-direction: column; gap: 2px; }
+.menu button { display: flex; align-items: center; gap: 8px; width: 100%; border: 0; background: transparent; text-align: left; padding: 9px 10px; border-radius: 10px; cursor: pointer; font-size: 13px; color: var(--ink); }
+.menu button:hover, .menu button:focus-visible { background: var(--sunk); outline: none; }
+.menu button.on { font-weight: 600; color: var(--accent); }
+.menu small { display: block; padding: 6px 10px 2px; font-size: 11px; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); }
+.menu hr { border: 0; border-top: 1px solid var(--line); margin: 4px 0; }
+.menu .who2 { padding: 4px 10px 6px; font-size: 12px; color: var(--muted); overflow-wrap: anywhere; }
+.savestate { position: relative; z-index: 1; font-size: 12px; color: rgba(255,255,255,.8); align-self: center; }
+.savestate.bad { color: #FFFFFF; background: rgba(229,86,111,.6); padding: 3px 8px; border-radius: 8px; }
+.banner { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; background: var(--accent-soft); border-radius: 18px; padding: 12px 16px; margin-bottom: 16px; }
+.banner p { margin: 0; flex: 1; min-width: 200px; }
+.mrow { display: flex; align-items: center; gap: 10px; padding: 8px 10px; border-radius: 12px; background: var(--sunk); }
+.mrow .meta2 { flex: 1; min-width: 0; overflow-wrap: anywhere; }
+.mrow small { color: var(--muted); }
+.role { font-size: 11px; font-weight: 600; padding: 2px 8px; border-radius: 999px; background: var(--accent-soft); color: var(--accent); }
+.role.pending { background: var(--coral-soft); color: var(--coral); }
+
 .toast { position: fixed; left: 50%; transform: translateX(-50%); bottom: calc(18px + env(safe-area-inset-bottom, 0px)); background: var(--ink); color: var(--bg); padding: 10px 16px; border-radius: 14px; font-weight: 500; z-index: 80; box-shadow: var(--shadow); }
 footer { color: var(--muted); font-size: 12px; margin-top: 24px; text-align: center; }
 @media (prefers-reduced-motion: reduce) { .block, .card { transition: none; } }
@@ -342,6 +375,8 @@ footer { color: var(--muted); font-size: 12px; margin-top: 24px; text-align: cen
       </div>
     </div>
     <div class="hero-actions">
+      <span class="savestate" id="saveState" aria-live="polite"></span>
+      <div class="acct" id="acct" hidden></div>
       <button class="hbtn" id="undoBtn" type="button" title="Undo (Ctrl+Z)"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M5 3L2 6l3 3"/><path d="M2 6h7.5a4 4 0 0 1 0 8H7"/></svg>Undo</button>
       <button class="hbtn" id="csvBtn" type="button">Copy as CSV</button>
       <button class="hbtn" id="exportBtn" type="button">Export</button>
@@ -356,6 +391,7 @@ footer { color: var(--muted); font-size: 12px; margin-top: 24px; text-align: cen
     <a href="#emails" id="nav-emails"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="14" height="10" rx="2"/><path d="M3.5 6l6.5 5 6.5-5"/></svg>Competitor emails <span class="num" id="trkCount">0</span></a>
   </nav>
 
+  <div class="banner" id="importBanner" hidden></div>
   <div id="view-builder">
   <nav class="tabs" id="tabs" aria-label="Your cycles"></nav>
   <section class="summary" id="summary" aria-label="Cycle summary"></section>
@@ -441,7 +477,7 @@ footer { color: var(--muted); font-size: 12px; margin-top: 24px; text-align: cen
     </div>
   </div>
 
-  <footer>Your cycles are saved in this browser. Use Export to back them up or move them to another computer.</footer>
+  <footer id="footNote">Your cycles are saved in this browser. Use Export to back them up or move them to another computer.</footer>
 </div>
 
 <aside class="drawer" id="drawer" hidden aria-labelledby="dTitle"></aside>
@@ -468,7 +504,10 @@ footer { color: var(--muted); font-size: 12px; margin-top: 24px; text-align: cen
     </div>
   </form>
 </div>
+<div class="authwrap" id="authScreen" hidden><div class="authcard" id="authCard"></div></div>
+<div class="modal" id="teamModal" hidden><div class="dialog" id="teamDialog" role="dialog" aria-modal="true" aria-labelledby="teamTitle"></div></div>
 <div class="toast" id="toast" hidden></div>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.118.0/dist/umd/supabase.js"></script>
 
 <script>
 (function () {
@@ -599,7 +638,10 @@ footer { color: var(--muted); font-size: 12px; margin-top: 24px; text-align: cen
   if (!Array.isArray(state.emails)) state.emails = [];
   state.trackers.forEach(function (t) { t.summarizing = false; });
   state.competitors.forEach(function (x) { if (x.status === "reading") { x.status = "error"; x.error = "Reading was interrupted. Upload the screenshots again."; } });
-  function save() { try { localStorage.setItem("ccp2_state", JSON.stringify(state)); } catch (e) { toast("Browser storage is full. Delete some competitor offers or export a backup."); } }
+  function save() {
+    if (cloud) { if (curWs) queueCloudSave(); return; }
+    try { localStorage.setItem("ccp2_state", JSON.stringify(state)); } catch (e) { toast("Browser storage is full. Delete some competitor offers or export a backup."); }
+  }
   function commit() { history.push(JSON.stringify(state)); if (history.length > 80) history.shift(); }
   function undo() {
     if (!history.length) return;
@@ -1271,6 +1313,10 @@ footer { color: var(--muted); font-size: 12px; margin-top: 24px; text-align: cen
     var added = 0;
     list.forEach(function (em) { if (!em || !em.id) return; if (!byId[em.id]) added++; byId[em.id] = { id: String(em.id), date: em.date, from: em.from || "", to: em.to || "", subject: em.subject || "(no subject)", text: String(em.text || "").slice(0, 4000) }; });
     state.emails = Object.keys(byId).map(function (k) { return byId[k]; }).sort(function (a, b) { return a.date < b.date ? -1 : 1; }).slice(-800);
+    if (cloud && curWs && list.length) {
+      var wsId = curWs.id, rows = list.filter(function (em) { return em && em.id; }).map(function (em) { var e2 = byId[em.id]; return { workspace_id: wsId, id: e2.id, sent_at: e2.date, from_addr: e2.from, to_addr: e2.to, subject: e2.subject, body: e2.text }; });
+      sb.from("emails").upsert(rows).then(function (r) { if (r.error) toast("Couldn't save the emails to the workspace: " + r.error.message); });
+    }
     return added;
   }
   function ago(iso) { if (!iso) return "never"; var m = Math.round((Date.now() - new Date(iso)) / 60000); return m < 1 ? "just now" : m < 60 ? m + " min ago" : m < 1440 ? Math.round(m / 60) + " h ago" : Math.round(m / 1440) + " days ago"; }
@@ -1554,8 +1600,297 @@ footer { color: var(--muted); font-size: 12px; margin-top: 24px; text-align: cen
   var tt;
   function toast(msg) { var el = document.getElementById("toast"); el.textContent = msg; el.hidden = false; clearTimeout(tt); tt = setTimeout(function () { el.hidden = true; }, 2600); }
 
-  setView();
-  render();
+
+  // ---------- login, workspaces and cloud saving (Supabase) ----------
+  // Fill these in from Supabase: Project Settings -> API. Both are safe to publish;
+  // the database's access rules decide what each signed-in person can see.
+  var SUPABASE_URL = "";
+  var SUPABASE_KEY = "";
+  var cloud = !!(SUPABASE_URL && SUPABASE_KEY && window.supabase && window.supabase.createClient);
+  var sb = cloud ? window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY) : null;
+  var session = null, workspaces = [], curWs = null, wsVersion = 0, saveTimer = null, saving = false, dirty = false, loginBusy = false, authEmail = "";
+
+  function lsGet(k) { try { return localStorage.getItem(k); } catch (e) { return null; } }
+  function lsSet(k, v) { try { localStorage.setItem(k, v); } catch (e) {} }
+  function errText(e) { return (e && (e.message || e.error_description)) || String(e || "Something went wrong."); }
+  function setSaveState(text, bad) { var el = document.getElementById("saveState"); el.textContent = text || ""; el.classList.toggle("bad", !!bad); }
+
+  function normaliseState(d) {
+    d = d && typeof d === "object" ? JSON.parse(JSON.stringify(d)) : {};
+    if (!Array.isArray(d.cycles) || !d.cycles.length) { var f = makeCycle("Welcome journey", "acquisition", true, 6, 10); d.cycles = [f]; d.activeId = f.id; d.fresh = true; }
+    if (!d.cycles.some(function (c) { return c.id === d.activeId; })) d.activeId = d.cycles[0].id;
+    d.competitors = Array.isArray(d.competitors) ? d.competitors : [];
+    d.trackers = Array.isArray(d.trackers) ? d.trackers : [];
+    d.emails = [];
+    d.trackers.forEach(function (t) { t.summarizing = false; });
+    d.competitors.forEach(function (x) { if (x.status === "reading") { x.status = "error"; x.error = "Reading was interrupted. Upload the screenshots again."; } });
+    return d;
+  }
+  function rowToEmail(r) { return { id: r.id, date: r.sent_at, from: r.from_addr || "", to: r.to_addr || "", subject: r.subject || "(no subject)", text: r.body || "" }; }
+
+  // sign-in screen
+  function showAuth(mode, msg) {
+    var card = document.getElementById("authCard"), wrap = document.getElementById("authScreen");
+    var logo = '<div class="logo" aria-hidden="true"><svg viewBox="0 0 32 32"><path d="M16 5a11 11 0 1 0 10.4 7.4" fill="none" stroke="#FFFFFF" stroke-width="3.2" stroke-linecap="round"/><path d="M27.5 5.5l-1 7-6.5-2.5" fill="none" stroke="#FFFFFF" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"/><circle cx="16" cy="16" r="4" fill="#FF8FA2"/></svg></div>';
+    var err = msg ? '<div class="autherr" role="alert">' + esc(msg) + "</div>" : "";
+    if (mode === "loading") card.innerHTML = logo + '<h2>Conversion Cycle Planner</h2><div class="row"><div class="spinner" role="status" aria-label="Loading"></div><p>' + esc(msg || "Loading your workspace…") + "</p></div>";
+    else if (mode === "email") card.innerHTML = logo + "<h2>Sign in</h2><p>Enter your work email. We'll send you a sign-in code. Only invited people can sign in.</p>" + err +
+      '<form class="stack" id="authEmailForm"><label class="field"><span>Email</span><input class="inp" id="authEmail" type="email" autocomplete="email" required value="' + esc(authEmail) + '"></label><button class="btn primary" type="submit">Send sign-in code</button></form>';
+    else if (mode === "code") card.innerHTML = logo + "<h2>Check your email</h2><p>We sent a code to <b>" + esc(authEmail) + "</b>. Type it below, or click the link in the email.</p>" + err +
+      '<form class="stack" id="authCodeForm"><label class="field"><span>Code</span><input class="inp code" id="authCode" inputmode="numeric" autocomplete="one-time-code" maxlength="10" required></label><button class="btn primary" type="submit">Sign in</button></form>' +
+      '<div class="row" style="justify-content:space-between"><button class="btn" type="button" data-auth="back">Use another email</button><button class="btn" type="button" data-auth="resend">Send a new code</button></div>';
+    else if (mode === "create") card.innerHTML = logo + "<h2>Create your first workspace</h2><p>A workspace holds cycles, competitor offers and emails. Make one for your team, and one for each client you work with.</p>" + err +
+      '<form class="stack" id="authCreateForm"><label class="field"><span>Workspace name</span><input class="inp" id="authWsName" type="text" maxlength="80" required placeholder="Our team"></label><button class="btn primary" type="submit">Create workspace</button></form><button class="btn" type="button" data-auth="signout">Sign out</button>';
+    else if (mode === "error") card.innerHTML = logo + "<h2>Something went wrong</h2>" + err + '<div class="row"><button class="btn primary" type="button" data-auth="retry">Try again</button><button class="btn" type="button" data-auth="signout">Sign out</button></div>';
+    wrap.hidden = false;
+    var f = card.querySelector("input"); if (f) setTimeout(function () { f.focus(); }, 0);
+  }
+  function hideAuth() { document.getElementById("authScreen").hidden = true; }
+
+  document.getElementById("authCard").addEventListener("submit", async function (e) {
+    e.preventDefault();
+    var btn = e.target.querySelector('button[type="submit"]'); if (btn) btn.disabled = true;
+    try {
+      if (e.target.id === "authEmailForm") { authEmail = document.getElementById("authEmail").value.trim().toLowerCase(); await sendCode(); }
+      if (e.target.id === "authCodeForm") {
+        var code = document.getElementById("authCode").value.replace(/\s+/g, "");
+        var r = await sb.auth.verifyOtp({ email: authEmail, token: code, type: "email" });
+        if (r.error) { showAuth("code", /expired|invalid/i.test(r.error.message) ? "That code is wrong or has expired. Check it, or send a new one." : errText(r.error)); return; }
+        session = r.data.session; afterLogin();
+      }
+      if (e.target.id === "authCreateForm") {
+        var name = document.getElementById("authWsName").value.trim(); if (!name) return;
+        var c = await sb.rpc("create_workspace", { ws_name: name });
+        if (c.error) { showAuth("create", errText(c.error)); return; }
+        await loadWorkspaces(); await openWorkspace(c.data);
+      }
+    } finally { if (btn) btn.disabled = false; }
+  });
+  document.getElementById("authCard").addEventListener("click", function (e) {
+    var b = e.target.closest("[data-auth]"); if (!b) return;
+    var a = b.getAttribute("data-auth");
+    if (a === "back") showAuth("email");
+    if (a === "resend") sendCode();
+    if (a === "retry") afterLogin();
+    if (a === "signout") signOut();
+  });
+  async function sendCode() {
+    var r = await sb.auth.signInWithOtp({ email: authEmail, options: { shouldCreateUser: true, emailRedirectTo: location.origin + location.pathname } });
+    if (r.error) {
+      var m = r.error.message || "";
+      if (r.error.status === 403 || /invit|not allowed|signups? not allowed|hook/i.test(m)) m = "This email hasn't been invited yet. Ask the person who manages your workspace to invite you.";
+      else if (r.error.status === 429 || /rate|too many/i.test(m)) m = "Too many attempts. Wait a minute, then try again.";
+      showAuth("email", m); return;
+    }
+    showAuth("code");
+  }
+  async function signOut() {
+    if (dirty) await cloudSave();
+    curWs = null; session = null; await sb.auth.signOut();
+    document.getElementById("acct").hidden = true; setSaveState("");
+    showAuth("email");
+  }
+
+  async function loadWorkspaces() {
+    var r = await sb.rpc("my_workspaces"); if (r.error) throw r.error;
+    workspaces = r.data || [];
+  }
+  async function afterLogin() {
+    if (loginBusy) return; loginBusy = true;
+    try {
+      showAuth("loading", "Signing you in…");
+      var u = await sb.auth.getUser(); authEmail = (u.data && u.data.user && u.data.user.email) || authEmail;
+      await sb.rpc("accept_invites");
+      await loadWorkspaces();
+      if (!workspaces.length) { showAuth("create"); return; }
+      var last = lsGet("ccp2_ws"), pick = workspaces.filter(function (w) { return w.id === last; })[0] || workspaces[0];
+      await openWorkspace(pick.id);
+    } catch (e) { showAuth("error", errText(e)); }
+    finally { loginBusy = false; }
+  }
+  async function fetchState(id) {
+    var r = await sb.from("workspace_state").select("data,version").eq("workspace_id", id).single();
+    if (r.error) throw r.error; return r.data;
+  }
+  async function openWorkspace(id) {
+    if (dirty && curWs) await cloudSave();
+    showAuth("loading");
+    try {
+      var st = await fetchState(id);
+      var e = await sb.from("emails").select("id,sent_at,from_addr,to_addr,subject,body").eq("workspace_id", id).order("sent_at", { ascending: false }).limit(800);
+      if (e.error) throw e.error;
+      curWs = workspaces.filter(function (w) { return w.id === id; })[0]; wsVersion = st.version; lsSet("ccp2_ws", id);
+      state = normaliseState(st.data);
+      var fresh = state.fresh; delete state.fresh;
+      state.emails = (e.data || []).map(rowToEmail).reverse();
+      history = []; lastKey = null; closeDrawer(); ui.focusDay = null; ui.pickDay = null; ui.addingDay = false;
+      hideAuth(); renderAcct(); render(); setSaveState("Saved");
+      if (fresh) queueCloudSave();
+      renderImportBanner();
+    } catch (err) { showAuth("error", errText(err)); }
+  }
+  async function reloadState(note) {
+    if (!curWs) return;
+    var st = await fetchState(curWs.id), emails = state.emails;
+    wsVersion = st.version; state = normaliseState(st.data); delete state.fresh; state.emails = emails;
+    history = []; lastKey = null; if (ui.sel && !findStep(ui.sel)) closeDrawer();
+    render(); if (ui.sel) renderDrawer(); setSaveState("Saved"); if (note) toast(note);
+  }
+
+  // saving: one document per workspace, with a version check so two people can't overwrite each other unseen
+  function queueCloudSave() { dirty = true; setSaveState("Saving…"); clearTimeout(saveTimer); saveTimer = setTimeout(cloudSave, 1000); }
+  async function cloudSave() {
+    clearTimeout(saveTimer);
+    if (!curWs || !dirty) return;
+    if (saving) { saveTimer = setTimeout(cloudSave, 400); return; }
+    saving = true; dirty = false;
+    var wsId = curWs.id;
+    var payload = { cycles: state.cycles, activeId: state.activeId, competitors: state.competitors,
+      trackers: state.trackers.map(function (t) { var c = Object.assign({}, t); delete c.summarizing; delete c.sumError; return c; }) };
+    var r = await sb.rpc("save_state", { ws: wsId, new_data: payload, expected_version: wsVersion });
+    saving = false;
+    if (!curWs || curWs.id !== wsId) return;
+    if (r.error) { dirty = true; setSaveState("Not saved", true); toast("Couldn't save: " + errText(r.error) + ". Your changes are kept here; I'll try again."); saveTimer = setTimeout(cloudSave, 8000); return; }
+    if (r.data === null || r.data === undefined) { await reloadState("Someone else changed this workspace at the same time, so their version was loaded. Your last change wasn't saved."); return; }
+    wsVersion = r.data; setSaveState(dirty ? "Saving…" : "Saved");
+  }
+  window.addEventListener("beforeunload", function (e) { if (cloud && (dirty || saving)) { cloudSave(); e.preventDefault(); e.returnValue = ""; } });
+  window.addEventListener("focus", async function () {
+    if (!cloud || !curWs || dirty || saving) return;
+    var r = await sb.from("workspace_state").select("version").eq("workspace_id", curWs.id).single();
+    if (r.data && r.data.version !== wsVersion && !dirty && !saving) reloadState("Loaded your team's latest changes");
+  });
+
+  // copy what was saved in this browser before login
+  function localData() { try { var d = JSON.parse(localStorage.getItem("ccp2_state")); return d && Array.isArray(d.cycles) && d.cycles.length ? d : null; } catch (e) { return null; } }
+  function renderImportBanner() {
+    var el = document.getElementById("importBanner"), d = localData();
+    if (!cloud || !curWs || !d || lsGet("ccp2_imported_" + curWs.id)) { el.hidden = true; return; }
+    el.innerHTML = "<p>This browser still has <b>" + d.cycles.length + (d.cycles.length === 1 ? " cycle" : " cycles") + "</b> from before you signed in" + ((d.competitors || []).length ? " and " + d.competitors.length + " competitor offers" : "") + ". Copy " + (d.cycles.length === 1 && !(d.competitors || []).length ? "it" : "them") + " into <b>" + esc(curWs.name) + "</b>?</p>" +
+      '<button class="btn primary" type="button" data-imp="yes">Copy into this workspace</button><button class="btn" type="button" data-imp="no">Not now</button>';
+    el.hidden = false;
+  }
+  document.getElementById("importBanner").addEventListener("click", function (e) {
+    var b = e.target.closest("[data-imp]"); if (!b) return;
+    if (b.getAttribute("data-imp") === "yes") {
+      var d = localData(); if (!d) return; commit();
+      d.cycles.forEach(function (c) { c = JSON.parse(JSON.stringify(c)); c.id = uid(); c.steps.forEach(function (s) { s.id = uid(); }); state.cycles.push(c); });
+      (d.competitors || []).forEach(function (x) { x = JSON.parse(JSON.stringify(x)); x.id = uid(); if (x.status === "reading") x.status = "done"; state.competitors.push(x); });
+      (d.trackers || []).forEach(function (t) { t = JSON.parse(JSON.stringify(t)); t.id = uid(); t.summarizing = false; state.trackers.push(t); });
+      if (Array.isArray(d.emails) && d.emails.length) mergeEmails(d.emails);
+      save(); render(); toast("Copied into " + curWs.name);
+    }
+    lsSet("ccp2_imported_" + curWs.id, "1"); renderImportBanner();
+  });
+
+  // account and workspace menu
+  function renderAcct() {
+    var el = document.getElementById("acct"); el.hidden = false;
+    el.innerHTML = '<button class="hbtn wsbtn" type="button" id="wsBtn" aria-haspopup="true" aria-expanded="false">' + svg('<rect x="3" y="4" width="14" height="12" rx="2"/><path d="M3 8h14"/>') + "<span>" + esc(curWs ? curWs.name : "Workspace") + '</span><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 8l4 4 4-4"/></svg></button>';
+    document.getElementById("footNote").textContent = "Signed in as " + authEmail + ". Changes save to the " + (curWs ? curWs.name : "") + " workspace automatically.";
+  }
+  function closeMenu() { var m = document.getElementById("wsMenu"); if (m) m.remove(); var b = document.getElementById("wsBtn"); if (b) b.setAttribute("aria-expanded", "false"); }
+  document.getElementById("acct").addEventListener("click", function (e) {
+    if (e.target.closest("#wsBtn")) {
+      if (document.getElementById("wsMenu")) { closeMenu(); return; }
+      var owner = curWs && curWs.role === "owner";
+      var m = document.createElement("div"); m.className = "menu"; m.id = "wsMenu"; m.setAttribute("role", "menu");
+      m.innerHTML = "<small>Workspaces</small>" + workspaces.map(function (w) { return '<button type="button" role="menuitem" data-ws="' + w.id + '" class="' + (curWs && w.id === curWs.id ? "on" : "") + '">' + esc(w.name) + (w.role === "owner" ? "" : ' <span class="role">member</span>') + "</button>"; }).join("") +
+        '<button type="button" role="menuitem" data-menu="new">+ New workspace</button><hr>' +
+        '<button type="button" role="menuitem" data-menu="members">' + (owner ? "Members and invites" : "Members") + "</button>" +
+        (owner ? '<button type="button" role="menuitem" data-menu="rename">Rename workspace</button>' : "") +
+        '<hr><div class="who2">Signed in as ' + esc(authEmail) + '</div><button type="button" role="menuitem" data-menu="signout">Sign out</button>';
+      this.appendChild(m); document.getElementById("wsBtn").setAttribute("aria-expanded", "true");
+      var first = m.querySelector("button"); if (first) first.focus();
+      return;
+    }
+    var t = e.target.closest("[data-ws],[data-menu]"); if (!t) return;
+    closeMenu();
+    if (t.hasAttribute("data-ws")) { var id = t.getAttribute("data-ws"); if (!curWs || id !== curWs.id) openWorkspace(id); return; }
+    var a = t.getAttribute("data-menu");
+    if (a === "new") openTeamDialog("new");
+    if (a === "members") openTeamDialog("members");
+    if (a === "rename") openTeamDialog("rename");
+    if (a === "signout") signOut();
+  });
+  document.addEventListener("click", function (e) { if (!e.target.closest("#acct")) closeMenu(); });
+  document.addEventListener("keydown", function (e) { if (e.key === "Escape") { closeMenu(); var tm = document.getElementById("teamModal"); if (!tm.hidden) tm.hidden = true; } });
+
+  // members, invites, new workspace, rename
+  var teamModal = document.getElementById("teamModal"), teamDialog = document.getElementById("teamDialog");
+  async function openTeamDialog(mode) {
+    teamModal.hidden = false;
+    if (mode === "new" || mode === "rename") {
+      teamDialog.innerHTML = '<h3 id="teamTitle">' + (mode === "new" ? "New workspace" : "Rename workspace") + "</h3>" +
+        (mode === "new" ? '<p class="small">Use one workspace per client. Only the people you invite to it can see it.</p>' : "") +
+        '<form class="stack" id="wsNameForm" data-mode="' + mode + '"><label class="field"><span>Name</span><input class="inp" id="wsName" type="text" maxlength="80" required value="' + (mode === "rename" ? esc(curWs.name) : "") + '"></label>' +
+        '<div class="row" style="justify-content:flex-end"><button class="btn" type="button" data-team="close">Cancel</button><button class="btn primary" type="submit">' + (mode === "new" ? "Create workspace" : "Save") + "</button></div></form>";
+      setTimeout(function () { var i = document.getElementById("wsName"); i.focus(); i.select(); }, 0);
+      return;
+    }
+    teamDialog.innerHTML = '<h3 id="teamTitle">Members of ' + esc(curWs.name) + '</h3><div class="row"><div class="spinner" role="status" aria-label="Loading"></div></div>';
+    var owner = curWs.role === "owner";
+    var mr = await sb.from("members").select("user_id,email,role").eq("workspace_id", curWs.id);
+    var ir = owner ? await sb.from("invites").select("id,email,role,accepted_at").eq("workspace_id", curWs.id).is("accepted_at", null) : { data: [] };
+    if (mr.error || ir.error) { teamDialog.innerHTML = '<h3 id="teamTitle">Members</h3><div class="autherr">' + esc(errText(mr.error || ir.error)) + '</div><div class="row" style="justify-content:flex-end"><button class="btn" type="button" data-team="close">Close</button></div>'; return; }
+    var me = session && session.user ? session.user.id : "";
+    var rows = (mr.data || []).map(function (m) {
+      return '<div class="mrow"><div class="meta2"><b>' + esc(m.email || "Member") + "</b>" + (m.user_id === me ? " <small>(you)</small>" : "") + '</div><span class="role">' + m.role + "</span>" +
+        (owner && m.user_id !== me ? '<button class="btn danger" type="button" data-rm="' + m.user_id + '">Remove</button>' : "") + "</div>";
+    }).join("") + (ir.data || []).map(function (i) {
+      return '<div class="mrow"><div class="meta2"><b>' + esc(i.email) + '</b> <small>hasn\'t signed in yet</small></div><span class="role pending">invited</span><button class="btn danger" type="button" data-cancel="' + i.id + '">Cancel</button></div>';
+    }).join("");
+    teamDialog.innerHTML = '<h3 id="teamTitle">Members of ' + esc(curWs.name) + "</h3>" + '<div class="stack" style="gap:6px">' + rows + "</div>" +
+      (owner ? '<form class="stack" id="inviteForm" style="gap:10px"><p class="small">Invite someone by email. They sign in with a code sent to that address and see only this workspace.</p><div class="grid2"><label class="field"><span>Email</span><input class="inp" id="invEmail" type="email" required></label><label class="field"><span>Role</span><select class="inp" id="invRole"><option value="member">Member: can edit</option><option value="owner">Owner: can also invite</option></select></label></div><button class="btn primary" type="submit">Send invite</button><p class="small">The planner does not email them. Tell them to go to this page and sign in with that address.</p></form>' : '<p class="small">Only owners can invite people.</p>') +
+      '<div class="row" style="justify-content:space-between"><button class="btn danger" type="button" data-team="leave">Leave workspace</button><button class="btn" type="button" data-team="close">Close</button></div>';
+  }
+  teamModal.addEventListener("click", async function (e) {
+    if (e.target === teamModal) { teamModal.hidden = true; return; }
+    var b = e.target.closest("[data-team],[data-rm],[data-cancel]"); if (!b) return;
+    if (b.getAttribute("data-team") === "close") { teamModal.hidden = true; return; }
+    if (b.getAttribute("data-team") === "leave") {
+      if (b.dataset.armed !== "1") { b.dataset.armed = "1"; b.textContent = "Click again to leave"; return; }
+      var me = session.user.id, r0 = await sb.from("members").delete().eq("workspace_id", curWs.id).eq("user_id", me);
+      if (r0.error) { toast(errText(r0.error)); return; }
+      teamModal.hidden = true; curWs = null; lsSet("ccp2_ws", ""); toast("You left the workspace"); afterLogin(); return;
+    }
+    if (b.hasAttribute("data-rm")) { var r1 = await sb.from("members").delete().eq("workspace_id", curWs.id).eq("user_id", b.getAttribute("data-rm")); if (r1.error) toast(errText(r1.error)); openTeamDialog("members"); return; }
+    if (b.hasAttribute("data-cancel")) { var r2 = await sb.from("invites").delete().eq("id", b.getAttribute("data-cancel")); if (r2.error) toast(errText(r2.error)); openTeamDialog("members"); return; }
+  });
+  teamModal.addEventListener("submit", async function (e) {
+    e.preventDefault();
+    if (e.target.id === "inviteForm") {
+      var em = document.getElementById("invEmail").value.trim().toLowerCase(), role = document.getElementById("invRole").value;
+      var r = await sb.from("invites").insert({ workspace_id: curWs.id, email: em, role: role });
+      if (r.error) { toast(/duplicate|unique/i.test(r.error.message) ? em + " is already invited." : errText(r.error)); return; }
+      toast(em + " can now sign in"); openTeamDialog("members");
+    }
+    if (e.target.id === "wsNameForm") {
+      var name = document.getElementById("wsName").value.trim(); if (!name) return;
+      if (e.target.getAttribute("data-mode") === "new") {
+        var c = await sb.rpc("create_workspace", { ws_name: name }); if (c.error) { toast(errText(c.error)); return; }
+        teamModal.hidden = true; await loadWorkspaces(); openWorkspace(c.data);
+      } else {
+        var u = await sb.from("workspaces").update({ name: name }).eq("id", curWs.id); if (u.error) { toast(errText(u.error)); return; }
+        curWs.name = name; teamModal.hidden = true; await loadWorkspaces(); curWs = workspaces.filter(function (w) { return w.id === curWs.id; })[0] || curWs; renderAcct(); toast("Renamed");
+      }
+    }
+  });
+
+  async function boot() {
+    setView();
+    if (!cloud) { render(); return; }
+    showAuth("loading", "Starting…");
+    sb.auth.onAuthStateChange(function (event, s) {
+      session = s;
+      if (event === "SIGNED_IN" && s && !curWs) setTimeout(afterLogin, 0);
+      if (event === "SIGNED_OUT") { curWs = null; showAuth("email"); }
+    });
+    var r = await sb.auth.getSession(); session = r.data && r.data.session;
+    if (session) afterLogin(); else showAuth("email");
+  }
+
+  boot();
 })();
 </script>
 </body>

@@ -10,6 +10,6 @@ A visual builder for iGaming CRM conversion cycles, plus a competitor offer trac
 
 The AI features (reading screenshots, summarising emails) run through the same Google Apps Script, which holds your Anthropic API key in its script properties. The key never reaches the website or the browser. Without it you can still add offers by hand.
 
-Everything is saved in your browser; use Export / Import to back up or share.
+**Login and workspaces.** Optional sign-in with an email code, invite-only, with a workspace for your team and one per client, saved in Supabase. Setup: [supabase/README.md](supabase/README.md). Until it's set up, everything is saved in your browser; use Export / Import to back up or share.
 
 `src/app.html` is the source; `./build.sh` builds `index.html` for GitHub Pages.
