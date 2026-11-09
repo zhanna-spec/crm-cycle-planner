@@ -1,7 +1,6 @@
 # Conversion Cycle Planner
 
-A single-page CRM lifecycle planner: choose conditions (lifecycle focus, vertical, segment, budget, regulation, channels) and get a step-by-step conversion plan, positioning advice and a competitor benchmark from an uploaded CSV.
+A prototype CRM planning tool for iGaming. Pick the lifecycle focus, vertical, player segment, budget, regulation and channels, and it generates a step-by-step conversion-cycle plan. Upload competitor offers as CSV to benchmark each stage and position your offers as aggressive, in line, or differentiated.
 
-Live: https://zhanna-spec.github.io/crm-cycle-planner/
-
-All offer values, take-up rates and conversion targets are placeholder rules of thumb to be calibrated with real data.
+- `src/app.html` – the app (single file, no dependencies)
+- `index.html` – built from `src/app.html` by `./build.sh`, served by GitHub Pages
