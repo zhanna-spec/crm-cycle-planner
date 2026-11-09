@@ -1596,8 +1596,8 @@ footer { color: var(--muted); font-size: 12px; margin-top: 24px; text-align: cen
   // ---------- login, workspaces and cloud saving (Supabase) ----------
   // Fill these in from Supabase: Project Settings -> API. Both are safe to publish;
   // the database's access rules decide what each signed-in person can see.
-  var SUPABASE_URL = "";
-  var SUPABASE_KEY = "";
+  var SUPABASE_URL = "https://armhnzdunwrgactgdlbc.supabase.co";
+  var SUPABASE_KEY = "sb_publishable_8gWkoQ2MP3iZM1ixe7rxjQ_it2LkWGW";
   var cloud = !!(SUPABASE_URL && SUPABASE_KEY && window.supabase && window.supabase.createClient);
   var sb = cloud ? window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY) : null;
   var session = null, workspaces = [], curWs = null, wsVersion = 0, saveTimer = null, saving = false, dirty = false, loginBusy = false, authEmail = "";
