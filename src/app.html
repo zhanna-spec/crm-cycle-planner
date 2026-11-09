@@ -210,7 +210,7 @@ textarea.inp { resize: vertical; min-height: 70px; }
 .addform .inp { background: var(--surface); }
 
 /* View switch */
-.viewnav { display: flex; gap: 4px; background: var(--surface); padding: 5px; border-radius: 16px; box-shadow: var(--shadow-sm); width: max-content; max-width: 100%; margin-bottom: 16px; }
+.viewnav { display: flex; gap: 4px; background: var(--surface); padding: 5px; border-radius: 16px; box-shadow: var(--shadow-sm); width: max-content; max-width: 100%; margin-bottom: 16px; overflow-x: auto; scrollbar-width: none; }
 .viewnav a { display: inline-flex; align-items: center; gap: 8px; padding: 9px 16px; border-radius: 12px; font-weight: 500; color: var(--muted); text-decoration: none; white-space: nowrap; }
 .viewnav a svg { width: 17px; height: 17px; }
 .viewnav a.on { background: var(--accent); color: var(--on-accent); }
@@ -270,6 +270,52 @@ textarea.inp { resize: vertical; min-height: 70px; }
 .mbar { height: 6px; border-radius: 3px; background: var(--coral-bg); margin-top: 5px; min-width: 4px; }
 .empty-c { text-align: center; color: var(--muted); padding: 30px 10px; }
 
+/* Competitor emails */
+.trk { display: flex; align-items: center; gap: 10px; padding: 8px 10px; border-radius: 14px; background: var(--sunk); }
+.trk .meta2 { flex: 1; min-width: 0; }
+.trk b { display: block; font-weight: 600; overflow-wrap: anywhere; }
+.trk small { color: var(--muted); font-size: 12px; overflow-wrap: anywhere; }
+.trk .iconbtn { width: 28px; height: 28px; background: transparent; }
+.trk .iconbtn:hover { background: var(--surface); color: var(--bad); }
+.unas { display: flex; align-items: center; gap: 8px; font-size: 12px; padding: 6px 0; border-top: 1px solid var(--line); }
+.unas span { flex: 1; min-width: 0; overflow-wrap: anywhere; color: var(--muted); }
+.unas b { color: var(--ink); font-weight: 500; }
+.ecard { background: var(--surface); border-radius: 24px; box-shadow: var(--shadow); padding: 18px; display: flex; flex-direction: column; gap: 14px; min-width: 0; }
+.ehead { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; }
+.ehead .avatar { width: 40px; height: 40px; font-size: 16px; }
+.ehead h3 { margin: 0; font-size: 18px; font-weight: 600; }
+.ehead .sub2 { font-size: 12px; color: var(--muted); }
+.ehead .grow { flex: 1; min-width: 160px; }
+.ehead .reg { display: flex; align-items: center; gap: 6px; font-size: 12px; color: var(--muted); }
+.ehead .reg input { width: auto; padding: 6px 8px; font-size: 13px; }
+.estrip { display: flex; gap: 3px; height: 34px; align-items: flex-end; padding: 0 2px; overflow-x: auto; }
+.estrip .dcol { flex: 1 0 14px; display: flex; flex-direction: column-reverse; gap: 2px; align-items: stretch; min-width: 14px; position: relative; }
+.estrip .dot2 { height: 8px; border-radius: 3px; background: var(--c-email); }
+.estrip .dot2.offer { background: var(--coral-bg); }
+.estrip .dcol.empty::after { content: ""; height: 2px; border-radius: 1px; background: var(--line); }
+.eaxis { display: flex; justify-content: space-between; font-size: 11px; color: var(--muted); padding: 0 2px; margin-top: -8px; }
+.elist { display: flex; flex-direction: column; gap: 6px; }
+.erow { border-radius: 14px; background: var(--sunk); }
+.erow summary { list-style: none; display: grid; grid-template-columns: 62px minmax(0, 1fr) auto; gap: 10px; align-items: center; padding: 9px 12px; cursor: pointer; }
+.erow summary::-webkit-details-marker { display: none; }
+.erow .dd { display: inline-grid; place-items: center; height: 30px; border-radius: 10px; background: var(--accent); color: var(--on-accent); font-weight: 600; font-size: 12px; }
+.erow .subj { min-width: 0; }
+.erow .subj b { display: block; font-weight: 500; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.erow .subj small { color: var(--muted); font-size: 11px; }
+.erow .chips2 { display: flex; flex-wrap: wrap; gap: 4px; justify-content: flex-end; max-width: 260px; }
+.erow .body { padding: 0 12px 12px 84px; font-size: 12px; color: var(--muted); white-space: pre-wrap; overflow-wrap: anywhere; max-height: 260px; overflow-y: auto; }
+@media (max-width: 600px) { .erow summary { grid-template-columns: 52px minmax(0, 1fr); } .erow .chips2 { grid-column: 2; justify-content: flex-start; } .erow .body { padding-left: 12px; } }
+.purpose { font-size: 11px; font-weight: 500; padding: 3px 8px; border-radius: 8px; background: var(--accent-soft); color: var(--accent); white-space: nowrap; }
+.sumbox { background: var(--sunk); border-radius: 18px; padding: 14px 16px; display: flex; flex-direction: column; gap: 8px; }
+.sumbox h4 { margin: 0; font-size: 13px; font-weight: 600; }
+.sumbox p { margin: 0; line-height: 1.55; }
+.sumbox ul { margin: 0; padding-left: 18px; color: var(--muted); }
+.estats { display: flex; flex-wrap: wrap; gap: 6px; }
+.estats span { font-size: 12px; padding: 4px 10px; border-radius: 999px; background: var(--sunk); }
+.estats b { font-weight: 600; }
+details.guide summary { cursor: pointer; color: var(--accent); font-weight: 500; font-size: 13px; }
+details.guide ol { margin: 8px 0 0; padding-left: 18px; font-size: 12px; color: var(--muted); display: grid; gap: 4px; }
+
 .toast { position: fixed; left: 50%; transform: translateX(-50%); bottom: calc(18px + env(safe-area-inset-bottom, 0px)); background: var(--ink); color: var(--bg); padding: 10px 16px; border-radius: 14px; font-weight: 500; z-index: 80; box-shadow: var(--shadow); }
 footer { color: var(--muted); font-size: 12px; margin-top: 24px; text-align: center; }
 @media (prefers-reduced-motion: reduce) { .block, .card { transition: none; } }
@@ -296,6 +342,7 @@ footer { color: var(--muted); font-size: 12px; margin-top: 24px; text-align: cen
   <nav class="viewnav" aria-label="Sections">
     <a href="#builder" id="nav-builder"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="4" height="12" rx="1.5"/><rect x="9" y="4" width="4" height="8" rx="1.5"/><rect x="15" y="4" width="2.5" height="5" rx="1"/></svg>Cycle builder</a>
     <a href="#competitors" id="nav-competitors"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="7" cy="7" r="3"/><circle cx="14" cy="9" r="2.5"/><path d="M2 17c.6-3 2.6-4.5 5-4.5s4.4 1.5 5 4.5M12.5 13.2c2-.4 4.4.6 5 3.8"/></svg>Competitor offers <span class="num" id="compCount">0</span></a>
+    <a href="#emails" id="nav-emails"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="14" height="10" rx="2"/><path d="M3.5 6l6.5 5 6.5-5"/></svg>Competitor emails <span class="num" id="trkCount">0</span></a>
   </nav>
 
   <div id="view-builder">
@@ -360,6 +407,29 @@ footer { color: var(--muted); font-size: 12px; margin-top: 24px; text-align: cen
       </div>
     </div>
   </div>
+  <div id="view-emails" hidden>
+    <div class="capp">
+      <div class="side">
+        <section class="panel stack" aria-labelledby="inbH">
+          <h2 class="ptitle" id="inbH">Research inbox</h2>
+          <div id="inboxPanel" class="stack"></div>
+        </section>
+        <section class="panel stack" aria-labelledby="trkH">
+          <h2 class="ptitle" id="trkH">Competitors you follow</h2>
+          <div id="trkList" class="stack" style="gap:8px"></div>
+          <form id="trkForm" class="stack" style="gap:10px">
+            <label class="field"><span>Competitor name</span><input class="inp" id="tName" type="text" placeholder="LuckyNova" required></label>
+            <label class="field"><span>Match emails by</span><input class="inp" id="tMatch" type="text" placeholder="+tag or sender domain, e.g. luckynova" required></label>
+            <label class="field"><span>Registered on</span><input class="inp" id="tReg" type="date"></label>
+            <button class="btn primary" type="submit">Follow competitor</button>
+          </form>
+          <div id="unassigned"></div>
+        </section>
+      </div>
+      <div class="stack" style="gap:18px;min-width:0" id="ecards"></div>
+    </div>
+  </div>
+
   <footer>Your cycles are saved in this browser. Use Export to back them up or move them to another computer.</footer>
 </div>
 
@@ -514,6 +584,9 @@ footer { color: var(--muted); font-size: 12px; margin-top: 24px; text-align: cen
     state = { cycles: [first], activeId: first.id };
   }
   if (!Array.isArray(state.competitors)) state.competitors = [];
+  if (!Array.isArray(state.trackers)) state.trackers = [];
+  if (!Array.isArray(state.emails)) state.emails = [];
+  state.trackers.forEach(function (t) { t.summarizing = false; });
   state.competitors.forEach(function (x) { if (x.status === "reading") { x.status = "error"; x.error = "Reading was interrupted. Upload the screenshots again."; } });
   function save() { try { localStorage.setItem("ccp2_state", JSON.stringify(state)); } catch (e) { toast("Browser storage is full. Delete some competitor offers or export a backup."); } }
   function commit() { history.push(JSON.stringify(state)); if (history.length > 80) history.shift(); }
@@ -570,7 +643,7 @@ footer { color: var(--muted); font-size: 12px; margin-top: 24px; text-align: cen
     var maxStep = c.steps.reduce(function (m, s) { return Math.max(m, s.day); }, 0);
     if (!(c.length >= 1)) c.length = Math.max(1, c.days[c.days.length - 1] || 7);
     if (c.length < maxStep) c.length = maxStep;
-    renderTabs(); renderSummary(c); renderSettings(c); renderBoard(c); renderCompetitors();
+    renderTabs(); renderSummary(c); renderSettings(c); renderBoard(c); renderCompetitors(); renderEmails();
     document.getElementById("undoBtn").disabled = !history.length;
   }
   function renderTabs() {
@@ -687,7 +760,7 @@ footer { color: var(--muted); font-size: 12px; margin-top: 24px; text-align: cen
       '<label class="field"><span>Title</span><input class="inp" id="s-title" data-f="title" type="text" value="' + esc(s.title) + '"></label>' +
       '<div class="field"><span>Channel</span><div class="chips">' + CH_ORDER.map(function (k) { return '<label><input type="radio" name="s-ch" id="s-ch-' + k + '" value="' + k + '"' + (s.channel === k ? " checked" : "") + "><span>" + chIcon(k, true) + CH[k].label + "</span></label>"; }).join("") + "</div></div>" +
       '<div class="grid2"><label class="field"><span>Day</span><input class="inp" id="s-day" data-f="day" type="number" min="0" max="365" value="' + s.day + '"></label>' +
-      '<label class="field"><span>Send</span><select class="inp" id="s-time" data-f="time">' + TIMES.map(function (t) { return "<option" + (t === s.time ? " selected" : "") + ">" + t + "</option>"; }).join("") + "</select></label></div>" +
+      '<label class="field"><span>Send</span><select class="inp" id="s-time" data-f="time">' + (TIMES.indexOf(s.time) < 0 ? [s.time].concat(TIMES) : TIMES).map(function (t) { return "<option" + (t === s.time ? " selected" : "") + ">" + t + "</option>"; }).join("") + "</select></label></div>" +
       '<div class="field"><span>Who gets it</span><div class="seg">' + Object.keys(AUD).map(function (k) { return '<label><input type="radio" name="s-aud" id="s-aud-' + k + '" value="' + k + '"' + (s.audience === k ? " checked" : "") + "><span>" + AUD[k] + "</span></label>"; }).join("") + "</div></div>" +
       '<label class="field"><span>Message</span><textarea class="inp" id="s-msg" data-f="message" rows="3" placeholder="What does this step say?">' + esc(s.message) + "</textarea></label>" +
       '<div class="field"><span>Offer</span><div class="seg">' + Object.keys(OFFERS).map(function (k) { return '<label><input type="radio" name="s-offer" id="s-offer-' + k + '" value="' + k + '"' + (o.type === k ? " checked" : "") + "><span>" + OFFERS[k] + "</span></label>"; }).join("") + "</div></div>" +
@@ -961,13 +1034,11 @@ footer { color: var(--muted); font-size: 12px; margin-top: 24px; text-align: cen
   }
 
   function setView() {
-    var v = location.hash === "#competitors" ? "competitors" : "builder";
-    document.getElementById("view-builder").hidden = v !== "builder";
-    document.getElementById("view-competitors").hidden = v !== "competitors";
-    document.getElementById("nav-builder").classList.toggle("on", v === "builder");
-    document.getElementById("nav-competitors").classList.toggle("on", v === "competitors");
-    document.getElementById("nav-builder").setAttribute("aria-current", v === "builder" ? "page" : "false");
-    document.getElementById("nav-competitors").setAttribute("aria-current", v === "competitors" ? "page" : "false");
+    var v = location.hash === "#competitors" ? "competitors" : location.hash === "#emails" ? "emails" : "builder";
+    ["builder", "competitors", "emails"].forEach(function (k) {
+      document.getElementById("view-" + k).hidden = v !== k;
+      var a = document.getElementById("nav-" + k); a.classList.toggle("on", v === k); a.setAttribute("aria-current", v === k ? "page" : "false");
+    });
     closeDrawer();
   }
   window.addEventListener("hashchange", setView);
@@ -1200,6 +1271,266 @@ footer { color: var(--muted); font-size: 12px; margin-top: 24px; text-align: cen
     closeDrawer(); save(); renderCompetitors(); toast("Offer deleted. Undo to bring it back.");
   });
 
+
+  // ---------- competitor emails ----------
+  var INBOX_STORE = "ccp2_inbox";
+  var SETUP_URL = "https://github.com/zhanna-spec/crm-cycle-planner/blob/main/inbox-collector/README.md";
+  var PURPOSE = { welcome: "Welcome", deposit_nudge: "Deposit nudge", offer: "Offer", reminder: "Reminder", reactivation: "Win-back", newsletter: "Newsletter", transactional: "Account", other: "Other" };
+  function inbox() { try { return JSON.parse(localStorage.getItem(INBOX_STORE)) || {}; } catch (e) { return {}; } }
+  function setInbox(o) { try { localStorage.setItem(INBOX_STORE, JSON.stringify(o)); } catch (e) {} }
+  function senderName(from) { var m = /^\s*"?([^"<]*?)"?\s*</.exec(from || ""); return (m && m[1].trim()) || (from || "").replace(/@.*/, ""); }
+  function senderDomain(from) { var m = /@([A-Za-z0-9.-]+)/.exec(from || ""); if (!m) return ""; var parts = m[1].toLowerCase().split("."); return parts.slice(-2).join("."); }
+  function plusTag(to) { var m = /\+([A-Za-z0-9._-]+)@/.exec(to || ""); return m ? m[1].toLowerCase() : ""; }
+  function trackerFor(em) {
+    var to = (em.to || "").toLowerCase(), from = (em.from || "").toLowerCase();
+    for (var i = 0; i < state.trackers.length; i++) {
+      var t = state.trackers[i], k = (t.match || "").toLowerCase().replace(/^\+/, "").trim(); if (!k) continue;
+      if (to.indexOf("+" + k + "@") >= 0 || from.indexOf(k) >= 0) return t;
+    }
+    return null;
+  }
+  function localDate(iso) { var d = new Date(iso); return d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0"); }
+  function dayOf(em, t) {
+    if (!t.registered) return 0;
+    var p = t.registered.split("-"), start = new Date(+p[0], +p[1] - 1, +p[2]);
+    return Math.floor((new Date(em.date) - start) / 864e5);
+  }
+  function emailsOf(t) { return state.emails.filter(function (em) { return trackerFor(em) === t; }).sort(function (a, b) { return a.date < b.date ? -1 : 1; }); }
+  function mergeEmails(list) {
+    var byId = {}; state.emails.forEach(function (em) { byId[em.id] = em; });
+    var added = 0;
+    list.forEach(function (em) { if (!em || !em.id) return; if (!byId[em.id]) added++; byId[em.id] = { id: String(em.id), date: em.date, from: em.from || "", to: em.to || "", subject: em.subject || "(no subject)", text: String(em.text || "").slice(0, 4000) }; });
+    state.emails = Object.keys(byId).map(function (k) { return byId[k]; }).sort(function (a, b) { return a.date < b.date ? -1 : 1; }).slice(-800);
+    return added;
+  }
+  function ago(iso) { if (!iso) return "never"; var m = Math.round((Date.now() - new Date(iso)) / 60000); return m < 1 ? "just now" : m < 60 ? m + " min ago" : m < 1440 ? Math.round(m / 60) + " h ago" : Math.round(m / 1440) + " days ago"; }
+
+  function renderInboxPanel() {
+    var ib = inbox(), el = document.getElementById("inboxPanel");
+    if (ib.url && ib.token) {
+      el.innerHTML = '<div class="keystate"><i></i>Connected' + (ib.account ? " to " + esc(ib.account) : "") + "</div>" +
+        '<p class="small">' + state.emails.length + " emails stored · last synced " + ago(ib.lastSync) + "</p>" +
+        '<div class="row"><button class="btn primary" type="button" id="syncBtn">Sync emails now</button><button class="btn danger" type="button" id="inbDisconnect">Disconnect</button></div>';
+    } else {
+      el.innerHTML = '<div class="keystate off"><i></i>Not connected yet</div>' +
+        '<p class="small">Collect competitor emails in a research Gmail account. A small script in that account shares them with this page. <a href="' + SETUP_URL + '" target="_blank" rel="noopener">Setup guide (about 10 minutes)</a></p>' +
+        '<label class="field"><span>Web app URL</span><input class="inp" id="inbUrl" type="url" placeholder="https://script.google.com/macros/s/…/exec"></label>' +
+        '<label class="field"><span>Token</span><input class="inp" id="inbToken" type="password" autocomplete="off"></label>' +
+        '<button class="btn primary" type="button" id="inbConnect">Connect</button>';
+    }
+  }
+
+  async function syncInbox(url, token, quiet) {
+    var btn = document.getElementById("syncBtn") || document.getElementById("inbConnect"); if (btn) { btn.disabled = true; btn.textContent = "Syncing…"; }
+    try {
+      var sep = url.indexOf("?") >= 0 ? "&" : "?";
+      var res;
+      try { res = await fetch(url + sep + "token=" + encodeURIComponent(token) + "&days=60", { redirect: "follow" }); }
+      catch (err) { throw new Error("Couldn't reach the inbox script. Check the URL, and that it's deployed as a web app with access set to Anyone."); }
+      var data; try { data = await res.json(); } catch (err) { throw new Error("The URL answered, but not with emails. Make sure you copied the web app URL ending in /exec."); }
+      if (data.error === "unauthorized") throw new Error("The token doesn't match. Copy it again from the script's execution log.");
+      if (data.error) throw new Error(data.message || "The inbox script returned an error.");
+      if (!Array.isArray(data.emails)) throw new Error("The inbox script sent an unexpected answer.");
+      commit();
+      var added = mergeEmails(data.emails);
+      setInbox({ url: url, token: token, account: data.account || "", lastSync: new Date().toISOString() });
+      // registration date defaults to the first email we see for that competitor
+      state.trackers.forEach(function (t) { if (!t.registered) { var f = emailsOf(t)[0]; if (f) t.registered = localDate(f.date); } });
+      save(); render();
+      if (!quiet) toast(added ? added + " new emails" : "No new emails");
+      return true;
+    } catch (err) {
+      toast(err.message);
+      if (inbox().url) renderInboxPanel(); else if (btn) { btn.disabled = false; btn.textContent = "Connect"; }
+      return false;
+    }
+  }
+
+  function unassignedGroups() {
+    var groups = {};
+    state.emails.forEach(function (em) {
+      if (trackerFor(em)) return;
+      var tag = plusTag(em.to), key = tag || senderDomain(em.from) || "unknown";
+      var g = groups[key] || (groups[key] = { key: key, byTag: !!tag, name: senderName(em.from), count: 0, first: em.date });
+      g.count++; if (em.date < g.first) g.first = em.date;
+    });
+    return Object.keys(groups).map(function (k) { return groups[k]; }).sort(function (a, b) { return b.count - a.count; });
+  }
+
+  function renderEmails() {
+    document.getElementById("trkCount").textContent = state.trackers.length;
+    renderInboxPanel();
+    var AVC = ["var(--accent-2)", "var(--coral-bg)", "var(--mint-bg)", "var(--sky-bg)", "var(--c-call)"];
+    document.getElementById("trkList").innerHTML = state.trackers.map(function (t, i) {
+      return '<div class="trk"><span class="avatar" style="background:' + AVC[i % AVC.length] + '">' + esc(t.name.charAt(0).toUpperCase()) + '</span><div class="meta2"><b>' + esc(t.name) + "</b><small>matches “" + esc(t.match) + "” · " + emailsOf(t).length + " emails</small></div>" +
+        '<button class="iconbtn" type="button" data-trkdel="' + t.id + '" aria-label="Stop following ' + esc(t.name) + '" title="Stop following">' + svg('<path d="M5 5l10 10M15 5L5 15"/>') + "</button></div>";
+    }).join("") || '<p class="small">Add the competitors you registered with. Their emails are matched by the +tag in the address or by the sender\'s domain.</p>';
+    var un = unassignedGroups();
+    document.getElementById("unassigned").innerHTML = un.length ? '<p class="small" style="margin-bottom:4px"><b>Senders not matched yet</b></p>' + un.slice(0, 8).map(function (g) {
+      return '<div class="unas"><span><b>' + esc(g.byTag ? "+" + g.key : g.name) + "</b> · " + esc(g.byTag ? g.name : g.key) + " · " + g.count + '</span><button class="btn" type="button" data-follow="' + esc(g.key) + '" data-fname="' + esc(g.name) + '" data-ffirst="' + esc(g.first) + '">Follow</button></div>';
+    }).join("") : "";
+
+    var wrap = document.getElementById("ecards");
+    if (!state.trackers.length) {
+      wrap.innerHTML = '<div class="panel empty-c">' + (inbox().url ? "Follow a competitor on the left to see its emails as a timeline." : "Connect your research inbox on the left, then follow the competitors you registered with.") + "</div>";
+      return;
+    }
+    wrap.innerHTML = state.trackers.map(function (t, i) {
+      var list = emailsOf(t), sum = t.summary || null, items = (sum && sum.items) || {};
+      var days = list.map(function (em) { return dayOf(em, t); });
+      var maxD = Math.max(7, days.length ? Math.max.apply(null, days) : 0);
+      var offers = list.filter(function (em) { var it = items[em.id]; return it && it.offer_type && it.offer_type !== "none"; }).length;
+      var strip = ""; for (var d = 0; d <= maxD; d++) {
+        var on = list.filter(function (em, k) { return days[k] === d; });
+        strip += '<div class="dcol' + (on.length ? "" : " empty") + '" title="Day ' + d + ": " + on.length + ' emails">' + on.map(function (em) { var it = items[em.id]; return '<i class="dot2' + (it && it.offer_type && it.offer_type !== "none" ? " offer" : "") + '"></i>'; }).join("") + "</div>";
+      }
+      var perDay = list.length ? (list.length / (maxD + 1)).toFixed(1) : "0";
+      var rows = list.map(function (em, k) {
+        var it = items[em.id], d = new Date(em.date);
+        var chips = it ? '<span class="purpose">' + esc(PURPOSE[it.purpose] || "Other") + "</span>" + (it.offer_summary ? '<span class="bdg offer">' + esc(it.offer_summary) + "</span>" : "") : "";
+        return '<details class="erow"><summary><span class="dd">Day ' + days[k] + '</span><span class="subj"><b>' + esc(em.subject) + "</b><small>" + d.toLocaleDateString(undefined, { weekday: "short", day: "numeric", month: "short" }) + " · " + d.toLocaleTimeString(undefined, { hour: "2-digit", minute: "2-digit" }) + " · " + esc(senderName(em.from)) + '</small></span><span class="chips2">' + chips + '</span></summary><div class="body">' + esc(em.text || "(no text in this email)") + "</div></details>";
+      }).join("");
+      var sumHtml = t.summarizing ? '<div class="sumbox reading"><h4>Claude is reading ' + list.length + ' emails…</h4><div class="bar"></div><div class="bar" style="width:70%"></div></div>'
+        : sum ? '<div class="sumbox"><h4>Summary · ' + esc(new Date(sum.at).toLocaleDateString()) + "</h4><p>" + esc(sum.overview) + "</p>" + (sum.patterns && sum.patterns.length ? "<ul>" + sum.patterns.map(function (x) { return "<li>" + esc(x) + "</li>"; }).join("") + "</ul>" : "") + "</div>"
+        : (t.sumError ? '<div class="errbox">' + esc(t.sumError) + "</div>" : "");
+      return '<article class="ecard" data-trk="' + t.id + '"><div class="ehead"><span class="avatar" style="background:' + AVC[i % AVC.length] + '">' + esc(t.name.charAt(0).toUpperCase()) + '</span><div class="grow"><h3>' + esc(t.name) + '</h3><div class="sub2">' + list.length + " emails in " + (maxD + 1) + " days · about " + perDay + ' a day</div></div>' +
+        '<label class="reg">Registered <input class="inp" type="date" data-reg="' + t.id + '" value="' + esc(t.registered || "") + '"></label></div>' +
+        (list.length ? '<div class="estrip" aria-hidden="true">' + strip + '</div><div class="eaxis"><span>Day 0</span><span>Day ' + maxD + "</span></div>" : "") +
+        '<div class="estats"><span><b>' + list.length + "</b> emails</span>" + (sum ? "<span><b>" + offers + "</b> with an offer</span>" : "") + (list.length ? "<span>first on <b>day " + days[0] + "</b></span><span>last on <b>day " + days[days.length - 1] + "</b></span>" : "") + "</div>" +
+        sumHtml +
+        (list.length ? '<div class="elist">' + rows + "</div>" : '<p class="small">No emails matched yet. Sync the inbox, or check the match text.</p>') +
+        '<div class="row"><button class="btn primary" type="button" data-summ="' + t.id + '"' + (list.length && !t.summarizing ? "" : " disabled") + ">" + (sum ? "Summarise again" : "Summarise with Claude") + '</button><button class="btn" type="button" data-tocycle="' + t.id + '"' + (list.length ? "" : " disabled") + ">Add to builder as a cycle</button>" + (sum ? '<button class="btn" type="button" data-copysum="' + t.id + '">Copy summary</button>' : "") + "</div></article>";
+    }).join("");
+  }
+
+  // Claude call shared by email summaries
+  async function callClaude(system, content, schema) {
+    if (!getKey()) throw new Error("Connect Claude first: add your API key in the Competitor offers tab.");
+    var mod; try { mod = await import(SDK_URL); } catch (err) { throw new Error("Couldn't load the Claude library. Check your connection, or open the tool from its GitHub Pages link."); }
+    var Anthropic = mod.default, client = new Anthropic({ apiKey: getKey(), dangerouslyAllowBrowser: true }), res;
+    try {
+      res = await client.beta.messages.create({
+        model: MODEL, max_tokens: 16000, betas: ["server-side-fallback-2026-07-01"], fallbacks: "default",
+        output_config: { effort: "medium", format: { type: "json_schema", schema: schema } },
+        system: system, messages: [{ role: "user", content: content }]
+      });
+    } catch (err) {
+      if (err instanceof Anthropic.AuthenticationError) throw new Error("Your API key was rejected. Update it in the Competitor offers tab.");
+      if (err instanceof Anthropic.RateLimitError) throw new Error("Too many requests right now. Wait a minute and try again.");
+      if (err instanceof Anthropic.BadRequestError) throw new Error("Claude couldn't accept the request (" + (err.message || "bad request") + ").");
+      if (err instanceof Anthropic.APIConnectionError) throw new Error("Couldn't reach Anthropic. Check your internet connection.");
+      if (err instanceof Anthropic.APIError) throw new Error("Anthropic returned an error (" + (err.status || "unknown") + "). Try again.");
+      throw err;
+    }
+    if (res.stop_reason === "refusal") throw new Error("Claude declined this request.");
+    if (res.stop_reason === "max_tokens") throw new Error("The answer was cut off. Try again with fewer emails.");
+    var text = res.content.filter(function (b) { return b.type === "text"; }).map(function (b) { return b.text; }).join("");
+    try { return JSON.parse(text); } catch (err) { throw new Error("Claude's answer wasn't in the expected format. Try again."); }
+  }
+  var EMAIL_SCHEMA = {
+    type: "object", additionalProperties: false, required: ["overview", "patterns", "emails"],
+    properties: {
+      overview: { type: "string" },
+      patterns: { type: "array", items: { type: "string" } },
+      emails: { type: "array", items: { type: "object", additionalProperties: false,
+        required: ["email_id", "purpose", "offer_type", "offer_summary", "match_pct", "max_bonus", "free_spins", "free_bet_value", "cashback_pct", "wagering_x", "deadline", "cta"],
+        properties: {
+          email_id: { type: "string" },
+          purpose: { type: "string", enum: Object.keys(PURPOSE) },
+          offer_type: { type: "string", enum: ["match", "free_spins", "free_bet", "cashback", "no_deposit", "none", "other"] },
+          offer_summary: STR, match_pct: NUM, max_bonus: NUM, free_spins: NUM, free_bet_value: NUM, cashback_pct: NUM, wagering_x: NUM, deadline: STR, cta: STR
+        } } }
+    }
+  };
+  var EMAIL_SYSTEM = "You analyse the marketing emails that one online casino or sportsbook sent to a newly registered player, to help a CRM team understand that competitor's conversion cycle.\n" +
+    "For each email, return its email_id unchanged, classify its purpose, and extract any offer exactly as written. Use null for anything the email doesn't state; never guess numbers. offer_summary is a short label such as \"100% up to €200, 35x\" or null when there is no offer.\n" +
+    "overview: 3 to 5 plain sentences describing the sequence: how often they email, when offers appear, how offers change over time, and what happens near the end. Refer to timing as \"day N\" using the day numbers given.\n" +
+    "patterns: up to 5 short, concrete observations a CRM manager could act on.";
+  async function summarise(id) {
+    var t = state.trackers.filter(function (x) { return x.id === id; })[0]; if (!t) return;
+    var list = emailsOf(t); if (!list.length) return;
+    t.summarizing = true; t.sumError = ""; renderEmails();
+    var input = "Competitor: " + t.name + "\nRegistered on: " + (t.registered || "unknown") + "\n\n" + list.map(function (em) {
+      return "=== email_id: " + em.id + " | day " + dayOf(em, t) + " | " + em.date + "\nFrom: " + em.from + "\nSubject: " + em.subject + "\n\n" + (em.text || "").slice(0, 3000);
+    }).join("\n\n");
+    try {
+      var d = await callClaude(EMAIL_SYSTEM, [{ type: "text", text: input }], EMAIL_SCHEMA);
+      var items = {}; (d.emails || []).forEach(function (it) { items[it.email_id] = it; });
+      t = state.trackers.filter(function (x) { return x.id === id; })[0]; if (!t) return;
+      commit(); t.summary = { overview: d.overview, patterns: d.patterns || [], items: items, at: new Date().toISOString() };
+      t.summarizing = false; save(); renderEmails(); toast("Summary ready for " + t.name);
+    } catch (err) {
+      t = state.trackers.filter(function (x) { return x.id === id; })[0]; if (!t) return;
+      t.summarizing = false; t.sumError = err.message; renderEmails();
+    }
+  }
+  function toCycle(id) {
+    var t = state.trackers.filter(function (x) { return x.id === id; })[0]; if (!t) return;
+    var list = emailsOf(t), items = (t.summary && t.summary.items) || {};
+    var steps = list.map(function (em) {
+      var it = items[em.id] || {}, d = new Date(em.date), offer = { type: "none" };
+      if (it.offer_type === "match") offer = M(it.match_pct || 0, it.max_bonus || 0, it.wagering_x || 0);
+      else if (it.offer_type === "free_spins") offer = { type: "freespins", count: it.free_spins || 0, wager: it.wagering_x || 0 };
+      else if (it.offer_type === "free_bet") offer = { type: "freebet", value: it.free_bet_value || 0 };
+      else if (it.offer_type === "cashback") offer = { type: "cashback", pct: it.cashback_pct || 0 };
+      var msg = it.offer_summary ? (PURPOSE[it.purpose] || "Email") + ": " + it.offer_summary + (it.cta ? ". " + it.cta : "") : (em.text || "").replace(/\s+/g, " ").slice(0, 160);
+      return S(Math.max(0, dayOf(em, t)), String(d.getHours()).padStart(2, "0") + ":" + String(d.getMinutes()).padStart(2, "0"), "email", em.subject, msg, "all", offer);
+    });
+    var maxD = steps.reduce(function (m, s) { return Math.max(m, s.day); }, 0);
+    commit();
+    var c = { id: uid(), name: t.name + " (competitor)", stage: "custom", entry: "Registered on " + t.name, goal: "First deposit", steps: steps, days: uniqDays(steps.map(function (s) { return s.day; })), length: Math.max(7, maxD + 1), everyDay: false };
+    state.cycles.push(c); state.activeId = c.id; save();
+    location.hash = "#builder"; render(); toast(t.name + "'s emails added as a cycle. Compare it with your own in the tabs.");
+  }
+
+  document.getElementById("inboxPanel").addEventListener("click", function (e) {
+    if (e.target.closest("#inbConnect")) {
+      var url = (document.getElementById("inbUrl").value || "").trim(), tok = (document.getElementById("inbToken").value || "").trim();
+      if (!/^https:\/\/script\.google(usercontent)?\.com\//.test(url)) { toast("Paste the web app URL from Apps Script. It starts with https://script.google.com/"); return; }
+      if (!tok) { toast("Paste the token from the script's execution log."); return; }
+      syncInbox(url, tok);
+    }
+    if (e.target.closest("#syncBtn")) { var ib = inbox(); syncInbox(ib.url, ib.token); }
+    if (e.target.closest("#inbDisconnect")) { setInbox({}); renderInboxPanel(); toast("Inbox disconnected. Stored emails are kept."); }
+  });
+  document.getElementById("trkForm").addEventListener("submit", function (e) {
+    e.preventDefault();
+    var name = document.getElementById("tName").value.trim(), match = document.getElementById("tMatch").value.trim().replace(/^\+/, "");
+    if (!name || !match) return;
+    commit();
+    var t = { id: uid(), name: name, match: match, registered: document.getElementById("tReg").value || "" };
+    state.trackers.push(t);
+    if (!t.registered) { var f = emailsOf(t)[0]; if (f) t.registered = localDate(f.date); }
+    e.target.reset(); save(); renderEmails(); toast("Following " + name);
+  });
+  document.getElementById("unassigned").addEventListener("click", function (e) {
+    var b = e.target.closest("[data-follow]"); if (!b) return;
+    commit();
+    state.trackers.push({ id: uid(), name: b.getAttribute("data-fname") || b.getAttribute("data-follow"), match: b.getAttribute("data-follow"), registered: localDate(b.getAttribute("data-ffirst")) });
+    save(); renderEmails();
+  });
+  document.getElementById("trkList").addEventListener("click", function (e) {
+    var b = e.target.closest("[data-trkdel]"); if (!b) return;
+    commit(); var id = b.getAttribute("data-trkdel"); state.trackers = state.trackers.filter(function (t) { return t.id !== id; });
+    save(); renderEmails(); toast("Stopped following. Undo to bring it back.");
+  });
+  var ecards = document.getElementById("ecards");
+  ecards.addEventListener("click", function (e) {
+    var b;
+    if ((b = e.target.closest("[data-summ]"))) summarise(b.getAttribute("data-summ"));
+    if ((b = e.target.closest("[data-tocycle]"))) toCycle(b.getAttribute("data-tocycle"));
+    if ((b = e.target.closest("[data-copysum]"))) {
+      var t = state.trackers.filter(function (x) { return x.id === b.getAttribute("data-copysum"); })[0], items = t.summary.items || {};
+      var lines = [t.name + " – email cycle summary", "", t.summary.overview, ""].concat((t.summary.patterns || []).map(function (p) { return "• " + p; })).concat(["", "Timeline:"]).concat(emailsOf(t).map(function (em) { var it = items[em.id] || {}; return "Day " + dayOf(em, t) + ": " + em.subject + (it.offer_summary ? " (" + it.offer_summary + ")" : ""); }));
+      copy(lines.join("\n"), "Summary copied");
+    }
+  });
+  ecards.addEventListener("change", function (e) {
+    var id = e.target.getAttribute("data-reg"); if (!id) return;
+    var t = state.trackers.filter(function (x) { return x.id === id; })[0]; if (!t) return;
+    commit(); t.registered = e.target.value; save(); renderEmails();
+  });
+
   // ---------- export / import ----------
   function copy(text, done) {
     var fb = function () { var ta = document.createElement("textarea"); ta.value = text; document.body.appendChild(ta); ta.select(); try { document.execCommand("copy"); toast(done); } catch (err) { toast("Copy failed"); } ta.remove(); };
@@ -1212,7 +1543,7 @@ footer { color: var(--muted); font-size: 12px; margin-top: 24px; text-align: cen
     copy(rows.join("\n"), "Copied. Paste into a spreadsheet.");
   });
   document.getElementById("exportBtn").addEventListener("click", function () {
-    var text = JSON.stringify({ app: "conversion-cycle-planner", version: 3, cycles: state.cycles, competitors: state.competitors || [] }, null, 2);
+    var text = JSON.stringify({ app: "conversion-cycle-planner", version: 4, cycles: state.cycles, competitors: state.competitors || [], trackers: state.trackers || [], emails: state.emails || [] }, null, 2);
     try {
       var a = document.createElement("a"); a.href = URL.createObjectURL(new Blob([text], { type: "application/json" })); a.download = "cycles.json";
       document.body.appendChild(a); a.click(); a.remove();
@@ -1228,7 +1559,9 @@ footer { color: var(--muted); font-size: 12px; margin-top: 24px; text-align: cen
         var data = JSON.parse(String(r.result)); var list = Array.isArray(data) ? data : data.cycles ? data.cycles : [data];
         list = list.filter(function (c) { return c && Array.isArray(c.steps); });
         var comps = Array.isArray(data.competitors) ? data.competitors.filter(function (x) { return x && typeof x === "object"; }) : [];
-        if (!list.length && !comps.length) throw new Error("none");
+        var trks = Array.isArray(data.trackers) ? data.trackers.filter(function (x) { return x && x.name; }) : [];
+        var ems = Array.isArray(data.emails) ? data.emails.filter(function (x) { return x && x.id; }) : [];
+        if (!list.length && !comps.length && !trks.length) throw new Error("none");
         commit();
         list.forEach(function (c) {
           c.id = uid(); c.stage = STAGES[c.stage] ? c.stage : "custom"; c.days = Array.isArray(c.days) ? c.days : [0];
@@ -1237,6 +1570,8 @@ footer { color: var(--muted); font-size: 12px; margin-top: 24px; text-align: cen
         });
         comps.forEach(function (x) { x.id = uid(); x.status = "done"; x.conditions = Array.isArray(x.conditions) ? x.conditions : []; x.uncertain = Array.isArray(x.uncertain) ? x.uncertain : []; x.thumbs = Array.isArray(x.thumbs) ? x.thumbs : []; state.competitors.push(x); });
         if (list.length) state.activeId = list[list.length - 1].id;
+        trks.forEach(function (t) { t.id = uid(); state.trackers.push(t); });
+        mergeEmails(ems);
         closeDrawer(); render(); save(); toast("Imported " + list.length + (list.length === 1 ? " cycle" : " cycles") + (comps.length ? " and " + comps.length + " competitor offers" : ""));
       } catch (err) { toast("That file isn't a cycle export."); }
     };
