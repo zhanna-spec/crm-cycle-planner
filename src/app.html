@@ -226,6 +226,25 @@ textarea.inp { resize: vertical; min-height: 70px; }
 .tray .btn.primary { justify-content: center; }
 .tray .btn:disabled { opacity: .5; cursor: default; }
 
+/* Operators */
+.oplist { display: flex; flex-direction: column; gap: 6px; }
+.opitem { display: flex; align-items: center; gap: 10px; width: 100%; border: 0; background: var(--sunk); border-radius: 14px; padding: 8px 10px; cursor: pointer; text-align: left; color: var(--ink); }
+.opitem:hover { background: var(--accent-soft); }
+.opitem.on { background: var(--accent); color: var(--on-accent); }
+.opitem.on small { color: inherit; opacity: .85; }
+.opitem .meta2 { flex: 1; min-width: 0; }
+.opitem b { display: block; font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.opitem small { color: var(--muted); font-size: 12px; }
+.opitem:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.ophead { display: flex; flex-wrap: wrap; align-items: center; gap: 14px; }
+.ophead .avatar { width: 52px; height: 52px; font-size: 22px; border-radius: 16px; }
+.ophead h2 { font-size: 22px; font-weight: 700; margin: 0; }
+.ophead .grow { flex: 1; min-width: 180px; }
+.ophead .sub2 { font-size: 13px; color: var(--muted); display: flex; flex-wrap: wrap; gap: 4px 12px; margin-top: 2px; }
+.ophead .sub2 a { color: var(--accent); }
+.opnotes { margin: 10px 0 0; color: var(--muted); white-space: pre-wrap; }
+.trayhint { color: var(--muted); }
+
 /* View switch */
 .viewnav { display: flex; gap: 4px; background: var(--surface); padding: 5px; border-radius: 16px; box-shadow: var(--shadow-sm); width: max-content; max-width: 100%; margin-bottom: 16px; overflow-x: auto; scrollbar-width: none; }
 .viewnav a { display: inline-flex; align-items: center; gap: 8px; padding: 9px 16px; border-radius: 12px; font-weight: 500; color: var(--muted); text-decoration: none; white-space: nowrap; }
@@ -438,8 +457,26 @@ footer { color: var(--muted); font-size: 12px; margin-top: 24px; text-align: cen
   <div id="view-competitors" hidden>
     <div class="capp">
       <div class="side">
-        <section class="panel stack" aria-labelledby="upH">
-          <h2 class="ptitle" id="upH">Add a competitor</h2>
+        <section class="panel stack" aria-labelledby="opH">
+          <h2 class="ptitle" id="opH">Operators</h2>
+          <div class="oplist" id="opList"></div>
+          <form class="stack" id="opForm" hidden style="gap:10px">
+            <label class="field"><span>Operator name</span><input class="inp" id="opName" type="text" maxlength="80" required placeholder="LuckyNova"></label>
+            <label class="field"><span>Website (optional)</span><input class="inp" id="opSite" type="text" placeholder="luckynova.com"></label>
+            <label class="field"><span>Market (optional)</span><input class="inp" id="opMarket" type="text" placeholder="UK, Germany, Ontario…"></label>
+            <div class="row"><button class="btn primary" type="submit">Add operator</button><button class="btn" type="button" id="opCancel">Cancel</button></div>
+          </form>
+          <button class="btn primary" type="button" id="opAdd">+ Add operator</button>
+        </section>
+        <section class="panel stack" aria-labelledby="keyH">
+          <h2 class="ptitle" id="keyH">AI screenshot reading</h2>
+          <div id="keyPanel" class="stack"></div>
+        </section>
+      </div>
+      <div class="stack" style="gap:18px;min-width:0">
+        <section class="panel" id="opHead"></section>
+        <section class="panel stack" id="trayPanel" aria-labelledby="upH">
+          <h2 class="ptitle" id="upH">Add an offer</h2>
           <div class="tray">
             <div class="trayhead" id="trayTarget" hidden></div>
             <div class="drop" id="drop" role="button" tabindex="0" aria-label="Add screenshots">
@@ -450,18 +487,11 @@ footer { color: var(--muted); font-size: 12px; margin-top: 24px; text-align: cen
             <div class="shots" id="trayShots" hidden></div>
             <label class="field"><span>Terms and conditions (optional)</span><textarea class="inp" id="trayTerms" rows="4" placeholder="Paste the bonus terms as text"></textarea></label>
             <div class="row" style="justify-content:space-between"><span class="traycount" id="trayCount"></span><button class="btn" type="button" id="trayClear" hidden>Clear</button></div>
-            <button class="btn primary" type="button" id="trayRead" disabled>Read offer</button>
+            <div class="row"><button class="btn primary" type="button" id="trayRead" disabled style="flex:1;justify-content:center">Read offer</button><button class="btn" type="button" id="addManual">Fill in by hand</button></div>
           </div>
-          <button class="btn" type="button" id="addManual">Add an offer by hand</button>
         </section>
-        <section class="panel stack" aria-labelledby="keyH">
-          <h2 class="ptitle" id="keyH">AI screenshot reading</h2>
-          <div id="keyPanel" class="stack"></div>
-        </section>
-      </div>
-      <div class="stack" style="gap:18px;min-width:0">
         <section class="panel" aria-labelledby="cmpH">
-          <div class="row" style="justify-content:space-between;margin-bottom:12px"><h2 class="ptitle" id="cmpH" style="margin:0">Welcome offers side by side</h2><span class="small" id="cmpNote"></span></div>
+          <div class="row" style="justify-content:space-between;margin-bottom:12px"><h2 class="ptitle" id="cmpH" style="margin:0">Offers side by side</h2><span class="small" id="cmpNote"></span></div>
           <div class="cmpwrap" id="cmp"></div>
         </section>
         <div class="ccards" id="ccards"></div>
@@ -641,13 +671,14 @@ footer { color: var(--muted); font-size: 12px; margin-top: 24px; text-align: cen
   }
 
   // ---------- state ----------
-  var state, history = [], ui = { sel: null, focusDay: null, editingDay: null, armed: null, pickDay: null, addingDay: false, compSel: null };
+  var state, history = [], ui = { sel: null, focusDay: null, editingDay: null, armed: null, pickDay: null, addingDay: false, compSel: null, opSel: null, opEditing: null };
   try { state = JSON.parse(localStorage.getItem("ccp2_state")); } catch (e) { state = null; }
   if (!state || !Array.isArray(state.cycles) || !state.cycles.length) {
     var first = makeCycle("Welcome journey", "acquisition", true, 6, 10);
     state = { cycles: [first], activeId: first.id };
   }
   if (!Array.isArray(state.competitors)) state.competitors = [];
+  if (!Array.isArray(state.operators)) state.operators = [];
   if (!Array.isArray(state.trackers)) state.trackers = [];
   if (!Array.isArray(state.emails)) state.emails = [];
   state.trackers.forEach(function (t) { t.summarizing = false; });
@@ -1110,27 +1141,76 @@ footer { color: var(--muted); font-size: 12px; margin-top: 24px; text-align: cen
       '<button class="btn primary" type="button" data-act="connect">Connect</button>';
   }
 
+  // Operators group offers. Older offers without one are grouped by brand name.
+  function ensureOperators() {
+    if (!Array.isArray(state.operators)) state.operators = [];
+    state.competitors.forEach(function (x) {
+      if (x.opId && state.operators.some(function (o) { return o.id === x.opId; })) return;
+      var name = (x.name || "").trim() || "Unnamed operator";
+      var op = state.operators.filter(function (o) { return o.name.toLowerCase() === name.toLowerCase(); })[0];
+      if (!op) { op = { id: uid(), name: name, website: "", market: "", notes: "", addedAt: new Date().toISOString() }; state.operators.push(op); }
+      x.opId = op.id;
+    });
+    state.competitors.forEach(function (x) { var o = findOp(x.opId); if (o) x.name = o.name; });
+  }
+  function findOp(id) { return (state.operators || []).filter(function (o) { return o.id === id; })[0]; }
+  function offersOf(op) { return state.competitors.filter(function (x) { return x.opId === op.id; }); }
+  function opColor(op) { return AV[Math.max(0, state.operators.indexOf(op)) % AV.length]; }
+  function siteUrl(w) { w = (w || "").trim(); if (!w) return ""; return /^https?:\/\//i.test(w) ? w : "https://" + w; }
+  function curOp() { var o = ui.opSel ? findOp(ui.opSel) : null; if (!o) ui.opSel = null; return o; }
+
+  function renderOpList() {
+    var ops = state.operators, el = document.getElementById("opList"), total = state.competitors.length;
+    el.innerHTML = '<button type="button" class="opitem' + (!ui.opSel ? " on" : "") + '" data-op=""><span class="avatar" style="background:var(--accent)">' + svg('<rect x="3" y="4" width="6" height="12" rx="1.5"/><rect x="11" y="4" width="6" height="12" rx="1.5"/>', "#FFFFFF") + '</span><span class="meta2"><b>Overview</b><small>' + ops.length + (ops.length === 1 ? " operator" : " operators") + " · " + total + (total === 1 ? " offer" : " offers") + "</small></span></button>" +
+      ops.map(function (o) { var n = offersOf(o).length; return '<button type="button" class="opitem' + (ui.opSel === o.id ? " on" : "") + '" data-op="' + o.id + '"><span class="avatar" style="background:' + opColor(o) + '">' + esc(o.name.charAt(0).toUpperCase()) + '</span><span class="meta2"><b>' + esc(o.name) + "</b><small>" + n + (n === 1 ? " offer" : " offers") + (o.market ? " · " + esc(o.market) : "") + "</small></span></button>"; }).join("");
+    if (!ops.length) el.innerHTML += '<p class="small">Add the operators you want to track. Then select one to add its offers.</p>';
+  }
+  function renderOpHead(op) {
+    var el = document.getElementById("opHead");
+    if (!op) {
+      el.innerHTML = '<div class="ophead"><span class="avatar" style="background:var(--accent)">' + svg('<rect x="3" y="4" width="6" height="12" rx="1.5"/><rect x="11" y="4" width="6" height="12" rx="1.5"/>', "#FFFFFF") + '</span><div class="grow"><h2>All operators</h2><div class="sub2">Every offer side by side. Select an operator on the left to add or change its offers.</div></div></div>';
+      return;
+    }
+    if (ui.opEditing === op.id) {
+      el.innerHTML = '<form class="stack" id="opEditForm" style="gap:10px"><div class="grid2"><label class="field"><span>Operator name</span><input class="inp" id="opEName" type="text" maxlength="80" required value="' + esc(op.name) + '"></label><label class="field"><span>Website</span><input class="inp" id="opESite" type="text" value="' + esc(op.website || "") + '"></label></div>' +
+        '<label class="field"><span>Market</span><input class="inp" id="opEMarket" type="text" value="' + esc(op.market || "") + '"></label><label class="field"><span>Notes</span><textarea class="inp" id="opENotes" rows="3" placeholder="Licence, brand group, anything worth remembering">' + esc(op.notes || "") + "</textarea></label>" +
+        '<div class="row"><button class="btn primary" type="submit">Save</button><button class="btn" type="button" data-opact="cancel">Cancel</button></div></form>';
+      return;
+    }
+    var n = offersOf(op).length, url = siteUrl(op.website);
+    el.innerHTML = '<div class="ophead"><span class="avatar" style="background:' + opColor(op) + '">' + esc(op.name.charAt(0).toUpperCase()) + '</span><div class="grow"><h2>' + esc(op.name) + '</h2><div class="sub2"><span>' + n + (n === 1 ? " offer" : " offers") + "</span>" + (url ? '<a href="' + esc(url) + '" target="_blank" rel="noopener">' + esc(op.website) + "</a>" : "") + (op.market ? "<span>" + esc(op.market) + "</span>" : "") + "</div></div>" +
+      '<div class="row"><button class="btn" type="button" data-opact="edit">Edit details</button><button class="btn danger' + (ui.armed === "op" ? " armed" : "") + '" type="button" data-opact="delete">' + (ui.armed === "op" ? "Click again to delete" + (n ? " with " + n + (n === 1 ? " offer" : " offers") : "") : "Delete") + "</button></div></div>" +
+      (op.notes ? '<p class="opnotes">' + esc(op.notes) + "</p>" : "");
+  }
+
   function renderCompetitors() {
-    var list = state.competitors || [];
-    document.getElementById("compCount").textContent = list.length;
+    ensureOperators();
+    var op = curOp();
+    var list = op ? offersOf(op) : state.competitors;
+    document.getElementById("compCount").textContent = state.operators.length;
     document.getElementById("undoBtn").disabled = !history.length;
-    renderKeyPanel();
+    renderKeyPanel(); renderOpList(); renderOpHead(op);
+    document.getElementById("trayPanel").hidden = !op;
+    document.getElementById("upH").textContent = op ? "Add an offer for " + op.name : "Add an offer";
     // cards
     var cards = document.getElementById("ccards");
-    if (!list.length) { cards.innerHTML = '<div class="panel empty-c">No competitor offers yet. Drop screenshots of a competitor\'s welcome offer on the left.</div>'; }
-    else cards.innerHTML = list.map(function (x, i) {
-      var th = x.thumbs && x.thumbs.length ? x.thumbs.map(function (t) { return '<img src="' + t + '" alt="">'; }).join("") : '<div class="noimg">Added by hand</div>';
-      var body;
-      if (x.status === "reading") body = '<div class="cname"><span class="avatar" style="background:' + AV[i % AV.length] + '">?</span><b>Reading screenshots…</b></div><div class="reading"><div class="bar"></div><div class="bar" style="width:70%"></div><div class="bar" style="width:85%"></div></div><p class="small">This usually takes 10 to 40 seconds.</p>';
+    if (!list.length) cards.innerHTML = '<div class="panel empty-c">' + (op ? "No offers for " + esc(op.name) + " yet. Add screenshots or terms above, or fill one in by hand." : state.operators.length ? "No offers yet. Select an operator on the left to add its offers." : "Start by adding an operator on the left.") + "</div>";
+    else cards.innerHTML = list.map(function (x) {
+      var o = findOp(x.opId) || { name: x.name || "?" };
+      var th = x.thumbs && x.thumbs.length ? x.thumbs.map(function (t) { return '<img src="' + t + '" alt="">'; }).join("") : '<div class="noimg">No screenshots</div>';
+      var body, title = x.title || (x.status === "reading" ? "" : "Offer");
+      var nameRow = '<div class="cname"><span class="avatar" style="background:' + opColor(o) + '">' + esc((o.name || "?").charAt(0).toUpperCase()) + "</span><b>" + (op ? esc(title) : esc(o.name) + (title ? ' <small style="font-weight:400;color:var(--muted)">· ' + esc(title) + "</small>" : "")) + "</b></div>";
+      if (x.status === "reading") body = '<div class="cname"><span class="avatar" style="background:' + opColor(o) + '">' + esc((o.name || "?").charAt(0).toUpperCase()) + '</span><b>Reading…</b></div><div class="reading"><div class="bar"></div><div class="bar" style="width:70%"></div><div class="bar" style="width:85%"></div></div><p class="small">This usually takes 10 to 40 seconds.</p>';
       else {
         var uns = x.uncertain || [];
         var fact = function (k, label, val) { return '<div class="fact' + (uns.indexOf(k) >= 0 ? " unsure" : "") + '"><small>' + label + "</small><span>" + (has(val) ? esc(val) : "–") + "</span></div>"; };
-        body = '<div class="cname"><span class="avatar" style="background:' + AV[i % AV.length] + '">' + esc((x.name || "?").charAt(0).toUpperCase()) + "</span><b>" + esc(x.name || "Unnamed competitor") + "</b></div>" +
-          (x.status === "error" ? '<div class="errbox">' + esc(x.error || "Couldn't read the screenshots.") + "</div>" : "") +
+        body = nameRow +
+          (x.status === "error" ? '<div class="errbox">' + esc(x.error || "Couldn't read the offer.") + "</div>" : "") +
           '<div class="headline">' + esc(compHeadline(x)) + "</div>" +
           '<div class="facts">' + fact("wagering", "Wagering", has(x.wagering) ? x.wagering + "x" + (x.wager_on ? " " + x.wager_on : "") : null) + fact("min_deposit", "Min deposit", has(x.min_deposit) ? cur(x) + x.min_deposit : null) +
           fact("max_bet", "Max bet", has(x.max_bet) ? cur(x) + x.max_bet : null) + fact("expiry_days", "Days to wager", x.expiry_days) + "</div>" +
           (x.conditions && x.conditions.length ? '<ul class="conds">' + x.conditions.slice(0, 4).map(function (c) { return "<li>" + esc(c) + "</li>"; }).join("") + (x.conditions.length > 4 ? "<li>+" + (x.conditions.length - 4) + " more</li>" : "") + "</ul>" : "") +
+          (x.terms ? '<p class="small">Terms text saved (' + x.terms.length.toLocaleString() + " characters)</p>" : "") +
           (uns.length ? '<p class="small" style="color:var(--warn)">Check: ' + esc(uns.map(function (u) { var f = FIELDS.filter(function (F) { return F[0] === u; })[0]; return f ? f[1] : u; }).join(", ")) + "</p>" : "");
       }
       var del = '<button class="btn danger" type="button" data-cdelete="' + x.id + '" style="margin-left:auto">' + svg('<path d="M4 6h12M8 6V4h4v2M6 6l1 10h6l1-10"/>') + "Delete</button>";
@@ -1138,6 +1218,7 @@ footer { color: var(--muted); font-size: 12px; margin-top: 24px; text-align: cen
       var foot = x.status === "reading" ? '<div class="cfoot">' + del + "</div>" : '<div class="cfoot" style="flex-wrap:wrap"><button class="btn" type="button" data-cedit="' + x.id + '">Edit</button><button class="btn" type="button" data-cmore="' + x.id + '">Add screenshots or terms</button>' + (canRetry ? '<button class="btn" type="button" data-cretry="' + x.id + '">Try again</button>' : "") + del + "</div>";
       return '<article class="ccard"><div class="thumbs">' + th + '</div><div class="cbody">' + body + "</div>" + foot + "</article>";
     }).join("");
+    document.getElementById("cmpH").textContent = op ? op.name + " compared with you" : "Offers side by side";
     renderCompare(list.filter(function (x) { return x.status !== "reading"; }));
     renderTray();
   }
@@ -1174,7 +1255,7 @@ footer { color: var(--muted); font-size: 12px; margin-top: 24px; text-align: cen
     el.innerHTML = '<table class="cmp"><thead><tr><th>Brand</th><th>Offer</th>' + cols.map(function (c) { return "<th>" + c[1] + "</th>"; }).join("") + '<th><span class="sr">Delete</span></th></tr></thead><tbody>' +
       rows.map(function (x, i) {
         var idx = x.you ? -1 : list.indexOf(x);
-        var av = x.you ? '<span class="avatar" style="background:var(--accent)">Y</span>' : '<span class="avatar" style="background:' + AV[(state.competitors.indexOf(x)) % AV.length] + '">' + esc((x.name || "?").charAt(0).toUpperCase()) + "</span>";
+        var av = x.you ? '<span class="avatar" style="background:var(--accent)">Y</span>' : '<span class="avatar" style="background:' + opColor(findOp(x.opId)) + '">' + esc((x.name || "?").charAt(0).toUpperCase()) + "</span>";
         return '<tr class="' + (x.you ? "you" : "") + '"><td><div class="who">' + av + esc(x.name || "Unnamed") + "</div></td><td>" + esc(x.you ? compHeadline(x) : (x.title || compHeadline(x))) + "</td>" + cols.map(function (c) { return cell(x, c); }).join("") + "<td>" + (x.you ? "" : '<button class="iconbtn rowdel" type="button" data-cdelete="' + x.id + '" title="Delete offer" aria-label="Delete ' + esc(x.name || "offer") + '">' + svg('<path d="M4 6h12M8 6V4h4v2M6 6l1 10h6l1-10"/>') + "</button>") + "</td></tr>";
       }).join("") + "</tbody></table>";
   }
@@ -1241,11 +1322,12 @@ footer { color: var(--muted); font-size: 12px; margin-top: 24px; text-align: cen
     var thumbs = tray.images.map(function (im) { return im.thumb; });
     var images = tray.images.map(function (im) { return { media_type: im.media_type, data: im.data }; });
     commit();
+    var op = curOp(); if (!op) { toast("Select an operator first."); return; }
     var x = tray.targetId ? findComp(tray.targetId) : null, isNew = !x;
-    if (isNew) { x = { id: uid(), name: "", title: "", conditions: [], uncertain: [], thumbs: [], terms: "", status: "done", addedAt: new Date().toISOString() }; state.competitors.unshift(x); }
+    if (isNew) { x = { id: uid(), opId: op.id, name: op.name, title: "", conditions: [], uncertain: [], thumbs: [], terms: "", status: "done", addedAt: new Date().toISOString() }; state.competitors.unshift(x); }
     x.thumbs = (x.thumbs || []).concat(thumbs).slice(-MAX_SHOTS);
     if (terms) x.terms = ((x.terms ? x.terms + "\n\n" : "") + terms).slice(0, 40000);
-    var known = isNew ? null : knownFields(x);
+    var known = isNew ? { competitor: op.name } : knownFields(x);
     // keep this session's screenshots so "Try again" can resend them
     imageCache[x.id] = (imageCache[x.id] || []).concat(images).slice(-MAX_SHOTS);
     clearTray(); save(); renderCompetitors();
@@ -1263,7 +1345,7 @@ footer { color: var(--muted); font-size: 12px; margin-top: 24px; text-align: cen
       x = findComp(id); if (!x) return; // deleted while reading
       commit();
       Object.assign(x, {
-        status: "done", name: d.competitor || "", title: d.offer_title || "", type: d.offer_type,
+        status: "done", name: (findOp(x.opId) || {}).name || d.competitor || "", title: d.offer_title || "", type: d.offer_type,
         match_pct: d.match_pct, max_bonus: d.max_bonus, currency: d.currency, free_spins: d.free_spins, free_bet: d.free_bet_value,
         wagering: d.wagering_x, wager_on: d.wagering_on, min_deposit: d.min_deposit, max_bet: d.max_bet, expiry_days: d.expiry_days,
         max_cashout: d.max_cashout, games: d.eligible_games, conditions: d.other_conditions || [],
@@ -1287,7 +1369,7 @@ footer { color: var(--muted); font-size: 12px; margin-top: 24px; text-align: cen
       return '<label class="field"><span>' + F[1] + (uns.indexOf(F[0]) >= 0 ? ' <b style="color:var(--warn)">· check</b>' : "") + '</span><input class="inp" data-c="' + F[0] + '" id="c-' + F[0] + '" type="' + (F[2] === "num" ? "number" : "text") + '"' + (F[2] === "num" ? ' min="0" step="any"' : "") + ' value="' + esc(has(v) ? v : "") + '"></label>';
     };
     dr.innerHTML = '<div class="dhead"><span class="avatar" style="background:var(--coral-bg)">' + esc((x.name || "?").charAt(0).toUpperCase()) + '</span><h3 id="dTitle">Competitor offer</h3><button type="button" class="iconbtn" id="dClose" aria-label="Close">' + svg('<path d="M5 5l10 10M15 5L5 15"/>') + "</button></div>" +
-      '<div class="dbody">' + f(FIELDS[0]) + f(FIELDS[1]) +
+      '<div class="dbody"><label class="field"><span>Operator</span><select class="inp" id="c-opId" data-c="opId">' + state.operators.map(function (o) { return '<option value="' + o.id + '"' + (o.id === x.opId ? " selected" : "") + ">" + esc(o.name) + "</option>"; }).join("") + "</select></label>" + f(FIELDS[1]) +
       '<div class="grid2">' + FIELDS.slice(2, 12).map(f).join("") + "</div>" + '<div class="grid2">' + f(FIELDS[12]) + f(FIELDS[13]) + "</div>" +
       '<label class="field"><span>Other conditions (one per line)</span><textarea class="inp" id="c-conds" data-c="conditions" rows="5">' + esc((x.conditions || []).join("\n")) + "</textarea></label>" +
       '<label class="field"><span>Terms and conditions text</span><textarea class="inp" id="c-terms" data-c="terms" rows="6" placeholder="Paste the bonus terms here to keep them with the offer">' + esc(x.terms || "") + "</textarea></label></div>" +
@@ -1314,9 +1396,48 @@ footer { color: var(--muted); font-size: 12px; margin-top: 24px; text-align: cen
     if (files.length) { e.preventDefault(); handleFiles(files); }
   });
   document.getElementById("addManual").addEventListener("click", function () {
-    commit(); var x = { id: uid(), name: "", title: "", conditions: [], uncertain: [], thumbs: [], status: "done", addedAt: new Date().toISOString() };
+    var op = curOp(); if (!op) { toast("Select an operator first."); return; }
+    commit(); var x = { id: uid(), opId: op.id, name: op.name, title: "", conditions: [], uncertain: [], thumbs: [], status: "done", addedAt: new Date().toISOString() };
     state.competitors.unshift(x); save(); renderCompetitors(); ui.compSel = x.id; ui.armed = null; renderCompDrawer();
-    setTimeout(function () { var n = document.getElementById("c-name"); if (n) n.focus(); }, 0);
+    setTimeout(function () { var n = document.getElementById("c-title"); if (n) n.focus(); }, 0);
+  });
+
+  // operator list, add, edit, delete
+  function selectOp(id) { ui.opSel = id || null; ui.opEditing = null; ui.armed = null; if (tray.targetId) { var t = findComp(tray.targetId); if (!t || t.opId !== ui.opSel) tray.targetId = null; } closeDrawer(); renderCompetitors(); }
+  document.getElementById("opList").addEventListener("click", function (e) { var b = e.target.closest("[data-op]"); if (b) selectOp(b.getAttribute("data-op")); });
+  document.getElementById("opAdd").addEventListener("click", function () { document.getElementById("opForm").hidden = false; this.hidden = true; document.getElementById("opName").focus(); });
+  document.getElementById("opCancel").addEventListener("click", function () { var f = document.getElementById("opForm"); f.reset(); f.hidden = true; document.getElementById("opAdd").hidden = false; });
+  document.getElementById("opForm").addEventListener("submit", function (e) {
+    e.preventDefault();
+    var name = document.getElementById("opName").value.trim(); if (!name) return;
+    if (state.operators.some(function (o) { return o.name.toLowerCase() === name.toLowerCase(); })) { toast(name + " is already in the list."); return; }
+    commit();
+    var op = { id: uid(), name: name, website: document.getElementById("opSite").value.trim(), market: document.getElementById("opMarket").value.trim(), notes: "", addedAt: new Date().toISOString() };
+    state.operators.push(op); save();
+    e.target.reset(); e.target.hidden = true; document.getElementById("opAdd").hidden = false;
+    selectOp(op.id); toast(name + " added. Now add its offers.");
+  });
+  document.getElementById("opHead").addEventListener("click", function (e) {
+    var b = e.target.closest("[data-opact]"); if (!b) return;
+    var op = curOp(); if (!op) return;
+    var a = b.getAttribute("data-opact");
+    if (a === "edit") { ui.opEditing = op.id; renderCompetitors(); document.getElementById("opEName").focus(); }
+    if (a === "cancel") { ui.opEditing = null; renderCompetitors(); }
+    if (a === "delete") {
+      if (ui.armed !== "op") { ui.armed = "op"; renderCompetitors(); setTimeout(function () { if (ui.armed === "op") { ui.armed = null; renderCompetitors(); } }, 3000); return; }
+      commit(); ui.armed = null;
+      state.competitors = state.competitors.filter(function (x) { return x.opId !== op.id; });
+      state.operators = state.operators.filter(function (o) { return o.id !== op.id; });
+      ui.opSel = null; save(); renderCompetitors(); toast(op.name + " deleted. Click Undo to bring it back.");
+    }
+  });
+  document.getElementById("opHead").addEventListener("submit", function (e) {
+    e.preventDefault(); var op = curOp(); if (!op) return;
+    var name = document.getElementById("opEName").value.trim(); if (!name) return;
+    if (state.operators.some(function (o) { return o.id !== op.id && o.name.toLowerCase() === name.toLowerCase(); })) { toast("Another operator already has that name."); return; }
+    commit();
+    op.name = name; op.website = document.getElementById("opESite").value.trim(); op.market = document.getElementById("opEMarket").value.trim(); op.notes = document.getElementById("opENotes").value.trim();
+    ui.opEditing = null; save(); renderCompetitors();
   });
   document.getElementById("ccards").addEventListener("click", function (e) {
     var t;
@@ -1341,6 +1462,7 @@ footer { color: var(--muted); font-size: 12px; margin-top: 24px; text-align: cen
     var key = x.id + ":" + k; if (key !== lastKey) { commit(); lastKey = key; }
     if (k === "conditions") x.conditions = t.value.split("\n").map(function (l) { return l.trim(); }).filter(Boolean);
     else if (k === "terms") x.terms = t.value.slice(0, 40000);
+    else if (k === "opId") { x.opId = t.value; var no = findOp(t.value); if (no) x.name = no.name; }
     else if (t.type === "number") x[k] = t.value === "" ? null : +t.value;
     else x[k] = t.value;
     x.uncertain = (x.uncertain || []).filter(function (u) { return u !== k; });
@@ -1633,7 +1755,7 @@ footer { color: var(--muted); font-size: 12px; margin-top: 24px; text-align: cen
     copy(rows.join("\n"), "Copied. Paste into a spreadsheet.");
   });
   document.getElementById("exportBtn").addEventListener("click", function () {
-    var text = JSON.stringify({ app: "conversion-cycle-planner", version: 4, cycles: state.cycles, competitors: state.competitors || [], trackers: state.trackers || [], emails: state.emails || [] }, null, 2);
+    var text = JSON.stringify({ app: "conversion-cycle-planner", version: 4, cycles: state.cycles, competitors: state.competitors || [], operators: state.operators || [], trackers: state.trackers || [], emails: state.emails || [] }, null, 2);
     try {
       var a = document.createElement("a"); a.href = URL.createObjectURL(new Blob([text], { type: "application/json" })); a.download = "cycles.json";
       document.body.appendChild(a); a.click(); a.remove();
@@ -1658,6 +1780,7 @@ footer { color: var(--muted); font-size: 12px; margin-top: 24px; text-align: cen
           c.steps.forEach(function (s) { s.id = uid(); if (!CH[s.channel]) s.channel = "email"; s.audience = AUD[s.audience] ? s.audience : "all"; s.offer = s.offer || { type: "none" }; s.day = +s.day || 0; });
           state.cycles.push(c);
         });
+        (Array.isArray(data.operators) ? data.operators : []).forEach(function (o) { if (o && o.id && o.name && !state.operators.some(function (q) { return q.id === o.id; })) state.operators.push(o); });
         comps.forEach(function (x) { x.id = uid(); x.status = "done"; x.conditions = Array.isArray(x.conditions) ? x.conditions : []; x.uncertain = Array.isArray(x.uncertain) ? x.uncertain : []; x.thumbs = Array.isArray(x.thumbs) ? x.thumbs : []; state.competitors.push(x); });
         if (list.length) state.activeId = list[list.length - 1].id;
         trks.forEach(function (t) { t.id = uid(); state.trackers.push(t); });
@@ -1698,6 +1821,7 @@ footer { color: var(--muted); font-size: 12px; margin-top: 24px; text-align: cen
     if (!Array.isArray(d.cycles) || !d.cycles.length) { var f = makeCycle("Welcome journey", "acquisition", true, 6, 10); d.cycles = [f]; d.activeId = f.id; d.fresh = true; }
     if (!d.cycles.some(function (c) { return c.id === d.activeId; })) d.activeId = d.cycles[0].id;
     d.competitors = Array.isArray(d.competitors) ? d.competitors : [];
+    d.operators = Array.isArray(d.operators) ? d.operators : [];
     d.trackers = Array.isArray(d.trackers) ? d.trackers : [];
     d.emails = [];
     d.trackers.forEach(function (t) { t.summarizing = false; });
@@ -1801,7 +1925,7 @@ footer { color: var(--muted); font-size: 12px; margin-top: 24px; text-align: cen
       state = normaliseState(st.data);
       var fresh = state.fresh; delete state.fresh;
       state.emails = (e.data || []).map(rowToEmail).reverse();
-      history = []; lastKey = null; closeDrawer(); ui.focusDay = null; ui.pickDay = null; ui.addingDay = false;
+      history = []; lastKey = null; closeDrawer(); ui.focusDay = null; ui.pickDay = null; ui.addingDay = false; ui.opSel = null; ui.opEditing = null;
       hideAuth(); renderAcct(); proxy.checked = false; render(); setSaveState("Saved"); loadProxyStatus();
       if (fresh) queueCloudSave();
       renderImportBanner();
@@ -1823,7 +1947,7 @@ footer { color: var(--muted); font-size: 12px; margin-top: 24px; text-align: cen
     if (saving) { saveTimer = setTimeout(cloudSave, 400); return; }
     saving = true; dirty = false;
     var wsId = curWs.id;
-    var payload = { cycles: state.cycles, activeId: state.activeId, competitors: state.competitors,
+    var payload = { cycles: state.cycles, activeId: state.activeId, competitors: state.competitors, operators: state.operators,
       trackers: state.trackers.map(function (t) { var c = Object.assign({}, t); delete c.summarizing; delete c.sumError; return c; }) };
     var r = await sb.rpc("save_state", { ws: wsId, new_data: payload, expected_version: wsVersion });
     saving = false;
@@ -1853,6 +1977,7 @@ footer { color: var(--muted); font-size: 12px; margin-top: 24px; text-align: cen
     if (b.getAttribute("data-imp") === "yes") {
       var d = localData(); if (!d) return; commit();
       d.cycles.forEach(function (c) { c = JSON.parse(JSON.stringify(c)); c.id = uid(); c.steps.forEach(function (s) { s.id = uid(); }); state.cycles.push(c); });
+      (d.operators || []).forEach(function (o) { if (o && o.id && !state.operators.some(function (q) { return q.id === o.id; })) state.operators.push(JSON.parse(JSON.stringify(o))); });
       (d.competitors || []).forEach(function (x) { x = JSON.parse(JSON.stringify(x)); x.id = uid(); if (x.status === "reading") x.status = "done"; state.competitors.push(x); });
       (d.trackers || []).forEach(function (t) { t = JSON.parse(JSON.stringify(t)); t.id = uid(); t.summarizing = false; state.trackers.push(t); });
       if (Array.isArray(d.emails) && d.emails.length) mergeEmails(d.emails);
