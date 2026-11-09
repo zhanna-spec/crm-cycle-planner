@@ -185,6 +185,35 @@ textarea.inp { resize: vertical; min-height: 70px; }
 .stages input:focus-visible + span { outline: 2px solid var(--accent); outline-offset: 6px; }
 .stages .ci { background: rgba(255,255,255,.22); }
 
+/* Length stepper, day badge, card actions, channel picker */
+.lenrow { display: flex; align-items: center; gap: 6px; margin-top: 2px; }
+.lenrow button { width: 30px; height: 30px; flex: none; border-radius: 10px; border: 0; background: var(--sunk); color: var(--accent); font-weight: 700; font-size: 17px; line-height: 1; cursor: pointer; }
+.lenrow button:hover { background: var(--accent-soft); }
+.lenrow input { width: 58px; font: 700 22px var(--font); border: 0; border-radius: 10px; background: transparent; color: var(--ink); text-align: center; padding: 2px 0; -moz-appearance: textfield; appearance: textfield; }
+.lenrow input::-webkit-outer-spin-button, .lenrow input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+.lenrow input:hover, .lenrow input:focus { background: var(--sunk); outline: none; }
+.lenrow span { font-weight: 700; font-size: 18px; }
+.lenrow button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.daybtn { display: inline-flex; align-items: center; gap: 6px; }
+.daybtn svg { width: 13px; height: 13px; opacity: .7; }
+.cact { display: flex; gap: 2px; opacity: 0; transition: opacity .12s; }
+.card:hover .cact, .card:focus-within .cact, .card.sel .cact { opacity: 1; }
+@media (hover: none) { .cact { opacity: 1; } }
+.cact button { width: 24px; height: 24px; border: 0; border-radius: 7px; background: transparent; color: var(--muted); display: grid; place-items: center; cursor: pointer; }
+.cact button:hover { background: var(--sunk); color: var(--accent); }
+.cact button.del:hover { color: var(--bad); }
+.cact button:focus-visible { outline: 2px solid var(--accent); opacity: 1; }
+.cact svg { width: 13px; height: 13px; }
+.picker { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 6px; padding: 8px; background: var(--surface); border-radius: 14px; box-shadow: 0 0 0 2px var(--accent); }
+.picker p { grid-column: 1 / -1; margin: 0 0 2px; font-size: 12px; font-weight: 500; color: var(--muted); display: flex; justify-content: space-between; }
+.picker p button { border: 0; background: none; color: var(--accent); cursor: pointer; font-size: 12px; padding: 0; }
+.pk { display: flex; flex-direction: column; align-items: center; gap: 4px; border: 0; background: var(--sunk); border-radius: 10px; padding: 8px 2px; font-size: 11px; font-weight: 500; cursor: pointer; }
+.pk:hover { background: var(--accent-soft); }
+.pk:focus-visible { outline: 2px solid var(--accent); }
+.addform { width: 150px; display: flex; flex-direction: column; gap: 8px; padding: 12px; border-radius: 18px; border: 1.5px dashed var(--accent); background: var(--accent-soft); }
+.addform label { font-size: 12px; font-weight: 500; color: var(--muted); }
+.addform .inp { background: var(--surface); }
+
 /* View switch */
 .viewnav { display: flex; gap: 4px; background: var(--surface); padding: 5px; border-radius: 16px; box-shadow: var(--shadow-sm); width: max-content; max-width: 100%; margin-bottom: 16px; }
 .viewnav a { display: inline-flex; align-items: center; gap: 8px; padding: 9px 16px; border-radius: 12px; font-weight: 500; color: var(--muted); text-decoration: none; white-space: nowrap; }
@@ -260,7 +289,7 @@ footer { color: var(--muted); font-size: 12px; margin-top: 24px; text-align: cen
       <div class="logo" aria-hidden="true"><svg viewBox="0 0 32 32"><path d="M16 5a11 11 0 1 0 10.4 7.4" fill="none" stroke="#6A5AE0" stroke-width="3.2" stroke-linecap="round"/><path d="M27.5 5.5l-1 7-6.5-2.5" fill="none" stroke="#6A5AE0" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"/><circle cx="16" cy="16" r="4" fill="#FF8FA2"/></svg></div>
       <div style="min-width:0">
         <h1>Conversion Cycle Planner</h1>
-        <p class="sub">Drag channels onto the timeline to build your cycle.</p>
+        <p class="sub">Build your cycle day by day. Drag channels onto the timeline.</p>
       </div>
     </div>
     <div class="hero-actions">
@@ -285,7 +314,7 @@ footer { color: var(--muted); font-size: 12px; margin-top: 24px; text-align: cen
     <div class="side">
       <section class="panel" id="palette" aria-labelledby="palH">
         <h2 class="ptitle" id="palH">Add a step</h2>
-        <p class="phint">Drag onto a day, or click to add to the selected day. On a phone, press and hold to drag.</p>
+        <p class="phint">Drag onto a day, or click to add to the selected day. Click a step to edit it. On a phone, press and hold to drag.</p>
         <div class="blocks" id="blocks"></div>
       </section>
       <section class="panel stack" id="settings" aria-labelledby="setH">
@@ -293,6 +322,13 @@ footer { color: var(--muted); font-size: 12px; margin-top: 24px; text-align: cen
         <label class="field"><span>Name</span><input class="inp" id="cName" type="text"></label>
         <label class="field"><span>Starts when</span><input class="inp" id="cEntry" type="text"></label>
         <label class="field"><span>Goal</span><input class="inp" id="cGoal" type="text"></label>
+        <label class="field"><span>Cycle length (days)</span><input class="inp" id="cLength" type="number" min="1" max="365"></label>
+        <div class="field"><span>Show on the board</span>
+          <div class="seg">
+            <label><input type="radio" name="cCols" id="cColsKey" value="key"><span>Days with steps</span></label>
+            <label><input type="radio" name="cCols" id="cColsAll" value="all"><span>Every day</span></label>
+          </div>
+        </div>
         <div class="row">
           <button class="btn" id="dupCycle" type="button">Duplicate</button>
           <button class="btn danger" id="delCycle" type="button">Delete cycle</button>
@@ -425,11 +461,13 @@ footer { color: var(--muted); font-size: 12px; margin-top: 24px; text-align: cen
   function makeCycle(name, stage, withTemplate) {
     var steps = withTemplate ? TEMPLATES[stage]() : [];
     var days = steps.length ? uniqDays(steps.map(function (s) { return s.day; })) : [0, 1, 3];
-    return { id: uid(), name: name, stage: stage, entry: STAGES[stage].entry, goal: STAGES[stage].goal, days: days, steps: steps };
+    var len = Math.max(7, days[days.length - 1] || 0);
+    if (days.indexOf(len) < 0) days.push(len);
+    return { id: uid(), name: name, stage: stage, entry: STAGES[stage].entry, goal: STAGES[stage].goal, days: days, steps: steps, length: len, everyDay: false };
   }
 
   // ---------- state ----------
-  var state, history = [], ui = { sel: null, focusDay: null, editingDay: null, armed: null };
+  var state, history = [], ui = { sel: null, focusDay: null, editingDay: null, armed: null, pickDay: null, addingDay: false, compSel: null };
   try { state = JSON.parse(localStorage.getItem("ccp2_state")); } catch (e) { state = null; }
   if (!state || !Array.isArray(state.cycles) || !state.cycles.length) {
     var first = makeCycle("Welcome journey", "acquisition", true);
@@ -489,6 +527,9 @@ footer { color: var(--muted); font-size: 12px; margin-top: 24px; text-align: cen
   function render() {
     var c = cyc();
     c.days = uniqDays(c.days.concat(c.steps.map(function (s) { return s.day; })));
+    var maxStep = c.steps.reduce(function (m, s) { return Math.max(m, s.day); }, 0);
+    if (!(c.length >= 1)) c.length = Math.max(1, c.days[c.days.length - 1] || 7);
+    if (c.length < maxStep) c.length = maxStep;
     renderTabs(); renderSummary(c); renderSettings(c); renderBoard(c); renderCompetitors();
     document.getElementById("undoBtn").disabled = !history.length;
   }
@@ -506,14 +547,15 @@ footer { color: var(--muted); font-size: 12px; margin-top: 24px; text-align: cen
     var mix = used.map(function (k) { return '<i style="flex:' + counts[k] + ";background:" + CH[k].color + '" title="' + CH[k].label + ": " + counts[k] + '"></i>'; }).join("");
     var legend = used.map(function (k) { return '<span><b style="background:' + CH[k].color + '"></b>' + CH[k].label + " " + counts[k] + "</span>"; }).join("");
     document.getElementById("summary").innerHTML =
-      '<div class="stat"><div class="k">Steps</div><div class="v">' + n + '</div><div class="n">across ' + c.days.length + " days on the board</div></div>" +
-      '<div class="stat"><div class="k">Cycle length</div><div class="v">' + maxDay + (maxDay === 1 ? " day" : " days") + '</div><div class="n">' + esc(c.entry) + " → " + esc(c.goal) + "</div></div>" +
+      '<div class="stat"><div class="k">Steps</div><div class="v">' + n + '</div><div class="n">across ' + uniqDays(c.steps.map(function (s) { return s.day; })).length + " days</div></div>" +
+      '<div class="stat"><div class="k">Cycle length</div><div class="lenrow"><button type="button" data-len="-1" aria-label="Shorten by one day">−</button><input id="lenInput" type="number" min="1" max="365" value="' + c.length + '" aria-label="Cycle length in days"><span>' + (c.length === 1 ? "day" : "days") + '</span><button type="button" data-len="1" aria-label="Lengthen by one day">+</button></div><div class="n">' + esc(c.entry) + " → " + esc(c.goal) + "</div></div>" +
       '<div class="stat feature"><div class="k">Offers</div><div class="v">' + offers.length + '</div><div class="n">Max bonus if all claimed: €' + Math.round(exp) + "</div></div>" +
       '<div class="stat"><div class="k">Channel mix</div>' + (n ? '<div class="mix">' + mix + '</div><div class="legend">' + legend + "</div>" : '<div class="n" style="margin-top:8px">Add steps to see the mix</div>') + "</div>";
   }
   function renderSettings(c) {
     var set = function (id, v) { var el = document.getElementById(id); if (document.activeElement !== el) el.value = v; };
-    set("cName", c.name); set("cEntry", c.entry); set("cGoal", c.goal);
+    set("cName", c.name); set("cEntry", c.entry); set("cGoal", c.goal); set("cLength", c.length);
+    document.getElementById(c.everyDay ? "cColsAll" : "cColsKey").checked = true;
     var del = document.getElementById("delCycle");
     del.classList.toggle("armed", ui.armed === "cycle");
     del.textContent = ui.armed === "cycle" ? "Click again to delete" : "Delete cycle";
@@ -521,29 +563,54 @@ footer { color: var(--muted); font-size: 12px; margin-top: 24px; text-align: cen
   function cardHtml(s) {
     var o = offerLabel(s.offer);
     return '<div class="card' + (ui.sel === s.id ? " sel" : "") + '" data-id="' + s.id + '" tabindex="0" role="button" aria-label="Edit ' + esc(s.title) + '">' +
-      '<div class="ctop">' + chIcon(s.channel, true) + "<span>" + CH[s.channel].label + '</span><span class="time">' + esc(s.time) + "</span></div>" +
+      '<div class="ctop">' + chIcon(s.channel, true) + "<span>" + CH[s.channel].label + '</span><span class="time">' + esc(s.time) + "</span>" +
+      '<span class="cact"><button type="button" data-cdup="' + s.id + '" title="Duplicate" aria-label="Duplicate step">' + svg('<rect x="7" y="7" width="9" height="9" rx="2"/><path d="M13 7V5a1 1 0 0 0-1-1H5a1 1 0 0 0-1 1v7a1 1 0 0 0 1 1h2"/>') + '</button><button type="button" class="del" data-cdel="' + s.id + '" title="Delete" aria-label="Delete step">' + svg('<path d="M4 6h12M8 6V4h4v2M6 6l1 10h6l1-10"/>') + "</button></span></div>" +
       '<div class="ctitle">' + esc(s.title || "Untitled step") + "</div>" +
       ((o || s.audience !== "all") ? '<div class="badges">' + (o ? '<span class="bdg offer">' + esc(o) + "</span>" : "") + (s.audience !== "all" ? '<span class="bdg aud">' + AUD[s.audience] + "</span>" : "") + "</div>" : "") +
       "</div>";
   }
+  function boardDays(c) {
+    if (!c.everyDay) return c.days;
+    var out = []; for (var d = 0; d <= c.length; d++) out.push(d);
+    return uniqDays(out.concat(c.days.filter(function (d) { return d > c.length; })));
+  }
+  function setLength(n) {
+    var c = cyc(); n = Math.max(1, Math.min(365, Math.round(+n) || 1));
+    var maxStep = c.steps.reduce(function (m, s) { return Math.max(m, s.day); }, 0);
+    if (n < maxStep) { toast("Day " + maxStep + " still has steps. Move or delete them first."); render(); return; }
+    if (n === c.length) { render(); return; }
+    commit();
+    var old = c.length, oldEmpty = old > 0 && !c.steps.some(function (x) { return x.day === old; });
+    c.days = c.days.filter(function (d) { return d <= n && !(oldEmpty && d === old); });
+    if (c.days.indexOf(n) < 0) c.days.push(n);
+    c.days = uniqDays(c.days); c.length = n;
+    render(); save();
+  }
   function renderBoard(c) {
-    if (ui.focusDay === null || c.days.indexOf(ui.focusDay) < 0) ui.focusDay = c.days[0];
+    var days = boardDays(c);
+    if (ui.focusDay === null || days.indexOf(ui.focusDay) < 0) ui.focusDay = days[0];
     var h = '<div class="col bookend"><div class="colhead bkhead"><span class="bkpin"></span></div><div class="bk start"><i class="ci">' + svg('<path d="M7 5l7 5-7 5z"/>') + "</i><small>Starts when</small><b>" + esc(c.entry) + "</b></div></div>";
-    c.days.forEach(function (d) {
+    days.forEach(function (d) {
       var steps = c.steps.filter(function (s) { return s.day === d; });
       var head = ui.editingDay === d
         ? '<input class="inp dayinput" id="dayInput" type="number" min="0" max="365" value="' + d + '" aria-label="Day number">'
-        : '<button type="button" class="daybtn" data-editday="' + d + '" title="Click to change the day">Day ' + d + "</button>";
+        : '<button type="button" class="daybtn" data-editday="' + d + '" title="Change the day">Day ' + d + svg('<path d="M13.5 3.5l3 3L7 16H4v-3z"/>') + "</button>";
       h += '<div class="col" data-col="' + d + '"><div class="colhead">' + head + (steps.length ? '<span class="cnt">' + steps.length + "</span>" : "") +
-        (steps.length ? "" : '<button type="button" class="colx" data-delday="' + d + '" title="Remove empty day" aria-label="Remove day ' + d + '">' + svg('<path d="M5 5l10 10M15 5L5 15"/>') + "</button>") + "</div>" +
+        (steps.length || c.everyDay ? "" : '<button type="button" class="colx" data-delday="' + d + '" title="Remove empty day" aria-label="Remove day ' + d + '">' + svg('<path d="M5 5l10 10M15 5L5 15"/>') + "</button>") + "</div>" +
         '<div class="colbody" data-day="' + d + '">' + steps.map(cardHtml).join("") +
         (steps.length ? "" : '<div class="empty">Drop a channel here</div>') +
-        '<button type="button" class="addin" data-addin="' + d + '">+ Add step</button></div></div>';
+        (ui.pickDay === d
+          ? '<div class="picker"><p>Choose a channel<button type="button" data-pickclose>Cancel</button></p>' + CH_ORDER.map(function (k) { return '<button type="button" class="pk" data-pick="' + k + '" data-pickday="' + d + '">' + chIcon(k, true) + CH[k].label + "</button>"; }).join("") + "</div>"
+          : '<button type="button" class="addin" data-addin="' + d + '">+ Add step</button>') + "</div></div>";
     });
-    h += '<div class="col" style="width:auto"><div class="colhead"></div><button type="button" class="addday" id="addDay">' + svg('<path d="M10 4v12M4 10h12"/>') + "Add day</button></div>";
-    h += '<div class="col bookend"><div class="colhead bkhead"><span class="bkpin goal"></span></div><div class="bk goal"><i class="ci">' + svg('<path d="M6 3h8v4a4 4 0 0 1-8 0zM6 5H3.5a2.5 2.5 0 0 0 2.6 3M14 5h2.5a2.5 2.5 0 0 1-2.6 3M10 11v3M7 17h6"/>', "#FFFFFF") + "</i><small>Goal</small><b>" + esc(c.goal) + "</b></div></div>";
+    var last = days[days.length - 1] || 0, suggest = Math.min(365, last + (last < 1 ? 1 : last < 3 ? 2 : last < 7 ? 4 : 7));
+    if (c.everyDay) h += '<div class="col" style="width:auto"><div class="colhead"></div><button type="button" class="addday" data-len="1">' + svg('<path d="M10 4v12M4 10h12"/>') + "Add a day</button></div>";
+    else if (ui.addingDay) h += '<div class="col" style="width:auto"><div class="colhead"></div><div class="addform"><label for="newDay">Which day?</label><input class="inp" id="newDay" type="number" min="0" max="365" value="' + suggest + '"><button type="button" class="btn primary" id="newDayOk">Add day</button><button type="button" class="btn" id="newDayCancel">Cancel</button></div></div>';
+    else h += '<div class="col" style="width:auto"><div class="colhead"></div><button type="button" class="addday" id="addDay">' + svg('<path d="M10 4v12M4 10h12"/>') + "Add day</button></div>";
+    h += '<div class="col bookend"><div class="colhead bkhead"><span class="bkpin goal"></span></div><div class="bk goal"><i class="ci">' + svg('<path d="M6 3h8v4a4 4 0 0 1-8 0zM6 5H3.5a2.5 2.5 0 0 0 2.6 3M14 5h2.5a2.5 2.5 0 0 1-2.6 3M10 11v3M7 17h6"/>', "#FFFFFF") + "</i><small>Goal · by day " + c.length + "</small><b>" + esc(c.goal) + "</b></div></div>";
     document.getElementById("board").innerHTML = h;
     var di = document.getElementById("dayInput"); if (di) { di.focus(); di.select(); }
+    var nd = document.getElementById("newDay"); if (nd && ui.addingDay === "focus") { ui.addingDay = true; nd.focus(); nd.select(); }
   }
 
   // ---------- drawer ----------
@@ -576,7 +643,7 @@ footer { color: var(--muted); font-size: 12px; margin-top: 24px; text-align: cen
   function editStep(field, value) {
     var s = findStep(ui.sel); if (!s) return;
     var key = s.id + ":" + field; if (key !== lastKey) { commit(); lastKey = key; }
-    if (field === "day") { if (value === "") return; var d = Math.max(0, Math.min(365, parseInt(value, 10) || 0)); placeStep(cyc(), s, d); ui.focusDay = d; }
+    if (field === "day") { if (value === "") return; var d = Math.max(0, Math.min(365, parseInt(value, 10) || 0)); placeStep(cyc(), s, d); if (d > cyc().length) cyc().length = d; ui.focusDay = d; }
     else if (field.indexOf("o.") === 0) { s.offer[field.slice(2)] = value === "" ? "" : +value; }
     else s[field] = value;
     render(); save();
@@ -586,6 +653,7 @@ footer { color: var(--muted); font-size: 12px; margin-top: 24px; text-align: cen
   var drag = null;
   function onDown(e) {
     if (e.button !== undefined && e.button !== 0) return;
+    if (e.target.closest(".cact")) return;
     var card = e.target.closest(".card"), block = e.target.closest(".block");
     if (!card && !block) return;
     drag = { x: e.clientX, y: e.clientY, card: card, block: block, started: false, touch: e.pointerType === "touch" };
@@ -661,7 +729,7 @@ footer { color: var(--muted); font-size: 12px; margin-top: 24px; text-align: cen
 
   document.getElementById("tabs").addEventListener("click", function (e) {
     var t = e.target.closest("[data-cycle]");
-    if (t) { state.activeId = t.getAttribute("data-cycle"); closeDrawer(); ui.focusDay = null; render(); save(); return; }
+    if (t) { state.activeId = t.getAttribute("data-cycle"); closeDrawer(); ui.focusDay = null; ui.pickDay = null; ui.addingDay = false; render(); save(); return; }
     if (e.target.closest("#newCycle")) openNew();
   });
 
@@ -670,17 +738,26 @@ footer { color: var(--muted); font-size: 12px; margin-top: 24px; text-align: cen
     var c = cyc(), t;
     if ((t = e.target.closest("[data-editday]"))) { ui.editingDay = +t.getAttribute("data-editday"); renderBoard(c); return; }
     if ((t = e.target.closest("[data-delday]"))) { commit(); var d = +t.getAttribute("data-delday"); c.days = c.days.filter(function (x) { return x !== d; }); if (!c.days.length) c.days = [0]; render(); save(); return; }
-    if ((t = e.target.closest("[data-addin]"))) { var day = +t.getAttribute("data-addin"); addStep("email", day); return; }
-    if (e.target.closest("#addDay")) {
-      commit(); var last = c.days.length ? c.days[c.days.length - 1] : -1;
-      var next = last < 0 ? 0 : last + (last < 1 ? 1 : last < 3 ? 2 : last < 7 ? 4 : 7);
-      next = Math.min(365, next);
-      c.days = uniqDays(c.days.concat([next])); ui.focusDay = next; render(); save();
-      var w = document.getElementById("boardwrap"); w.scrollLeft = w.scrollWidth; return;
-    }
+    if ((t = e.target.closest("[data-addin]"))) { ui.pickDay = +t.getAttribute("data-addin"); ui.focusDay = ui.pickDay; renderBoard(c); var fp = document.querySelector(".pk"); if (fp) fp.focus(); return; }
+    if (e.target.closest("#addDay")) { ui.addingDay = "focus"; renderBoard(c); var w = document.getElementById("boardwrap"); w.scrollLeft = w.scrollWidth; return; }
+    if (e.target.closest("#newDayCancel")) { ui.addingDay = false; renderBoard(c); return; }
+    if (e.target.closest("#newDayOk")) { addDayAt(document.getElementById("newDay").value); return; }
+    if ((t = e.target.closest("[data-pick]"))) { var pd = +t.getAttribute("data-pickday"); ui.pickDay = null; addStep(t.getAttribute("data-pick"), pd); return; }
+    if (e.target.closest("[data-pickclose]")) { ui.pickDay = null; renderBoard(c); return; }
+    if ((t = e.target.closest("[data-cdup]"))) { var src = findStep(t.getAttribute("data-cdup")); commit(); lastKey = null; var cp = JSON.parse(JSON.stringify(src)); cp.id = uid(); c.steps.splice(c.steps.indexOf(src) + 1, 0, cp); render(); if (ui.sel) renderDrawer(); save(); toast("Step duplicated"); return; }
+    if ((t = e.target.closest("[data-cdel]"))) { var did = t.getAttribute("data-cdel"); commit(); lastKey = null; c.steps = c.steps.filter(function (x) { return x.id !== did; }); if (ui.sel === did) closeDrawer(); render(); save(); toast("Step deleted. Undo to bring it back."); return; }
+    if ((t = e.target.closest(".addday[data-len]"))) { setLength(c.length + 1); var w2 = document.getElementById("boardwrap"); w2.scrollLeft = w2.scrollWidth; return; }
     if ((t = e.target.closest(".colbody"))) { ui.focusDay = +t.getAttribute("data-day"); }
   });
+  function addDayAt(v) {
+    var c = cyc(), n = parseInt(v, 10);
+    if (!(n >= 0 && n <= 365)) { toast("Enter a day between 0 and 365."); return; }
+    ui.addingDay = false;
+    if (c.days.indexOf(n) >= 0) { ui.focusDay = n; render(); toast("Day " + n + " is already on the board."); return; }
+    commit(); c.days = uniqDays(c.days.concat([n])); if (n > c.length) c.length = n; ui.focusDay = n; render(); save();
+  }
   board.addEventListener("keydown", function (e) {
+    if (e.target.id === "newDay") { if (e.key === "Enter") { e.preventDefault(); addDayAt(e.target.value); } if (e.key === "Escape") { ui.addingDay = false; renderBoard(cyc()); } return; }
     var card = e.target.closest(".card");
     if (card && (e.key === "Enter" || e.key === " ")) { e.preventDefault(); ui.sel = card.getAttribute("data-id"); lastKey = null; ui.focusDay = findStep(ui.sel).day; render(); renderDrawer(); }
     if (e.target.id === "dayInput") { if (e.key === "Enter") e.target.blur(); if (e.key === "Escape") { ui.editingDay = null; renderBoard(cyc()); } }
@@ -693,11 +770,18 @@ footer { color: var(--muted); font-size: 12px; margin-top: 24px; text-align: cen
       commit();
       c.steps.forEach(function (s) { if (s.day === from) s.day = to; });
       c.days = uniqDays(c.days.map(function (x) { return x === from ? to : x; }));
+      if (to > c.length) c.length = to;
       ui.focusDay = to; save();
     }
     setTimeout(function () { render(); if (ui.sel) renderDrawer(); }, 0);
   });
 
+  var summaryEl = document.getElementById("summary");
+  summaryEl.addEventListener("click", function (e) { var t = e.target.closest("[data-len]"); if (t) setLength(cyc().length + (+t.getAttribute("data-len"))); });
+  summaryEl.addEventListener("change", function (e) { if (e.target.id === "lenInput") setLength(e.target.value); });
+  summaryEl.addEventListener("keydown", function (e) { if (e.target.id === "lenInput" && e.key === "Enter") e.target.blur(); });
+  document.getElementById("cLength").addEventListener("change", function (e) { setLength(e.target.value); });
+  document.querySelectorAll('input[name="cCols"]').forEach(function (r) { r.addEventListener("change", function (e) { commit(); cyc().everyDay = e.target.value === "all"; ui.addingDay = false; render(); save(); }); });
   ["cName", "cEntry", "cGoal"].forEach(function (id) {
     var f = { cName: "name", cEntry: "entry", cGoal: "goal" }[id];
     document.getElementById(id).addEventListener("input", function (e) { var c = cyc(), key = c.id + ":" + f; if (key !== lastKey) { commit(); lastKey = key; } c[f] = e.target.value; render(); save(); });
