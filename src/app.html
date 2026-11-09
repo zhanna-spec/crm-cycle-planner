@@ -1043,7 +1043,7 @@ footer { color: var(--muted); font-size: 12px; margin-top: 24px; text-align: cen
   var UNSURE_MAP = { competitor: "name", offer_title: "title", free_bet_value: "free_bet", wagering_x: "wagering", wagering_on: "wager_on", eligible_games: "games" };
 
   function findComp(id) { return (state.competitors || []).filter(function (x) { return x.id === id; })[0]; }
-  function aiReady() { if (cloud) return !!(proxy.connected && proxy.ai); var ib = inbox(); return !!(ib.url && ib.token && ib.ai); }
+  function aiReady() { if (cloud) return !!proxy.ai; var ib = inbox(); return !!(ib.url && ib.token && ib.ai); }
   try { localStorage.removeItem("ccp2_api_key"); } catch (e) {} // keys no longer live in the browser
   function cur(x) { var c = (x.currency || "EUR").toUpperCase(); return c === "EUR" ? "€" : c === "GBP" ? "£" : c === "USD" ? "$" : c + " "; }
   function has(v) { return v !== null && v !== undefined && v !== ""; }
@@ -1912,18 +1912,19 @@ footer { color: var(--muted); font-size: 12px; margin-top: 24px; text-align: cen
     var guide = '<a href="' + SETUP_URL + '#8-keep-the-token-on-the-server-signed-in-planner" target="_blank" rel="noopener">Setup guide</a>';
     var check = '<button class="btn" type="button" data-act="proxycheck">Check again</button>';
     if (proxy.loading || !proxy.checked) { el.innerHTML = '<div class="row"><div class="spinner" role="status" aria-label="Checking"></div><p class="small">Checking the connection…</p></div>'; return; }
+    if (kind === "ai" && !proxy.missingFn) {
+      el.innerHTML = proxy.ai
+        ? '<div class="keystate"><i></i>AI is on. It runs on the server.</div><p class="small">The Anthropic key is stored in Supabase, never in this page. Each screenshot set costs about 2 to 5 cents.</p>'
+        : '<div class="keystate off"><i></i>AI isn\'t set up yet</div><p class="small">' + (curWs && curWs.role === "owner" ? "In Supabase, open <b>Edge Functions → Secrets</b> and add <b>ANTHROPIC_API_KEY</b> with your Anthropic key. " : "Ask your workspace owner to add the Anthropic key in Supabase. ") + '<a href="' + SETUP_URL.replace("inbox-collector/README.md", "supabase/README.md") + '#8-turn-on-ai" target="_blank" rel="noopener">How to do it</a></p>' + check;
+      return;
+    }
     if (!proxy.connected) {
       el.innerHTML = '<div class="keystate off"><i></i>' + (proxy.missingFn ? "Not set up yet" : "The Google script isn't connected yet") + "</div>" +
         '<p class="small">The script\'s address and token are kept on the server, not in this page. ' + (curWs && curWs.role === "owner" ? "In Supabase, add the <b>planner-proxy</b> function and the <b>SCRIPT_URL</b> and <b>SCRIPT_TOKEN</b> secrets. " : "Ask your workspace owner to finish the setup. ") + guide + "</p>" +
         (proxy.problem && !proxy.missingFn ? '<p class="small" style="color:var(--warn)">' + esc(proxy.problem) + "</p>" : "") + check;
       return;
     }
-    if (kind === "ai") {
-      el.innerHTML = proxy.ai
-        ? '<div class="keystate"><i></i>AI is on. It runs on the server.</div><p class="small">Your Anthropic key stays in the Google script. Each screenshot set costs about 2 to 5 cents.</p>'
-        : '<div class="keystate off"><i></i>The script is connected, but it has no Anthropic key yet.</div><p class="small">In Apps Script, open <b>Project Settings → Script properties</b>, add <b>ANTHROPIC_API_KEY</b>, then deploy a new version. ' + guide + "</p>" + check;
-      return;
-    }
+
     var last = curWs ? lsGet("ccp2_sync_" + curWs.id) : "";
     el.innerHTML = '<div class="keystate"><i></i>Connected' + (proxy.account ? " to " + esc(proxy.account) : "") + "</div>" +
       '<p class="small">' + state.emails.length + " emails in this workspace · last synced from this browser " + ago(last) + " · AI " + (proxy.ai ? "on" : "off") + "</p>" +

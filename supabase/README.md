@@ -59,4 +59,15 @@ Both values are safe to publish: the access rules in the database decide what ea
 - **Workspace menu → Members and invites** to invite people by email. Owners can invite; members can edit. The planner doesn't send invite emails, so tell people to open the planner and sign in with that address.
 - Changes save automatically. If two people edit the same workspace at once, the second save loads the other person's version and tells you.
 
-The Google script connection (competitor emails and AI) is still set per browser, so each person who needs it connects it once.
+## 8. Turn on AI
+
+All AI features (reading offer screenshots, summarising competitor emails, and anything added later) run in the `planner-proxy` Edge Function with one Anthropic key stored in Supabase.
+
+1. Deploy the function if you haven't: **Edge Functions → Deploy a new function → Via Editor**, name it `planner-proxy`, paste [`functions/planner-proxy/index.ts`](functions/planner-proxy/index.ts), and click **Deploy**. If it already exists, open it, replace the code with the latest version, and deploy again.
+2. Open **Edge Functions → Secrets** and add `ANTHROPIC_API_KEY` with your Anthropic key (starts with `sk-ant-`).
+3. In the planner, open **Competitor offers** and click **Check again**. It should say "AI is on".
+
+Set a monthly spend limit on the key at platform.claude.com. Every member of a workspace can use AI there, so the limit caps the cost.
+
+The same function also connects the research Gmail inbox: add `SCRIPT_URL` and `SCRIPT_TOKEN` as described in [`inbox-collector/README.md`](../inbox-collector/README.md#8-keep-the-token-on-the-server-signed-in-planner).
+

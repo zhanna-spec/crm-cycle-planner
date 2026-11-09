@@ -43,7 +43,10 @@ A person on your team signs up on each competitor site with a tagged address, fo
 
 Tick the marketing-email opt-in when registering, otherwise you won't receive the cycle.
 
-## 7. Turn on the AI features
+## 7. Turn on the AI features (only for the planner without login)
+
+If you sign in to the planner, skip this: AI runs in Supabase with the `ANTHROPIC_API_KEY` secret instead (see [supabase/README.md](../supabase/README.md#8-turn-on-ai)).
+
 
 1. In the Apps Script editor, click the gear icon (**Project Settings**) in the left sidebar.
 2. Scroll to **Script properties** and click **Add script property**.
