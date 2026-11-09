@@ -1,0 +1,673 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<title>Conversion Cycle Planner</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700&family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
+<style>
+/* Layout: control rail on the left, generated plan + market benchmark on the right; stacks on phones. */
+:root {
+  --bg: #F2F4F7; --surface: #FFFFFF; --sunk: #E8ECF1; --ink: #131922; --muted: #5A6472; --line: #D8DEE6;
+  --accent: #1D5BCF; --accent-soft: #E2EBFB; --on-accent: #FFFFFF;
+  --aggr: #B8460B; --aggr-soft: #FCEBDD; --inline: #3F4C5E; --inline-soft: #E6EAF0; --diff: #0B7468; --diff-soft: #DAF1EE;
+  --good: #15803D; --warn: #A16207; --bad: #B91C1C;
+  --f-display: "Bricolage Grotesque", "Segoe UI", system-ui, sans-serif;
+  --f-body: "IBM Plex Sans", "Segoe UI", system-ui, sans-serif;
+  --f-mono: "IBM Plex Mono", ui-monospace, "SFMono-Regular", Menlo, monospace;
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+  --bg: #0E1217; --surface: #161B22; --sunk: #1D232C; --ink: #E5E9EF; --muted: #95A0AE; --line: #2A323D;
+  --accent: #6E9CF0; --accent-soft: #1A2840; --on-accent: #0E1217;
+  --aggr: #F59A5B; --aggr-soft: #3A2414; --inline: #B4BFCD; --inline-soft: #252C36; --diff: #3CCBB8; --diff-soft: #11302C;
+  --good: #4ADE80; --warn: #FACC15; --bad: #F87171; color-scheme: dark; } }
+:root[data-theme="dark"] {
+  --bg: #0E1217; --surface: #161B22; --sunk: #1D232C; --ink: #E5E9EF; --muted: #95A0AE; --line: #2A323D;
+  --accent: #6E9CF0; --accent-soft: #1A2840; --on-accent: #0E1217;
+  --aggr: #F59A5B; --aggr-soft: #3A2414; --inline: #B4BFCD; --inline-soft: #252C36; --diff: #3CCBB8; --diff-soft: #11302C;
+  --good: #4ADE80; --warn: #FACC15; --bad: #F87171; color-scheme: dark; }
+
+* { box-sizing: border-box; }
+body { background: var(--bg); color: var(--ink); font-family: var(--f-body); font-size: 14px; line-height: 1.5; }
+.wrap { max-width: 1320px; margin: 0 auto; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); padding-block: 20px 48px; }
+header.top { display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: 12px; padding-block: 8px 20px; border-bottom: 1px solid var(--line); margin-bottom: 20px; }
+h1 { font-family: var(--f-display); font-weight: 700; font-size: clamp(24px, 3vw, 32px); letter-spacing: -0.01em; margin: 0; text-wrap: balance; }
+.sub { color: var(--muted); margin: 4px 0 0; max-width: 62ch; }
+h2 { font-family: var(--f-display); font-weight: 600; font-size: 19px; margin: 0; }
+h3 { font-size: 12px; text-transform: uppercase; letter-spacing: 0.08em; color: var(--muted); margin: 0 0 8px; font-weight: 600; }
+.grid { display: grid; grid-template-columns: 320px minmax(0, 1fr); gap: 24px; align-items: start; }
+@media (max-width: 900px) { .grid { grid-template-columns: minmax(0, 1fr); } }
+
+/* Control rail */
+aside.rail { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 18px; display: flex; flex-direction: column; gap: 18px; position: sticky; top: calc(env(safe-area-inset-top, 0px) + 12px); }
+@media (max-width: 900px) { aside.rail { position: static; } }
+fieldset { border: 0; margin: 0; padding: 0; min-width: 0; }
+legend { font-size: 12px; text-transform: uppercase; letter-spacing: 0.08em; color: var(--muted); font-weight: 600; margin-bottom: 8px; padding: 0; }
+.seg { display: flex; flex-wrap: wrap; gap: 4px; background: var(--sunk); border-radius: 8px; padding: 3px; }
+.seg label { flex: 1 1 auto; text-align: center; }
+.seg input { position: absolute; opacity: 0; pointer-events: none; }
+.seg span { display: block; padding: 6px 8px; border-radius: 6px; cursor: pointer; font-size: 13px; color: var(--muted); white-space: nowrap; }
+.seg input:checked + span { background: var(--surface); color: var(--ink); font-weight: 600; box-shadow: 0 1px 2px rgba(0,0,0,.12); }
+.seg input:focus-visible + span, .chk input:focus-visible + span { outline: 2px solid var(--accent); outline-offset: 1px; }
+.chks { display: flex; flex-wrap: wrap; gap: 6px; }
+.chk input { position: absolute; opacity: 0; pointer-events: none; }
+.chk span { display: inline-block; padding: 5px 10px; border: 1px solid var(--line); border-radius: 999px; cursor: pointer; font-size: 13px; color: var(--muted); }
+.chk input:checked + span { border-color: var(--accent); background: var(--accent-soft); color: var(--ink); }
+.num { display: flex; align-items: center; gap: 8px; }
+.num input { width: 100%; font: 500 14px var(--f-mono); padding: 7px 10px; border: 1px solid var(--line); border-radius: 6px; background: var(--surface); color: var(--ink); }
+.hint { font-size: 12px; color: var(--muted); margin: 6px 0 0; }
+
+/* Output */
+main { display: flex; flex-direction: column; gap: 24px; min-width: 0; }
+.panel { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 18px; min-width: 0; }
+.panel-head { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 14px; }
+.summary { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 1px; background: var(--line); border: 1px solid var(--line); border-radius: 10px; overflow: hidden; }
+@media (max-width: 700px) { .summary { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+.stat { background: var(--surface); padding: 14px 16px; min-width: 0; }
+.stat .k { font-size: 12px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.06em; }
+.stat .v { font: 600 22px var(--f-display); margin-top: 2px; font-variant-numeric: tabular-nums; }
+.stat .n { font-size: 12px; color: var(--muted); }
+.meter { height: 6px; border-radius: 3px; background: var(--sunk); margin-top: 8px; overflow: hidden; }
+.meter i { display: block; height: 100%; border-radius: 3px; }
+
+.pos { display: inline-flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 600; padding: 2px 8px; border-radius: 999px; white-space: nowrap; }
+.pos::before { content: ""; width: 7px; height: 7px; border-radius: 50%; background: currentColor; }
+.pos.aggressive { color: var(--aggr); background: var(--aggr-soft); }
+.pos.inline { color: var(--inline); background: var(--inline-soft); }
+.pos.differentiated { color: var(--diff); background: var(--diff-soft); }
+
+.reco { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 6px 14px; align-items: start; padding: 14px 16px; border-radius: 8px; background: var(--sunk); }
+.reco ul { margin: 0; padding-left: 18px; color: var(--muted); }
+.reco b { color: var(--ink); }
+
+/* Timeline */
+.timeline { list-style: none; margin: 0; padding: 0; position: relative; }
+.timeline::before { content: ""; position: absolute; left: 47px; top: 6px; bottom: 6px; width: 2px; background: var(--line); }
+.step { display: grid; grid-template-columns: 96px minmax(0, 1fr); gap: 14px; padding-block: 10px; position: relative; }
+.day { font: 500 13px var(--f-mono); text-align: center; position: relative; z-index: 1; }
+.day b { display: inline-block; background: var(--surface); border: 2px solid var(--accent); color: var(--accent); border-radius: 999px; padding: 2px 10px; font-weight: 500; }
+.day small { display: block; color: var(--muted); font-size: 11px; margin-top: 4px; font-family: var(--f-body); background: var(--surface); }
+.card { border: 1px solid var(--line); border-radius: 8px; padding: 12px 14px; min-width: 0; }
+.card.special { border-style: dashed; }
+.card-top { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; justify-content: space-between; }
+.card h4 { margin: 0; font-size: 15px; font-weight: 600; }
+.chans { display: flex; gap: 4px; flex-wrap: wrap; }
+.chan { font: 500 11px var(--f-mono); text-transform: uppercase; letter-spacing: 0.04em; padding: 2px 6px; border-radius: 4px; background: var(--sunk); color: var(--muted); }
+.chan.fb { text-decoration: underline dotted; }
+.msg { margin: 6px 0 0; color: var(--ink); }
+.meta { display: flex; flex-wrap: wrap; gap: 6px 18px; margin-top: 8px; font-size: 12px; color: var(--muted); }
+.meta b { color: var(--ink); font-weight: 500; }
+.offer { margin-top: 10px; display: flex; flex-wrap: wrap; align-items: center; gap: 8px; padding: 8px 10px; border-radius: 6px; background: var(--accent-soft); font: 500 13px var(--f-mono); }
+.offer .lbl { font-family: var(--f-body); font-size: 12px; color: var(--muted); }
+.flag { font-size: 12px; color: var(--warn); margin-top: 6px; }
+
+/* Market */
+.tbl-wrap { overflow-x: auto; }
+table { border-collapse: collapse; width: 100%; min-width: 760px; font-size: 13px; }
+th, td { text-align: left; padding: 9px 10px; border-bottom: 1px solid var(--line); vertical-align: top; }
+th { font-size: 11px; text-transform: uppercase; letter-spacing: 0.06em; color: var(--muted); font-weight: 600; }
+td.mono { font-family: var(--f-mono); font-variant-numeric: tabular-nums; }
+.delta.up { color: var(--good); } .delta.down { color: var(--bad); }
+select { font: 500 13px var(--f-body); padding: 6px 8px; border-radius: 6px; border: 1px solid var(--line); background: var(--surface); color: var(--ink); }
+.btn { font: 600 13px var(--f-body); padding: 8px 12px; border-radius: 6px; border: 1px solid var(--line); background: var(--surface); color: var(--ink); cursor: pointer; }
+.btn:hover { border-color: var(--accent); }
+.btn.primary { background: var(--accent); border-color: var(--accent); color: var(--on-accent); }
+.btn:focus-visible, select:focus-visible, .num input:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.row { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+.src { font-size: 12px; color: var(--muted); }
+.tag-ex { font: 600 11px var(--f-mono); text-transform: uppercase; letter-spacing: 0.06em; color: var(--warn); border: 1px solid currentColor; border-radius: 4px; padding: 1px 6px; }
+details.tpl { margin-top: 12px; }
+details.tpl summary { cursor: pointer; color: var(--accent); font-weight: 500; }
+pre { background: var(--sunk); padding: 10px 12px; border-radius: 6px; overflow-x: auto; font: 12px/1.6 var(--f-mono); margin: 8px 0; }
+.comp-list { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; }
+.comp-list span { font-size: 12px; padding: 3px 8px; border-radius: 4px; background: var(--sunk); }
+.tests { margin: 0; padding-left: 18px; }
+.tests li + li { margin-top: 4px; }
+.toast { position: fixed; right: max(16px, env(safe-area-inset-right, 0px)); bottom: calc(16px + env(safe-area-inset-bottom, 0px)); background: var(--ink); color: var(--bg); padding: 10px 14px; border-radius: 8px; font-weight: 500; z-index: 20; }
+footer { color: var(--muted); font-size: 12px; margin-top: 28px; }
+@media (prefers-reduced-motion: no-preference) { .step { animation: rise .25s ease both; } @keyframes rise { from { transform: translateY(4px); } to { transform: none; } } }
+</style>
+
+<div class="wrap">
+  <header class="top">
+    <div>
+      <h1>Conversion Cycle Planner</h1>
+      <p class="sub">Choose your conditions and get a step-by-step CRM plan. Add competitor offers to see where you stand and whether to be aggressive, stay in line, or differentiate.</p>
+    </div>
+    <div class="row">
+      <button class="btn" id="copyMd" type="button">Copy plan (Markdown)</button>
+      <button class="btn" id="copyCsv" type="button">Copy plan (CSV)</button>
+    </div>
+  </header>
+
+  <div class="grid">
+    <aside class="rail" aria-label="Plan conditions">
+      <fieldset><legend>Lifecycle focus</legend>
+        <div class="seg" data-name="focus">
+          <label><input type="radio" name="focus" id="f-acq" value="acquisition" checked><span>Reg → FTD</span></label>
+          <label><input type="radio" name="focus" id="f-early" value="early"><span>FTD → 3rd</span></label>
+          <label><input type="radio" name="focus" id="f-ret" value="retention"><span>Retention</span></label>
+          <label><input type="radio" name="focus" id="f-react" value="reactivation"><span>Reactivation</span></label>
+        </div>
+      </fieldset>
+      <fieldset><legend>Vertical</legend>
+        <div class="seg">
+          <label><input type="radio" name="vertical" id="v-c" value="casino" checked><span>Casino</span></label>
+          <label><input type="radio" name="vertical" id="v-s" value="sports"><span>Sportsbook</span></label>
+          <label><input type="radio" name="vertical" id="v-h" value="hybrid"><span>Hybrid</span></label>
+        </div>
+      </fieldset>
+      <fieldset><legend>Player value segment</legend>
+        <div class="seg">
+          <label><input type="radio" name="segment" id="s-l" value="low"><span>Low</span></label>
+          <label><input type="radio" name="segment" id="s-m" value="mid" checked><span>Mid</span></label>
+          <label><input type="radio" name="segment" id="s-v" value="vip"><span>VIP</span></label>
+        </div>
+      </fieldset>
+      <fieldset><legend>Bonus budget</legend>
+        <div class="seg">
+          <label><input type="radio" name="budget" id="b-l" value="low"><span>Low</span></label>
+          <label><input type="radio" name="budget" id="b-m" value="medium" checked><span>Medium</span></label>
+          <label><input type="radio" name="budget" id="b-h" value="high"><span>High</span></label>
+        </div>
+      </fieldset>
+      <fieldset><legend>Market regulation</legend>
+        <div class="seg">
+          <label><input type="radio" name="regulation" id="r-s" value="strict"><span>Strict</span></label>
+          <label><input type="radio" name="regulation" id="r-m" value="moderate" checked><span>Moderate</span></label>
+          <label><input type="radio" name="regulation" id="r-l" value="light"><span>Light</span></label>
+        </div>
+        <p class="hint">Strict caps wagering at 10x, removes no-deposit offers and adds safer-gambling checks.</p>
+      </fieldset>
+      <fieldset><legend>Channels available</legend>
+        <div class="chks">
+          <label class="chk"><input type="checkbox" name="ch" id="c-email" value="email" checked><span>Email</span></label>
+          <label class="chk"><input type="checkbox" name="ch" id="c-sms" value="sms" checked><span>SMS</span></label>
+          <label class="chk"><input type="checkbox" name="ch" id="c-push" value="push" checked><span>Push</span></label>
+          <label class="chk"><input type="checkbox" name="ch" id="c-popup" value="popup" checked><span>On-site popup</span></label>
+          <label class="chk"><input type="checkbox" name="ch" id="c-gam" value="gamification" checked><span>Missions</span></label>
+          <label class="chk"><input type="checkbox" name="ch" id="c-call" value="call"><span>Account manager</span></label>
+        </div>
+      </fieldset>
+      <fieldset><legend>Average deposit (€)</legend>
+        <div class="num"><input type="number" id="dep" min="5" max="5000" step="5" value="50" inputmode="numeric"></div>
+        <p class="hint">Used to size match bonuses and compare real offer value.</p>
+      </fieldset>
+      <fieldset><legend>Offer position</legend>
+        <div class="seg">
+          <label><input type="radio" name="mode" id="m-auto" value="auto" checked><span>Auto</span></label>
+          <label><input type="radio" name="mode" id="m-ag" value="aggressive"><span>Aggressive</span></label>
+          <label><input type="radio" name="mode" id="m-in" value="inline"><span>In line</span></label>
+          <label><input type="radio" name="mode" id="m-df" value="differentiated"><span>Differentiate</span></label>
+        </div>
+      </fieldset>
+    </aside>
+
+    <main>
+      <section class="summary" id="summary" aria-label="Plan summary"></section>
+
+      <section class="panel" aria-labelledby="recoH">
+        <div class="panel-head"><h2 id="recoH">Positioning</h2><span id="recoPill"></span></div>
+        <div id="reco"></div>
+      </section>
+
+      <section class="panel" aria-labelledby="planH">
+        <div class="panel-head"><h2 id="planH">Conversion cycle</h2><span class="src" id="planNote"></span></div>
+        <ol class="timeline" id="timeline"></ol>
+      </section>
+
+      <section class="panel" aria-labelledby="mktH">
+        <div class="panel-head">
+          <h2 id="mktH">Market benchmark</h2>
+          <div class="row">
+            <label class="btn" for="csvFile" tabindex="0" id="uploadLbl">Upload competitor CSV</label>
+            <input type="file" id="csvFile" accept=".csv,text/csv" hidden>
+            <button class="btn" type="button" id="loadSample">Load example data</button>
+            <button class="btn" type="button" id="clearComp">Clear</button>
+          </div>
+        </div>
+        <div class="row" id="compSrc"></div>
+        <div class="comp-list" id="compList"></div>
+        <div class="tbl-wrap" style="margin-top:14px"><table id="bench"></table></div>
+        <details class="tpl">
+          <summary>CSV format</summary>
+          <p class="hint">One row per competitor offer. <code>stage</code> is one of: welcome, second, third, reload, cashback, reactivation. <code>vertical</code> is casino or sports (optional). Missing numbers count as 0.</p>
+          <pre id="tplText"></pre>
+          <button class="btn" type="button" id="copyTpl">Copy template</button>
+        </details>
+      </section>
+
+      <section class="panel" aria-labelledby="testH">
+        <h2 id="testH" style="margin-bottom:10px">What to A/B test first</h2>
+        <ul class="tests" id="tests"></ul>
+      </section>
+    </main>
+  </div>
+  <footer>Prototype. Conversion targets and offer values are rule-of-thumb estimates to validate against your own data, not forecasts.</footer>
+</div>
+<div class="toast" id="toast" hidden></div>
+
+<script>
+(function () {
+  "use strict";
+  var SPIN = 0.2; // € value per free spin
+  var STAGES = { welcome: "Welcome (FTD)", second: "2nd deposit", third: "3rd deposit", reload: "Weekly reload", cashback: "Cashback", reactivation: "Reactivation" };
+  var FIELDS = ["match_pct", "max_bonus", "free_spins", "free_bet", "wagering", "cashback_pct"];
+  var CH_LABEL = { email: "Email", sms: "SMS", push: "Push", popup: "Popup", gamification: "Mission", call: "Call" };
+  var FALLBACK = { sms: ["push", "email"], push: ["sms", "email"], popup: ["push", "email"], gamification: ["popup", "email"], call: ["email"], email: ["push", "popup"] };
+  var POS_LABEL = { aggressive: "Aggressive", inline: "In line", differentiated: "Differentiated" };
+
+  function O(m, b, fs, fb, w, cb) { return { match_pct: m, max_bonus: b, free_spins: fs, free_bet: fb, wagering: w, cashback_pct: cb }; }
+  var BASE = {
+    casino: { welcome: O(100, 200, 50, 0, 35, 0), second: O(75, 150, 25, 0, 35, 0), third: O(50, 100, 20, 0, 35, 0), reload: O(25, 100, 0, 0, 30, 0), cashback: O(0, 0, 0, 0, 1, 10), reactivation: O(50, 100, 20, 0, 30, 0) },
+    sports: { welcome: O(100, 50, 0, 20, 6, 0), second: O(50, 50, 0, 10, 6, 0), third: O(50, 50, 0, 10, 6, 0), reload: O(25, 50, 0, 5, 5, 0), cashback: O(0, 0, 0, 0, 1, 10), reactivation: O(0, 0, 0, 15, 1, 0) }
+  };
+  BASE.hybrid = JSON.parse(JSON.stringify(BASE.casino));
+  BASE.hybrid.welcome.free_bet = 10;
+
+  var SAMPLE = [
+    "competitor,vertical,stage,match_pct,max_bonus,free_spins,free_bet,wagering,cashback_pct",
+    "Competitor A,casino,welcome,100,300,100,0,40,0",
+    "Competitor B,casino,welcome,150,200,50,0,35,0",
+    "Competitor C,casino,welcome,100,500,0,0,45,0",
+    "Competitor D,casino,welcome,100,100,30,0,10,0",
+    "Competitor A,casino,second,50,200,50,0,40,0",
+    "Competitor B,casino,second,75,150,0,0,35,0",
+    "Competitor C,casino,second,100,250,25,0,40,0",
+    "Competitor A,casino,third,50,200,25,0,40,0",
+    "Competitor C,casino,third,50,150,50,0,40,0",
+    "Competitor A,casino,reload,25,150,0,0,35,0",
+    "Competitor B,casino,reload,50,100,20,0,35,0",
+    "Competitor D,casino,reload,25,50,20,0,10,0",
+    "Competitor A,casino,cashback,0,0,0,0,1,10",
+    "Competitor B,casino,cashback,0,0,0,0,1,15",
+    "Competitor C,casino,cashback,0,0,0,0,5,20",
+    "Competitor B,casino,reactivation,100,100,30,0,35,0",
+    "Competitor C,casino,reactivation,50,200,0,0,40,0",
+    "Competitor A,sports,welcome,100,100,0,30,8,0",
+    "Competitor B,sports,welcome,0,0,0,30,1,0",
+    "Competitor D,sports,welcome,100,50,0,10,5,0"
+  ].join("\n");
+
+  // ---------- state ----------
+  var comp = { rows: [], source: null, skipped: 0 };
+  var overrides = {}; // stage -> position
+  var lastPlan = null;
+
+  function store(k, v) { try { localStorage.setItem("ccp_" + k, JSON.stringify(v)); } catch (e) {} }
+  function load(k) { try { var v = localStorage.getItem("ccp_" + k); return v ? JSON.parse(v) : null; } catch (e) { return null; } }
+
+  function readConditions() {
+    var get = function (n) { var el = document.querySelector('input[name="' + n + '"]:checked'); return el ? el.value : null; };
+    var ch = Array.prototype.map.call(document.querySelectorAll('input[name="ch"]:checked'), function (e) { return e.value; });
+    var dep = parseFloat(document.getElementById("dep").value);
+    if (!(dep > 0)) dep = 50;
+    return { focus: get("focus"), vertical: get("vertical"), segment: get("segment"), budget: get("budget"), regulation: get("regulation"), mode: get("mode"), channels: ch, dep: dep };
+  }
+  function applyConditions(c) {
+    if (!c) return;
+    ["focus", "vertical", "segment", "budget", "regulation", "mode"].forEach(function (n) {
+      var el = document.querySelector('input[name="' + n + '"][value="' + c[n] + '"]'); if (el) el.checked = true;
+    });
+    if (Array.isArray(c.channels)) document.querySelectorAll('input[name="ch"]').forEach(function (e) { e.checked = c.channels.indexOf(e.value) >= 0; });
+    if (c.dep) document.getElementById("dep").value = c.dep;
+  }
+
+  // ---------- CSV ----------
+  function parseCSV(text) {
+    var rows = [], row = [], cur = "", q = false;
+    for (var i = 0; i < text.length; i++) {
+      var ch = text[i];
+      if (q) { if (ch === '"') { if (text[i + 1] === '"') { cur += '"'; i++; } else q = false; } else cur += ch; }
+      else if (ch === '"') q = true;
+      else if (ch === "," || ch === ";") { row.push(cur); cur = ""; }
+      else if (ch === "\n" || ch === "\r") { if (ch === "\r" && text[i + 1] === "\n") i++; row.push(cur); rows.push(row); row = []; cur = ""; }
+      else cur += ch;
+    }
+    if (cur !== "" || row.length) { row.push(cur); rows.push(row); }
+    return rows.filter(function (r) { return r.some(function (x) { return x.trim() !== ""; }); });
+  }
+  function normStage(s) {
+    s = (s || "").toLowerCase().trim();
+    if (/welcome|ftd|first|^1st/.test(s)) return "welcome";
+    if (/second|2nd/.test(s)) return "second";
+    if (/third|3rd/.test(s)) return "third";
+    if (/reload/.test(s)) return "reload";
+    if (/cash ?back/.test(s)) return "cashback";
+    if (/reactiv|win ?back|winback/.test(s)) return "reactivation";
+    return null;
+  }
+  function ingest(text, source) {
+    var rows = parseCSV(text);
+    if (rows.length < 2) { toast("That file has no data rows."); return; }
+    var head = rows[0].map(function (h) { return h.toLowerCase().trim().replace(/\s+/g, "_"); });
+    if (head.indexOf("stage") < 0) { toast("Missing a 'stage' column. See the CSV format below."); return; }
+    var out = [], skipped = 0;
+    rows.slice(1).forEach(function (r) {
+      var o = {}; head.forEach(function (h, i) { o[h] = (r[i] || "").trim(); });
+      var st = normStage(o.stage); if (!st) { skipped++; return; }
+      var rec = { competitor: o.competitor || "Unnamed", vertical: (o.vertical || "").toLowerCase(), stage: st };
+      FIELDS.forEach(function (f) { var v = parseFloat((o[f] || "").replace(/[^0-9.\-]/g, "")); rec[f] = isFinite(v) ? v : 0; });
+      out.push(rec);
+    });
+    comp = { rows: out, source: source, skipped: skipped };
+    overrides = {};
+    store("comp", comp);
+    render();
+    toast("Loaded " + out.length + " offers" + (skipped ? ", skipped " + skipped + " with an unknown stage" : ""));
+  }
+
+  // ---------- maths ----------
+  function quant(arr, q) { var a = arr.slice().sort(function (x, y) { return x - y; }); if (!a.length) return 0; var p = (a.length - 1) * q, lo = Math.floor(p), hi = Math.ceil(p); return a[lo] + (a[hi] - a[lo]) * (p - lo); }
+  function nice(v) { if (v <= 0) return 0; if (v >= 100) return Math.round(v / 10) * 10; if (v >= 20) return Math.round(v / 5) * 5; return Math.round(v); }
+  function relevantRows(vertical) {
+    return comp.rows.filter(function (r) { if (!r.vertical || vertical === "hybrid") return true; return r.vertical === vertical; });
+  }
+  function compStats(vertical) {
+    var by = {}, rows = relevantRows(vertical);
+    rows.forEach(function (r) { (by[r.stage] = by[r.stage] || []).push(r); });
+    var stats = {};
+    Object.keys(by).forEach(function (st) {
+      var list = by[st], s = { n: list.length, p25: {}, median: {}, p75: {}, rows: list };
+      FIELDS.forEach(function (f) { var vals = list.map(function (r) { return r[f]; }); s.p25[f] = quant(vals, .25); s.median[f] = quant(vals, .5); s.p75[f] = quant(vals, .75); });
+      stats[st] = s;
+    });
+    return stats;
+  }
+  function bonusAmt(o, dep) { return Math.min(o.match_pct / 100 * dep, o.max_bonus); }
+  function headline(o, dep) { return bonusAmt(o, dep) + o.free_spins * SPIN + o.free_bet + o.cashback_pct / 100 * dep; }
+  // "Real" value discounts wagered money: at 60x+ a bonus is worth ~10% of face value to the player.
+  function realValue(o, dep) { var wf = Math.max(0.1, 1 - o.wagering / 60); return bonusAmt(o, dep) * wf + o.free_spins * SPIN * 0.8 + o.free_bet * 0.7 + o.cashback_pct / 100 * dep; }
+
+  function recommend(c) {
+    var s = 0, why = [];
+    if (c.budget === "high") { s += 1; why.push("A <b>high budget</b> can fund above-market offers."); }
+    if (c.budget === "low") { s -= 1; why.push("With a <b>low budget</b>, compete on terms (lower wagering, no-wager spins) instead of headline size."); }
+    if (c.regulation === "strict") { s -= 1; why.push("In a <b>strict market</b>, wagering caps make offers look alike, so experience and terms stand out more than size."); }
+    if (c.regulation === "light") { s += 0.5; why.push("A <b>light-touch market</b> lets players compare headline offers freely."); }
+    if (c.focus === "acquisition") { s += 1; why.push("Players compare <b>welcome offers</b> across sites more than any other offer."); }
+    if (c.focus === "retention") { s -= 0.5; why.push("Existing players rarely compare <b>reloads</b> across sites, so overpaying buys little."); }
+    if (c.segment === "vip") { s += 0.5; why.push("<b>VIP</b> players are worth matching the best offers in the market to keep."); }
+    if (c.channels.indexOf("gamification") >= 0) { s -= 0.5; why.push("<b>Missions</b> add value that competitors can't match on price alone."); }
+    var pos = s >= 1.5 ? "aggressive" : s <= -1 ? "differentiated" : "inline";
+    return { pos: pos, why: why, score: s };
+  }
+
+  function positionedOffer(stage, pos, c, stats) {
+    var base = BASE[c.vertical][stage], st = stats[stage], o, notes = [];
+    if (st) {
+      var m = st.median, p = st.p75, lo = st.p25;
+      if (pos === "inline") o = { match_pct: m.match_pct, max_bonus: m.max_bonus, free_spins: m.free_spins, free_bet: m.free_bet, wagering: m.wagering, cashback_pct: m.cashback_pct };
+      else if (pos === "aggressive") o = { match_pct: Math.max(m.match_pct, p.match_pct), max_bonus: Math.max(m.max_bonus * 1.25, p.max_bonus), free_spins: Math.max(m.free_spins * 1.25, p.free_spins), free_bet: Math.max(m.free_bet * 1.25, p.free_bet), wagering: Math.min(m.wagering, lo.wagering), cashback_pct: Math.max(m.cashback_pct * 1.25, p.cashback_pct) };
+      else { o = { match_pct: m.match_pct, max_bonus: m.max_bonus * 0.75, free_spins: m.free_spins * 1.2, free_bet: m.free_bet, wagering: m.wagering * 0.4, cashback_pct: m.cashback_pct }; notes.push("Lead with the low wagering in the message"); }
+    } else {
+      o = Object.assign({}, base);
+      if (pos === "aggressive") { o.max_bonus *= 1.25; o.free_spins *= 1.25; o.free_bet *= 1.25; o.cashback_pct *= 1.25; o.wagering = Math.max(0, o.wagering - 5); }
+      if (pos === "differentiated") { o.max_bonus *= 0.75; o.free_spins *= 1.2; o.wagering *= 0.4; notes.push("Lead with the low wagering in the message"); }
+    }
+    var mult = { low: 0.6, mid: 1, vip: 2.5 }[c.segment];
+    o.max_bonus *= mult; o.free_spins *= mult; o.free_bet *= mult;
+    o.match_pct = Math.round(o.match_pct / 5) * 5;
+    o.max_bonus = nice(o.max_bonus); o.free_spins = nice(o.free_spins); o.free_bet = nice(o.free_bet);
+    o.cashback_pct = Math.round(o.cashback_pct); o.wagering = Math.round(o.wagering);
+    if (o.match_pct === 0 || o.max_bonus === 0) { o.match_pct = 0; o.max_bonus = 0; }
+    if (o.match_pct === 0 && o.free_spins === 0 && o.free_bet === 0 && o.cashback_pct === 0) o.wagering = 0;
+    if (c.regulation === "strict" && o.wagering > 10) { o.wagering = 10; notes.push("Wagering capped at 10x by regulation"); }
+    if (c.regulation === "moderate" && o.wagering > 40) { o.wagering = 40; notes.push("Wagering held at 40x"); }
+    return { offer: o, notes: notes, benchmarked: !!st };
+  }
+
+  function offerLabel(o) {
+    var parts = [];
+    if (o.match_pct > 0 && o.max_bonus > 0) parts.push(o.match_pct + "% up to €" + o.max_bonus);
+    if (o.free_spins) parts.push(o.free_spins + " free spins");
+    if (o.free_bet) parts.push("€" + o.free_bet + " free bet");
+    if (o.cashback_pct) parts.push(o.cashback_pct + "% cashback");
+    if (!parts.length) return "No offer";
+    return parts.join(" + ") + " · " + (o.wagering > 1 ? o.wagering + "x wagering" : "no wagering");
+  }
+
+  // ---------- plan templates ----------
+  // take = share of players entering the cycle expected to claim the offer at that step.
+  function templates(c) {
+    var prod = c.vertical === "sports" ? "sportsbook" : c.vertical === "hybrid" ? "casino and sportsbook" : "casino";
+    var extra = c.vertical === "sports" ? "free bet" : "free spins";
+    return {
+      acquisition: [
+        { day: "D0", when: "On registration", title: "Welcome and offer reveal", ch: ["email", "popup"], msg: "Confirm the account, show the welcome offer and one clear deposit button.", stage: "welcome", trigger: "Registration completed", kpi: "Deposit-page visits", take: 0.18 },
+        { day: "D0", when: "+1 hour, no deposit", title: "Deposit nudge", ch: ["push", "sms"], msg: "Short reminder that the welcome offer is waiting, with a deep link to the cashier.", trigger: "No FTD 60 min after registration", kpi: "Click-to-deposit rate" },
+        { day: "D0", when: "On first login", title: "Verify-your-account mission", ch: ["gamification"], msg: "Complete profile and verification to unlock a small no-deposit reward (10 " + extra + ").", trigger: "First login", kpi: "Verification completion", noStrict: true, special: true, cost: function () { return c.vertical === "sports" ? 2 : 10 * SPIN; }, take: 0.35 },
+        { day: "D1", when: "Day 1", title: "Trust builder", ch: ["email"], msg: "Payment methods, payout speed, licence and support. Answers the reasons people hesitate to deposit.", trigger: "Still no FTD", kpi: "Email click rate" },
+        { day: "D3", when: "Day 3", title: "Urgency: offer expires in 48h", ch: ["sms", "push"], msg: "Countdown on the welcome offer. Name the most popular " + (c.vertical === "sports" ? "upcoming match" : "game") + ".", trigger: "Still no FTD", kpi: "Reg → FTD conversion", stage: "welcome", take: 0.07, aggrOnly: "Add a +20% sweetener for this window only" },
+        { day: "D5", when: "Day 5", title: "Low-entry alternative", ch: ["popup", "email"], msg: "Offer a smaller minimum deposit (€10) for players who didn't respond to the main offer.", trigger: "Still no FTD, logged in at least once", kpi: "Small-deposit FTDs", diffOnly: true },
+        { day: "D7", when: "Day 7", title: "Last chance", ch: ["email"], msg: "Final reminder before the welcome offer expires. Simple and short.", trigger: "Still no FTD", kpi: "Reg → FTD conversion", stage: "welcome", take: 0.04 },
+        { day: "D14", when: "Day 14", title: "Move to nurture pool", ch: ["email"], msg: "Stop the welcome flow. Move the player to a low-frequency newsletter and the reactivation flow.", trigger: "No FTD after 14 days", kpi: "Unsubscribe rate", special: true }
+      ],
+      early: [
+        { day: "D0", when: "Right after FTD", title: "Thank you and what's next", ch: ["email", "popup"], msg: "Confirm the bonus is active, show how wagering progress works and preview the 2nd deposit offer.", trigger: "First deposit", kpi: "Bonus activation rate" },
+        { day: "D1", when: "Day 1", title: "First-week missions", ch: ["gamification"], msg: "Three easy missions (try 3 " + (c.vertical === "sports" ? "markets" : "games") + ", log in 3 days) with small rewards to build a habit.", trigger: "Logged in after FTD", kpi: "Day-7 active rate", special: true, cost: function () { return c.vertical === "sports" ? 3 : 15 * SPIN; }, take: 0.4 },
+        { day: "D2", when: "Day 2", title: "2nd deposit offer", ch: ["email", "push"], msg: "Personalised 2nd deposit offer based on what they played first.", stage: "second", trigger: "No 2nd deposit yet", kpi: "FTD → 2nd deposit", take: 0.3 },
+        { day: "D2", when: "Day 2", title: "Safer gambling check-in", ch: ["email"], msg: "Introduce deposit limits and reality checks as account features, not warnings.", trigger: "FTD completed", kpi: "Limit-setting rate", strictOnly: true, special: true },
+        { day: "D4", when: "Day 4", title: "2nd deposit reminder", ch: ["sms", "push"], msg: "Reminder that the 2nd deposit offer ends soon.", trigger: "Still no 2nd deposit", kpi: "FTD → 2nd deposit", stage: "second", take: 0.08 },
+        { day: "D5", when: "Day 5", title: "Welcome call", ch: ["call"], msg: "Account manager introduces themselves and sets up a personal offer.", trigger: "FTD above VIP threshold", kpi: "3rd deposit rate (VIP)", vipOnly: true },
+        { day: "D6", when: "After 2nd deposit", title: "3rd deposit offer", ch: ["email", "popup"], msg: "Final step of the welcome package. Frame it as completing the set.", stage: "third", trigger: "2nd deposit made", kpi: "2nd → 3rd deposit", take: 0.2 },
+        { day: "D10", when: "Day 10", title: "First cashback", ch: ["email", "push"], msg: "Weekly cashback on net losses so the first bad week doesn't end the relationship.", stage: "cashback", trigger: "Net losses in first 10 days", kpi: "Day-30 retention", take: 0.25 },
+        { day: "D14", when: "Day 14", title: "Segment and hand over", ch: ["email"], msg: "Assign a value tier from deposits and activity. Hand over to the retention programme.", trigger: "End of early-life window", kpi: "Tier distribution", special: true }
+      ],
+      retention: [
+        { day: "Fri", when: "Every Friday", title: "Weekend reload", ch: ["email", "push"], msg: "Reload offer for the weekend, personalised to their favourite " + (c.vertical === "sports" ? "league" : "game type") + ".", stage: "reload", trigger: "Active in last 14 days", kpi: "Weekend deposit rate", take: 0.25 },
+        { day: "Mon", when: "Every Monday", title: "Weekly cashback", ch: ["email", "popup"], msg: "Cashback on last week's net losses, credited on login.", stage: "cashback", trigger: "Net losses last week", kpi: "Week-on-week retention", take: 0.3 },
+        { day: "Wkly", when: "Weekly", title: "Mission series / tournament", ch: ["gamification", "popup"], msg: "Weekly missions or a leaderboard with prizes. Keeps play going without straight bonus cost.", trigger: "Active players", kpi: "Sessions per week", special: true, cost: function () { return 2; }, take: 0.35 },
+        { day: "Auto", when: "When triggered", title: "Deposit-drop rescue", ch: ["sms", "push"], msg: "Personal reload when weekly deposits fall more than 40% below the 4-week average.", stage: "reload", trigger: "Deposit drop > 40% vs 4-week avg", kpi: "Churn prevented", take: 0.1 },
+        { day: "Mo", when: "Monthly", title: "Safer gambling review", ch: ["email"], msg: "Monthly activity summary with a link to limits.", trigger: "All active players", kpi: "Limit-setting rate", strictOnly: true, special: true },
+        { day: "Mo", when: "Monthly", title: "Account manager check-in", ch: ["call"], msg: "Personal call with a tailored offer and upcoming event invitations.", trigger: "VIP tier", kpi: "VIP retention", vipOnly: true },
+        { day: "B'day", when: "Birthday", title: "Birthday gift", ch: ["email", "popup"], msg: "No-wager gift on their birthday.", trigger: "Birthday", kpi: "Login on the day", special: true, cost: function () { return c.vertical === "sports" ? 5 : 25 * SPIN; }, take: 0.08 }
+      ],
+      reactivation: [
+        { day: "D0", when: "30 days inactive", title: "We miss you", ch: ["email"], msg: "Show what's new since their last visit, plus a return offer.", stage: "reactivation", trigger: "No login for 30 days", kpi: "Reactivation rate", take: 0.06 },
+        { day: "D3", when: "Day 3", title: "Short reminder", ch: ["sms", "push"], msg: "One-line reminder of the return offer with a direct link.", trigger: "No return yet", kpi: "Click rate" },
+        { day: "D7", when: "Day 7", title: "No-wager taster", ch: ["push", "email"], msg: "Small no-wager reward (10 " + extra + ") just for logging in.", trigger: "No return yet", kpi: "Login rate", special: true, cost: function () { return c.vertical === "sports" ? 3 : 10 * SPIN; }, take: 0.08, noStrict: true },
+        { day: "D10", when: "Day 10", title: "Personal call", ch: ["call"], msg: "Account manager asks why they left and offers a tailored return package.", trigger: "VIP tier, no return", kpi: "VIP reactivation", vipOnly: true },
+        { day: "D14", when: "Day 14", title: "Stronger second offer", ch: ["email", "sms"], msg: "A bigger return offer for players who ignored the first.", stage: "reactivation", trigger: "No return after first offer", kpi: "Reactivation rate", take: 0.04, aggrOnly: "Raise the offer 25% over the D0 offer" },
+        { day: "D14", when: "Day 14", title: "Quick survey", ch: ["email"], msg: "Two-question survey on why they stopped. Feeds product and offer decisions.", trigger: "No return", kpi: "Survey responses", diffOnly: true },
+        { day: "D30", when: "Day 30", title: "Close the flow", ch: ["email"], msg: "Final message, then move to dormant. Reduce contact to protect deliverability.", trigger: "No return after 30 days", kpi: "Unsubscribe rate", special: true }
+      ]
+    };
+  }
+
+  function resolveChannels(wanted, available) {
+    var used = [], fb = false;
+    wanted.forEach(function (w) {
+      if (available.indexOf(w) >= 0) { if (used.indexOf(w) < 0) used.push(w); return; }
+      var alt = (FALLBACK[w] || []).filter(function (a) { return available.indexOf(a) >= 0 && used.indexOf(a) < 0; })[0];
+      if (alt) { used.push(alt); fb = true; }
+    });
+    return { used: used, fallback: fb };
+  }
+
+  function buildPlan(c) {
+    var stats = compStats(c.vertical);
+    var reco = recommend(c);
+    var globalPos = c.mode === "auto" ? reco.pos : c.mode;
+    var steps = [], skipped = [], cost = 0, stagesUsed = [];
+    templates(c)[c.focus].forEach(function (t) {
+      if (t.vipOnly && c.segment !== "vip") return;
+      if (t.noStrict && c.regulation === "strict") { skipped.push(t.title + " (not allowed in strict markets)"); return; }
+      if (t.strictOnly && c.regulation !== "strict") return;
+      var pos = t.stage ? (overrides[t.stage] || globalPos) : globalPos;
+      if (t.diffOnly && pos !== "differentiated") return;
+      var chs = resolveChannels(t.ch, c.channels);
+      if (!chs.used.length) { skipped.push(t.title + " (no channel available)"); return; }
+      var s = { day: t.day, when: t.when, title: t.title, channels: chs.used, fallback: chs.fallback, msg: t.msg, trigger: t.trigger, kpi: t.kpi, special: !!t.special, notes: [] };
+      if (t.stage) {
+        var po = positionedOffer(t.stage, pos, c, stats);
+        var o = po.offer;
+        if (t.aggrOnly && pos === "aggressive") { o = Object.assign({}, o); o.max_bonus = nice(o.max_bonus * 1.2); o.free_spins = nice(o.free_spins * 1.2); o.free_bet = nice(o.free_bet * 1.2); s.notes.push(t.aggrOnly); }
+        s.stage = t.stage; s.pos = pos; s.offer = o; s.notes = s.notes.concat(po.notes); s.benchmarked = po.benchmarked;
+        s.cost = realValue(o, c.dep) * t.take;
+        if (stagesUsed.indexOf(t.stage) < 0) stagesUsed.push(t.stage);
+      } else if (t.cost) { s.cost = t.cost() * t.take; }
+      if (s.cost) cost += s.cost;
+      steps.push(s);
+    });
+    var segMult = { low: 0.6, mid: 1, vip: 2.5 }[c.segment];
+    var budgetCap = { low: 15, medium: 30, high: 60 }[c.budget] * segMult;
+    return { c: c, steps: steps, skipped: skipped, cost: cost, budgetCap: budgetCap, reco: reco, globalPos: globalPos, stats: stats, stagesUsed: stagesUsed };
+  }
+
+  function kpiTarget(c, pos) {
+    var bump = pos === "aggressive" ? 3 : pos === "differentiated" ? -1 : 0;
+    var strict = c.regulation === "strict" ? -3 : 0;
+    var t = {
+      acquisition: { k: "Reg → FTD", lo: 25, hi: 35 },
+      early: { k: "FTD → 3rd deposit", lo: 30, hi: 40 },
+      retention: { k: "Monthly retention", lo: 55, hi: 65 },
+      reactivation: { k: "Reactivated in 30d", lo: 6, hi: 12 }
+    }[c.focus];
+    var adj = c.focus === "reactivation" ? Math.round((bump + strict) / 2) : bump + strict;
+    return { k: t.k, lo: t.lo + adj, hi: t.hi + adj };
+  }
+
+  // ---------- render ----------
+  function esc(s) { return String(s).replace(/[&<>"]/g, function (ch) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[ch]; }); }
+  function pill(pos) { return '<span class="pos ' + pos + '">' + POS_LABEL[pos] + "</span>"; }
+  function eur(v) { return "€" + (v >= 100 ? Math.round(v) : v.toFixed(2)); }
+
+  function render() {
+    var c = readConditions();
+    store("cond", c);
+    var plan = buildPlan(c); lastPlan = plan;
+    var kt = kpiTarget(c, plan.globalPos);
+    var ratio = plan.cost / plan.budgetCap;
+    var status = ratio <= 0.85 ? ["Within budget", "var(--good)"] : ratio <= 1.05 ? ["At the limit", "var(--warn)"] : ["Over budget", "var(--bad)"];
+    var touches = plan.steps.length, offers = plan.steps.filter(function (s) { return s.offer; }).length;
+
+    document.getElementById("summary").innerHTML =
+      '<div class="stat"><div class="k">Touchpoints</div><div class="v">' + touches + '</div><div class="n">' + offers + " with an offer</div></div>" +
+      '<div class="stat"><div class="k">Target ' + esc(kt.k) + '</div><div class="v">' + kt.lo + "–" + kt.hi + '%</div><div class="n">Benchmark range to validate</div></div>' +
+      '<div class="stat"><div class="k">Est. bonus cost / player</div><div class="v">' + eur(plan.cost) + '</div><div class="n">Guide for this budget: ' + eur(plan.budgetCap) + "</div></div>" +
+      '<div class="stat"><div class="k">Budget fit</div><div class="v" style="color:' + status[1] + '">' + status[0] + '</div><div class="meter" role="img" aria-label="' + Math.round(ratio * 100) + '% of budget guide"><i style="width:' + Math.min(100, ratio * 100) + "%;background:" + status[1] + '"></i></div></div>';
+
+    document.getElementById("recoPill").innerHTML = pill(plan.globalPos);
+    var recoHtml = '<div class="reco"><div>' + pill(plan.reco.pos) + '</div><div><b>Recommended: ' + POS_LABEL[plan.reco.pos] + "</b>" +
+      (c.mode !== "auto" && c.mode !== plan.reco.pos ? " · you chose " + POS_LABEL[c.mode] : "") +
+      "<ul>" + plan.reco.why.map(function (w) { return "<li>" + w + "</li>"; }).join("") + "</ul></div></div>";
+    if (!comp.rows.length) recoHtml += '<p class="hint">No competitor data loaded, so offers use house defaults. Load example data or upload a CSV to position against the market.</p>';
+    document.getElementById("reco").innerHTML = recoHtml;
+
+    document.getElementById("planNote").textContent = plan.skipped.length ? plan.skipped.length + " step(s) removed: " + plan.skipped.join("; ") : "";
+    document.getElementById("timeline").innerHTML = plan.steps.map(function (s) {
+      var chans = s.channels.map(function (ch) { return '<span class="chan' + (s.fallback ? " fb" : "") + '"' + (s.fallback ? ' title="Fallback channel"' : "") + ">" + CH_LABEL[ch] + "</span>"; }).join("");
+      var offer = s.offer ? '<div class="offer"><span class="lbl">' + STAGES[s.stage] + "</span>" + esc(offerLabel(s.offer)) + " " + pill(s.pos) + "</div>" : "";
+      var notes = s.notes.length ? '<div class="flag">' + s.notes.map(esc).join(" · ") + "</div>" : "";
+      return '<li class="step"><div class="day"><b>' + esc(s.day) + "</b><small>" + esc(s.when) + '</small></div><div class="card' + (s.special ? " special" : "") + '">' +
+        '<div class="card-top"><h4>' + esc(s.title) + '</h4><div class="chans">' + chans + "</div></div>" +
+        '<p class="msg">' + esc(s.msg) + "</p>" + offer + notes +
+        '<div class="meta"><span>Trigger <b>' + esc(s.trigger) + "</b></span><span>Watch <b>" + esc(s.kpi) + "</b></span>" + (s.cost ? "<span>Est. cost <b>" + eur(s.cost) + "</b>/player</span>" : "") + "</div></div></li>";
+    }).join("");
+
+    renderBench(plan);
+    renderTests(plan);
+  }
+
+  function renderBench(plan) {
+    var c = plan.c;
+    var srcEl = document.getElementById("compSrc"), listEl = document.getElementById("compList"), tbl = document.getElementById("bench");
+    if (!comp.rows.length) {
+      srcEl.innerHTML = '<span class="src">No competitor data yet.</span>';
+      listEl.innerHTML = "";
+      tbl.innerHTML = "";
+      return;
+    }
+    srcEl.innerHTML = (comp.source === "example" ? '<span class="tag-ex">Example data</span>' : "") + '<span class="src">' + (comp.source === "example" ? "Made-up offers to show how the tool works" : "Source: " + esc(comp.source)) + " · " + comp.rows.length + " offers</span>";
+    var names = {}; relevantRows(c.vertical).forEach(function (r) { names[r.competitor] = (names[r.competitor] || 0) + 1; });
+    listEl.innerHTML = Object.keys(names).map(function (n) { return "<span>" + esc(n) + " · " + names[n] + "</span>"; }).join("");
+    var stages = Object.keys(STAGES).filter(function (st) { return plan.stats[st] || plan.stagesUsed.indexOf(st) >= 0; });
+    var rows = stages.map(function (st) {
+      var s = plan.stats[st];
+      var pos = overrides[st] || plan.globalPos;
+      var ours = positionedOffer(st, pos, c, plan.stats).offer;
+      var inPlan = plan.stagesUsed.indexOf(st) >= 0;
+      var medO = s ? s.median : null, bestRow = null;
+      if (s) s.rows.forEach(function (r) { if (!bestRow || realValue(r, c.dep) > realValue(bestRow, c.dep)) bestRow = r; });
+      var ourV = realValue(ours, c.dep), medV = medO ? realValue(medO, c.dep) : null;
+      var delta = medV ? (ourV - medV) / medV * 100 : null;
+      var sel = '<select id="ov-' + st + '" data-stage="' + st + '" aria-label="Position for ' + STAGES[st] + '"><option value="">Follow global</option>' +
+        ["aggressive", "inline", "differentiated"].map(function (p) { return '<option value="' + p + '"' + (overrides[st] === p ? " selected" : "") + ">" + POS_LABEL[p] + "</option>"; }).join("") + "</select>";
+      return "<tr><td><b>" + STAGES[st] + "</b>" + (inPlan ? "" : '<div class="hint">Not in this plan</div>') + "</td>" +
+        '<td class="mono">' + (s ? esc(offerLabel(roundO(medO))) + '<div class="hint">' + s.n + " offers · real value " + eur(medV) + "</div>" : "No data") + "</td>" +
+        '<td class="mono">' + (bestRow ? esc(offerLabel(bestRow)) + '<div class="hint">' + esc(bestRow.competitor) + " · real value " + eur(realValue(bestRow, c.dep)) + "</div>" : "–") + "</td>" +
+        '<td class="mono">' + esc(offerLabel(ours)) + '<div class="hint">real value ' + eur(ourV) + "</div></td>" +
+        '<td class="mono">' + (delta === null ? "–" : '<span class="delta ' + (delta >= 0 ? "up" : "down") + '">' + (delta >= 0 ? "+" : "") + Math.round(delta) + "%</span>") + "</td>" +
+        "<td>" + sel + "</td></tr>";
+    }).join("");
+    tbl.innerHTML = "<thead><tr><th>Stage</th><th>Market median</th><th>Best in market</th><th>Your offer</th><th>vs median</th><th>Position</th></tr></thead><tbody>" + rows + "</tbody>";
+  }
+  function roundO(o) { return { match_pct: Math.round(o.match_pct), max_bonus: nice(o.max_bonus), free_spins: nice(o.free_spins), free_bet: nice(o.free_bet), wagering: Math.round(o.wagering), cashback_pct: Math.round(o.cashback_pct) }; }
+
+  function renderTests(plan) {
+    var c = plan.c, t = [];
+    if (plan.globalPos === "aggressive") t.push("Bigger headline offer vs the market median on the first offer step. Measure conversion <i>and</i> 30-day net revenue, since bigger offers often attract bonus hunters.");
+    if (plan.globalPos === "differentiated") t.push("Low-wagering offer vs a standard offer at the same cost. Check whether “no wagering” in the subject line beats a bigger number.");
+    if (plan.globalPos === "inline") t.push("Same offer, different framing: “€" + (plan.steps.filter(function (s) { return s.offer; })[0] ? Math.round(bonusAmt(plan.steps.filter(function (s) { return s.offer; })[0].offer, c.dep)) : 50) + " bonus” vs “double your deposit”.");
+    if (c.channels.indexOf("sms") >= 0 && c.channels.indexOf("push") >= 0) t.push("SMS vs push for the reminder steps. SMS usually converts better but costs more per message.");
+    if (c.focus === "acquisition") t.push("Timing of the first nudge: 1 hour vs 24 hours after registration.");
+    if (c.focus === "early") t.push("2nd deposit offer on day 2 vs day 4.");
+    if (c.focus === "retention") t.push("Cashback paid as cash vs as a bonus with low wagering.");
+    if (c.focus === "reactivation") t.push("Inactivity trigger at 21 vs 30 days.");
+    if (c.channels.indexOf("gamification") >= 0) t.push("Missions with a reward vs the same missions with only progress badges.");
+    document.getElementById("tests").innerHTML = t.slice(0, 4).map(function (x) { return "<li>" + x + "</li>"; }).join("");
+  }
+
+  // ---------- export ----------
+  function planMarkdown(p) {
+    var c = p.c, out = ["# Conversion cycle plan", "", "Focus: " + c.focus + " · Vertical: " + c.vertical + " · Segment: " + c.segment + " · Budget: " + c.budget + " · Regulation: " + c.regulation, "Position: " + POS_LABEL[p.globalPos] + " · Est. bonus cost/player: " + eur(p.cost), ""];
+    out.push("| When | Step | Channels | Offer | Trigger | KPI |", "|---|---|---|---|---|---|");
+    p.steps.forEach(function (s) { out.push("| " + [s.day + " (" + s.when + ")", s.title, s.channels.map(function (x) { return CH_LABEL[x]; }).join(", "), s.offer ? offerLabel(s.offer) + " (" + POS_LABEL[s.pos] + ")" : "", s.trigger, s.kpi].join(" | ") + " |"); });
+    return out.join("\n");
+  }
+  function planCSV(p) {
+    var q = function (v) { return '"' + String(v).replace(/"/g, '""') + '"'; };
+    var out = ["day,when,step,channels,message,offer,position,trigger,kpi,est_cost_eur"];
+    p.steps.forEach(function (s) { out.push([s.day, s.when, s.title, s.channels.map(function (x) { return CH_LABEL[x]; }).join(" + "), s.msg, s.offer ? offerLabel(s.offer) : "", s.pos ? POS_LABEL[s.pos] : "", s.trigger, s.kpi, s.cost ? s.cost.toFixed(2) : ""].map(q).join(",")); });
+    return out.join("\n");
+  }
+  function copy(text, done) {
+    var fallback = function () { var ta = document.createElement("textarea"); ta.value = text; document.body.appendChild(ta); ta.select(); try { document.execCommand("copy"); toast(done); } catch (e) { toast("Copy failed. Select the text manually."); } ta.remove(); };
+    if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(text).then(function () { toast(done); }, fallback); else fallback();
+  }
+  var tt;
+  function toast(msg) { var el = document.getElementById("toast"); el.textContent = msg; el.hidden = false; clearTimeout(tt); tt = setTimeout(function () { el.hidden = true; }, 2600); }
+
+  // ---------- wire up ----------
+  document.getElementById("tplText").textContent = SAMPLE.split("\n").slice(0, 3).join("\n");
+  document.querySelector(".rail").addEventListener("change", render);
+  document.getElementById("dep").addEventListener("input", render);
+  document.getElementById("bench").addEventListener("change", function (e) {
+    var st = e.target.getAttribute("data-stage"); if (!st) return;
+    if (e.target.value) overrides[st] = e.target.value; else delete overrides[st];
+    render();
+  });
+  document.getElementById("csvFile").addEventListener("change", function (e) {
+    var f = e.target.files[0]; if (!f) return;
+    var r = new FileReader(); r.onload = function () { ingest(String(r.result), f.name); }; r.readAsText(f); e.target.value = "";
+  });
+  document.getElementById("uploadLbl").addEventListener("keydown", function (e) { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); document.getElementById("csvFile").click(); } });
+  document.getElementById("loadSample").addEventListener("click", function () { ingest(SAMPLE, "example"); });
+  document.getElementById("clearComp").addEventListener("click", function () { comp = { rows: [], source: null, skipped: 0 }; overrides = {}; store("comp", null); render(); });
+  document.getElementById("copyTpl").addEventListener("click", function () { copy(document.getElementById("tplText").textContent, "Template copied"); });
+  document.getElementById("copyMd").addEventListener("click", function () { copy(planMarkdown(lastPlan), "Plan copied as Markdown"); });
+  document.getElementById("copyCsv").addEventListener("click", function () { copy(planCSV(lastPlan), "Plan copied as CSV. Paste into a spreadsheet."); });
+
+  applyConditions(load("cond"));
+  var savedComp = load("comp");
+  if (savedComp && savedComp.rows && savedComp.rows.length) comp = savedComp;
+  else { // open in a working state with the example market loaded
+    var rows = parseCSV(SAMPLE), head = rows[0];
+    comp = { rows: rows.slice(1).map(function (r) { var o = {}; head.forEach(function (h, i) { o[h] = r[i]; }); var rec = { competitor: o.competitor, vertical: o.vertical, stage: o.stage }; FIELDS.forEach(function (f) { rec[f] = parseFloat(o[f]) || 0; }); return rec; }), source: "example", skipped: 0 };
+  }
+  render();
+})();
+</script>
+
+</body></html>
