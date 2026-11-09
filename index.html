@@ -185,6 +185,64 @@ textarea.inp { resize: vertical; min-height: 70px; }
 .stages input:focus-visible + span { outline: 2px solid var(--accent); outline-offset: 6px; }
 .stages .ci { background: rgba(255,255,255,.22); }
 
+/* View switch */
+.viewnav { display: flex; gap: 4px; background: var(--surface); padding: 5px; border-radius: 16px; box-shadow: var(--shadow-sm); width: max-content; max-width: 100%; margin-bottom: 16px; }
+.viewnav a { display: inline-flex; align-items: center; gap: 8px; padding: 9px 16px; border-radius: 12px; font-weight: 500; color: var(--muted); text-decoration: none; white-space: nowrap; }
+.viewnav a svg { width: 17px; height: 17px; }
+.viewnav a.on { background: var(--accent); color: var(--on-accent); }
+.viewnav a:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.viewnav .num { font-size: 11px; padding: 1px 7px; border-radius: 999px; background: var(--accent-soft); color: var(--accent); }
+.viewnav a.on .num { background: rgba(255,255,255,.25); color: inherit; }
+
+/* Competitors */
+.capp { display: grid; grid-template-columns: 300px minmax(0, 1fr); gap: 18px; align-items: start; }
+@media (max-width: 860px) { .capp { grid-template-columns: minmax(0, 1fr); } }
+.drop { border: 2px dashed var(--line); border-radius: 20px; padding: 26px 14px; text-align: center; display: flex; flex-direction: column; align-items: center; gap: 8px; cursor: pointer; background: var(--sunk); transition: border-color .12s, background .12s; }
+.drop:hover, .drop.over { border-color: var(--accent); background: var(--accent-soft); }
+.drop .ci { background: var(--accent); width: 48px; height: 48px; border-radius: 15px; }
+.drop .ci svg { width: 24px; height: 24px; }
+.drop b { font-size: 15px; }
+.drop small { color: var(--muted); font-size: 12px; }
+.drop:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.keystate { display: flex; align-items: center; gap: 10px; padding: 10px 12px; border-radius: 14px; background: var(--mint-soft); color: var(--mint); font-weight: 500; font-size: 13px; }
+.keystate.off { background: var(--coral-soft); color: var(--coral); }
+.keystate i { width: 8px; height: 8px; border-radius: 50%; background: currentColor; flex: none; }
+.small { font-size: 12px; color: var(--muted); margin: 0; }
+.ccards { display: grid; grid-template-columns: repeat(auto-fill, minmax(270px, 1fr)); gap: 14px; }
+.ccard { background: var(--surface); border-radius: 20px; box-shadow: var(--shadow); overflow: hidden; display: flex; flex-direction: column; min-width: 0; }
+.thumbs { display: flex; gap: 3px; height: 104px; background: var(--sunk); }
+.thumbs img { flex: 1 1 0; min-width: 0; height: 100%; object-fit: cover; object-position: top; }
+.thumbs .noimg { flex: 1; display: grid; place-items: center; color: var(--muted); font-size: 12px; }
+.cbody { padding: 14px 16px; display: flex; flex-direction: column; gap: 10px; flex: 1; }
+.cname { display: flex; align-items: center; gap: 10px; }
+.cname b { font-size: 16px; font-weight: 600; flex: 1; min-width: 0; overflow-wrap: anywhere; }
+.avatar { width: 30px; height: 30px; border-radius: 50%; display: grid; place-items: center; color: #FFFFFF; font-weight: 600; font-size: 13px; flex: none; }
+.headline { background: var(--coral-soft); color: var(--coral); font-weight: 600; padding: 8px 10px; border-radius: 12px; font-size: 13px; }
+.facts { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
+.fact { background: var(--sunk); border-radius: 10px; padding: 6px 9px; min-width: 0; }
+.fact small { display: block; font-size: 10px; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); }
+.fact span { font-weight: 600; font-variant-numeric: tabular-nums; }
+.fact.unsure span { color: var(--warn); }
+.conds { margin: 0; padding-left: 18px; font-size: 12px; color: var(--muted); }
+.conds li + li { margin-top: 2px; }
+.cfoot { display: flex; gap: 8px; padding: 0 16px 14px; }
+.reading { display: flex; flex-direction: column; gap: 8px; }
+.reading .bar { height: 10px; border-radius: 5px; background: linear-gradient(90deg, var(--sunk) 25%, var(--accent-soft) 50%, var(--sunk) 75%); background-size: 200% 100%; animation: shimmer 1.3s linear infinite; }
+@keyframes shimmer { from { background-position: 200% 0; } to { background-position: -200% 0; } }
+@media (prefers-reduced-motion: reduce) { .reading .bar { animation: none; } }
+.errbox { background: var(--coral-soft); color: var(--coral); border-radius: 12px; padding: 8px 10px; font-size: 12px; }
+.cmpwrap { overflow-x: auto; }
+.cmp { border-collapse: separate; border-spacing: 0; width: 100%; min-width: 720px; font-size: 13px; }
+.cmp th { text-align: left; font-size: 11px; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); font-weight: 500; background: var(--sunk); padding: 9px 10px; }
+.cmp th:first-child { border-radius: 12px 0 0 12px; } .cmp th:last-child { border-radius: 0 12px 12px 0; }
+.cmp td { padding: 10px; border-bottom: 1px solid var(--line); vertical-align: middle; font-variant-numeric: tabular-nums; }
+.cmp tr.you td { background: var(--accent-soft); }
+.cmp tr.you td:first-child { border-radius: 12px 0 0 12px; } .cmp tr.you td:last-child { border-radius: 0 12px 12px 0; }
+.who { display: flex; align-items: center; gap: 8px; font-weight: 600; }
+.best { display: inline-block; background: var(--mint-soft); color: var(--mint); font-weight: 600; padding: 2px 8px; border-radius: 8px; }
+.mbar { height: 6px; border-radius: 3px; background: var(--coral-bg); margin-top: 5px; min-width: 4px; }
+.empty-c { text-align: center; color: var(--muted); padding: 30px 10px; }
+
 .toast { position: fixed; left: 50%; transform: translateX(-50%); bottom: calc(18px + env(safe-area-inset-bottom, 0px)); background: var(--ink); color: var(--bg); padding: 10px 16px; border-radius: 14px; font-weight: 500; z-index: 80; box-shadow: var(--shadow); }
 footer { color: var(--muted); font-size: 12px; margin-top: 24px; text-align: center; }
 @media (prefers-reduced-motion: reduce) { .block, .card { transition: none; } }
@@ -211,6 +269,12 @@ footer { color: var(--muted); font-size: 12px; margin-top: 24px; text-align: cen
     </div>
   </header>
 
+  <nav class="viewnav" aria-label="Sections">
+    <a href="#builder" id="nav-builder"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="4" height="12" rx="1.5"/><rect x="9" y="4" width="4" height="8" rx="1.5"/><rect x="15" y="4" width="2.5" height="5" rx="1"/></svg>Cycle builder</a>
+    <a href="#competitors" id="nav-competitors"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="7" cy="7" r="3"/><circle cx="14" cy="9" r="2.5"/><path d="M2 17c.6-3 2.6-4.5 5-4.5s4.4 1.5 5 4.5M12.5 13.2c2-.4 4.4.6 5 3.8"/></svg>Competitor offers <span class="num" id="compCount">0</span></a>
+  </nav>
+
+  <div id="view-builder">
   <nav class="tabs" id="tabs" aria-label="Your cycles"></nav>
   <section class="summary" id="summary" aria-label="Cycle summary"></section>
 
@@ -235,6 +299,35 @@ footer { color: var(--muted); font-size: 12px; margin-top: 24px; text-align: cen
     <section class="panel boardwrap" id="boardwrap" aria-label="Cycle timeline">
       <div class="board" id="board"></div>
     </section>
+  </div>
+  </div>
+
+  <div id="view-competitors" hidden>
+    <div class="capp">
+      <div class="side">
+        <section class="panel stack" aria-labelledby="upH">
+          <h2 class="ptitle" id="upH">Add a competitor</h2>
+          <div class="drop" id="drop" role="button" tabindex="0" aria-label="Upload screenshots">
+            <i class="ci"><svg viewBox="0 0 20 20" fill="none" stroke="#FFFFFF" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="14" height="12" rx="2"/><circle cx="7.5" cy="8.5" r="1.5"/><path d="M17 13l-4-4-7 7"/></svg></i>
+            <b>Drop screenshots here</b>
+            <small>or click to choose, or paste with Ctrl+V. Add the promo page and the terms together, up to 5 images per competitor.</small>
+          </div>
+          <input type="file" id="shotFile" accept="image/png,image/jpeg,image/webp,image/gif" multiple hidden>
+          <button class="btn" type="button" id="addManual">Add an offer by hand</button>
+        </section>
+        <section class="panel stack" aria-labelledby="keyH">
+          <h2 class="ptitle" id="keyH">Screenshot reading</h2>
+          <div id="keyPanel"></div>
+        </section>
+      </div>
+      <div class="stack" style="gap:18px;min-width:0">
+        <section class="panel" aria-labelledby="cmpH">
+          <div class="row" style="justify-content:space-between;margin-bottom:12px"><h2 class="ptitle" id="cmpH" style="margin:0">Welcome offers side by side</h2><span class="small" id="cmpNote"></span></div>
+          <div class="cmpwrap" id="cmp"></div>
+        </section>
+        <div class="ccards" id="ccards"></div>
+      </div>
+    </div>
   </div>
   <footer>Your cycles are saved in this browser. Use Export to back them up or move them to another computer.</footer>
 </div>
@@ -339,13 +432,16 @@ footer { color: var(--muted); font-size: 12px; margin-top: 24px; text-align: cen
     var first = makeCycle("Welcome journey", "acquisition", true);
     state = { cycles: [first], activeId: first.id };
   }
-  function save() { try { localStorage.setItem("ccp2_state", JSON.stringify(state)); } catch (e) {} }
+  if (!Array.isArray(state.competitors)) state.competitors = [];
+  state.competitors.forEach(function (x) { if (x.status === "reading") { x.status = "error"; x.error = "Reading was interrupted. Upload the screenshots again."; } });
+  function save() { try { localStorage.setItem("ccp2_state", JSON.stringify(state)); } catch (e) { toast("Browser storage is full. Delete some competitor offers or export a backup."); } }
   function commit() { history.push(JSON.stringify(state)); if (history.length > 80) history.shift(); }
   function undo() {
     if (!history.length) return;
     state = JSON.parse(history.pop()); lastKey = null;
     if (ui.sel && !findStep(ui.sel)) closeDrawer();
-    render(); if (ui.sel) renderDrawer(); save(); toast("Undone");
+    if (ui.compSel && !findComp(ui.compSel)) closeDrawer();
+    render(); if (ui.sel) renderDrawer(); if (ui.compSel) renderCompDrawer(); save(); toast("Undone");
   }
   function cyc() { return state.cycles.filter(function (c) { return c.id === state.activeId; })[0] || state.cycles[0]; }
   function findStep(id) { return cyc().steps.filter(function (s) { return s.id === id; })[0]; }
@@ -390,7 +486,7 @@ footer { color: var(--muted); font-size: 12px; margin-top: 24px; text-align: cen
   function render() {
     var c = cyc();
     c.days = uniqDays(c.days.concat(c.steps.map(function (s) { return s.day; })));
-    renderTabs(); renderSummary(c); renderSettings(c); renderBoard(c);
+    renderTabs(); renderSummary(c); renderSettings(c); renderBoard(c); renderCompetitors();
     document.getElementById("undoBtn").disabled = !history.length;
   }
   function renderTabs() {
@@ -448,7 +544,7 @@ footer { color: var(--muted); font-size: 12px; margin-top: 24px; text-align: cen
   }
 
   // ---------- drawer ----------
-  function closeDrawer() { ui.sel = null; ui.armed = null; document.getElementById("drawer").hidden = true; document.querySelectorAll(".card.sel").forEach(function (e) { e.classList.remove("sel"); }); }
+  function closeDrawer() { ui.sel = null; ui.compSel = null; ui.armed = null; document.getElementById("drawer").hidden = true; document.querySelectorAll(".card.sel").forEach(function (e) { e.classList.remove("sel"); }); }
   function renderDrawer() {
     var s = findStep(ui.sel), dr = document.getElementById("drawer");
     if (!s) { closeDrawer(); return; }
@@ -660,6 +756,294 @@ footer { color: var(--muted); font-size: 12px; margin-top: 24px; text-align: cen
     toast(tpl ? "Cycle created with suggested steps" : "Blank cycle created. Drag a channel onto Day 0.");
   });
 
+
+  // ---------- competitor offers ----------
+  var SDK_URL = "https://cdn.jsdelivr.net/npm/@anthropic-ai/sdk@1.3.0/+esm";
+  var MODEL = "claude-opus-5-5";
+  var KEY_STORE = "ccp2_api_key";
+  var AV = ["var(--accent-2)", "var(--coral-bg)", "var(--mint-bg)", "var(--sky-bg)", "var(--c-call)"];
+  var imageCache = {}; // competitor id -> images sent to Claude (kept for retry in this session only)
+  var NUM = { anyOf: [{ type: "number" }, { type: "null" }] };
+  var STR = { anyOf: [{ type: "string" }, { type: "null" }] };
+  var SCHEMA = {
+    type: "object", additionalProperties: false,
+    properties: {
+      competitor: { type: "string", description: "Brand name of the casino or sportsbook" },
+      offer_title: { type: "string", description: "Headline of the welcome offer as written" },
+      offer_type: { type: "string", enum: ["match", "free_spins", "free_bet", "cashback", "no_deposit", "other"] },
+      match_pct: NUM, max_bonus: NUM, currency: STR, free_spins: NUM, free_bet_value: NUM,
+      wagering_x: NUM, wagering_on: STR, min_deposit: NUM, max_bet: NUM, expiry_days: NUM, max_cashout: NUM,
+      eligible_games: STR,
+      other_conditions: { type: "array", items: { type: "string" } },
+      uncertain_fields: { type: "array", items: { type: "string" } }
+    },
+    required: ["competitor", "offer_title", "offer_type", "match_pct", "max_bonus", "currency", "free_spins", "free_bet_value", "wagering_x", "wagering_on", "min_deposit", "max_bet", "expiry_days", "max_cashout", "eligible_games", "other_conditions", "uncertain_fields"]
+  };
+  var SYSTEM = "You read screenshots of online casino and sportsbook promotion pages and their bonus terms, and extract the main welcome offer into the given JSON schema.\n" +
+    "Use only what is visible in the screenshots. When a value is not shown, return null for it and add the field name to uncertain_fields. Also add a field to uncertain_fields when the text is blurry, cut off or ambiguous.\n" +
+    "Write amounts as plain numbers without currency symbols and put the ISO currency code in currency. If the welcome offer is split across several deposits, use the first deposit for match_pct and max_bonus, and describe the rest in other_conditions.\n" +
+    "wagering_on says what the wagering applies to, for example \"bonus\" or \"deposit + bonus\". expiry_days is how long the player has to meet the wagering. other_conditions lists any other rules a player would care about, each as one short plain sentence.";
+  var FIELDS = [
+    ["name", "Competitor", "text"], ["title", "Offer headline", "text"],
+    ["match_pct", "Match %", "num"], ["max_bonus", "Max bonus", "num"], ["free_spins", "Free spins", "num"], ["free_bet", "Free bet", "num"],
+    ["wagering", "Wagering (x)", "num"], ["wager_on", "Wagering applies to", "text"], ["min_deposit", "Min deposit", "num"], ["max_bet", "Max bet", "num"],
+    ["expiry_days", "Days to wager", "num"], ["max_cashout", "Max cashout", "num"], ["currency", "Currency", "text"], ["games", "Eligible games", "text"]
+  ];
+  var UNSURE_MAP = { competitor: "name", offer_title: "title", free_bet_value: "free_bet", wagering_x: "wagering", wagering_on: "wager_on", eligible_games: "games" };
+
+  function findComp(id) { return (state.competitors || []).filter(function (x) { return x.id === id; })[0]; }
+  function getKey() { try { return localStorage.getItem(KEY_STORE) || ""; } catch (e) { return ""; } }
+  function cur(x) { var c = (x.currency || "EUR").toUpperCase(); return c === "EUR" ? "€" : c === "GBP" ? "£" : c === "USD" ? "$" : c + " "; }
+  function has(v) { return v !== null && v !== undefined && v !== ""; }
+  function compHeadline(x) {
+    var p = [];
+    if (has(x.match_pct) && has(x.max_bonus)) p.push(x.match_pct + "% up to " + cur(x) + x.max_bonus);
+    else if (has(x.max_bonus)) p.push("Up to " + cur(x) + x.max_bonus);
+    if (has(x.free_spins) && x.free_spins > 0) p.push(x.free_spins + " free spins");
+    if (has(x.free_bet) && x.free_bet > 0) p.push(cur(x) + x.free_bet + " free bet");
+    return p.join(" + ") || x.title || "Offer details not filled in";
+  }
+
+  function setView() {
+    var v = location.hash === "#competitors" ? "competitors" : "builder";
+    document.getElementById("view-builder").hidden = v !== "builder";
+    document.getElementById("view-competitors").hidden = v !== "competitors";
+    document.getElementById("nav-builder").classList.toggle("on", v === "builder");
+    document.getElementById("nav-competitors").classList.toggle("on", v === "competitors");
+    document.getElementById("nav-builder").setAttribute("aria-current", v === "builder" ? "page" : "false");
+    document.getElementById("nav-competitors").setAttribute("aria-current", v === "competitors" ? "page" : "false");
+    closeDrawer();
+  }
+  window.addEventListener("hashchange", setView);
+
+  function renderKeyPanel() {
+    var k = getKey(), el = document.getElementById("keyPanel");
+    if (k) {
+      el.innerHTML = '<div class="keystate"><i></i>Claude is connected (key ending ' + esc(k.slice(-4)) + ")</div>" +
+        '<p class="small">Each screenshot set costs about 2 to 5 cents. The key stays in this browser and is only sent to Anthropic.</p>' +
+        '<button class="btn danger" type="button" id="keyRemove">Remove key</button>';
+    } else {
+      el.innerHTML = '<div class="keystate off"><i></i>Not connected. Offers must be filled in by hand.</div>' +
+        '<label class="field"><span>Anthropic API key</span><input class="inp" id="keyInput" type="password" autocomplete="off" placeholder="sk-ant-..."></label>' +
+        '<button class="btn primary" type="button" id="keySave">Connect</button>' +
+        '<p class="small">Create a key at <a href="https://platform.claude.com/settings/keys" target="_blank" rel="noopener">platform.claude.com</a>. It is saved only in this browser, so use this on a computer you trust.</p>';
+    }
+  }
+
+  function renderCompetitors() {
+    var list = state.competitors || [];
+    document.getElementById("compCount").textContent = list.length;
+    document.getElementById("undoBtn").disabled = !history.length;
+    renderKeyPanel();
+    // cards
+    var cards = document.getElementById("ccards");
+    if (!list.length) { cards.innerHTML = '<div class="panel empty-c">No competitor offers yet. Drop screenshots of a competitor\'s welcome offer on the left.</div>'; }
+    else cards.innerHTML = list.map(function (x, i) {
+      var th = x.thumbs && x.thumbs.length ? x.thumbs.map(function (t) { return '<img src="' + t + '" alt="">'; }).join("") : '<div class="noimg">Added by hand</div>';
+      var body;
+      if (x.status === "reading") body = '<div class="cname"><span class="avatar" style="background:' + AV[i % AV.length] + '">?</span><b>Reading screenshots…</b></div><div class="reading"><div class="bar"></div><div class="bar" style="width:70%"></div><div class="bar" style="width:85%"></div></div><p class="small">This usually takes 10 to 40 seconds.</p>';
+      else {
+        var uns = x.uncertain || [];
+        var fact = function (k, label, val) { return '<div class="fact' + (uns.indexOf(k) >= 0 ? " unsure" : "") + '"><small>' + label + "</small><span>" + (has(val) ? esc(val) : "–") + "</span></div>"; };
+        body = '<div class="cname"><span class="avatar" style="background:' + AV[i % AV.length] + '">' + esc((x.name || "?").charAt(0).toUpperCase()) + "</span><b>" + esc(x.name || "Unnamed competitor") + "</b></div>" +
+          (x.status === "error" ? '<div class="errbox">' + esc(x.error || "Couldn't read the screenshots.") + "</div>" : "") +
+          '<div class="headline">' + esc(compHeadline(x)) + "</div>" +
+          '<div class="facts">' + fact("wagering", "Wagering", has(x.wagering) ? x.wagering + "x" + (x.wager_on ? " " + x.wager_on : "") : null) + fact("min_deposit", "Min deposit", has(x.min_deposit) ? cur(x) + x.min_deposit : null) +
+          fact("max_bet", "Max bet", has(x.max_bet) ? cur(x) + x.max_bet : null) + fact("expiry_days", "Days to wager", x.expiry_days) + "</div>" +
+          (x.conditions && x.conditions.length ? '<ul class="conds">' + x.conditions.slice(0, 4).map(function (c) { return "<li>" + esc(c) + "</li>"; }).join("") + (x.conditions.length > 4 ? "<li>+" + (x.conditions.length - 4) + " more</li>" : "") + "</ul>" : "") +
+          (uns.length ? '<p class="small" style="color:var(--warn)">Check: ' + esc(uns.map(function (u) { var f = FIELDS.filter(function (F) { return F[0] === u; })[0]; return f ? f[1] : u; }).join(", ")) + "</p>" : "");
+      }
+      var foot = x.status === "reading" ? "" : '<div class="cfoot"><button class="btn" type="button" data-cedit="' + x.id + '">Edit</button>' + (x.status === "error" && imageCache[x.id] ? '<button class="btn" type="button" data-cretry="' + x.id + '">Try again</button>' : "") + "</div>";
+      return '<article class="ccard"><div class="thumbs">' + th + '</div><div class="cbody">' + body + "</div>" + foot + "</article>";
+    }).join("");
+    renderCompare(list.filter(function (x) { return x.status !== "reading"; }));
+  }
+
+  function yourOffer() {
+    var steps = cyc().steps.slice().sort(function (a, b) { return a.day - b.day; });
+    var s = steps.filter(function (x) { return x.offer && ["match", "freespins", "freebet"].indexOf(x.offer.type) >= 0; })[0];
+    if (!s) return null;
+    var o = s.offer, r = { name: "You · " + cyc().name, currency: "EUR" };
+    if (o.type === "match") { r.match_pct = o.pct; r.max_bonus = o.cap; r.wagering = o.wager; }
+    if (o.type === "freespins") { r.free_spins = o.count; r.wagering = o.wager; }
+    if (o.type === "freebet") { r.free_bet = o.value; }
+    return r;
+  }
+  function renderCompare(list) {
+    var el = document.getElementById("cmp"), you = yourOffer();
+    document.getElementById("cmpNote").textContent = you ? "Your row uses the first offer in " + cyc().name : "Add an offer to a cycle to compare yourself";
+    if (!list.length) { el.innerHTML = '<p class="small">Offers you add appear here, with the best value in each column highlighted.</p>'; return; }
+    var rows = (you ? [Object.assign({ you: true }, you)] : []).concat(list);
+    var cols = [["max_bonus", "Max bonus", "high"], ["free_spins", "Free spins", "high"], ["wagering", "Wagering", "low"], ["min_deposit", "Min deposit", "low"], ["max_bet", "Max bet", "high"], ["expiry_days", "Days to wager", "high"]];
+    var best = {};
+    cols.forEach(function (c) {
+      var vals = list.concat(you ? [you] : []).map(function (x) { return x[c[0]]; }).filter(has).map(Number);
+      if (vals.length > 1) best[c[0]] = c[2] === "high" ? Math.max.apply(null, vals) : Math.min.apply(null, vals);
+    });
+    var maxB = Math.max.apply(null, rows.map(function (x) { return +x.max_bonus || 0; }).concat([1]));
+    var cell = function (x, c) {
+      var v = x[c[0]]; if (!has(v)) return '<td class="small">–</td>';
+      var txt = c[0] === "wagering" ? v + "x" : c[0] === "max_bonus" || c[0] === "min_deposit" || c[0] === "max_bet" ? cur(x) + v : String(v);
+      var inner = best[c[0]] === +v ? '<span class="best">' + esc(txt) + "</span>" : esc(txt);
+      if (c[0] === "max_bonus") inner += '<div class="mbar" style="width:' + Math.round((+v / maxB) * 100) + '%"></div>';
+      return "<td>" + inner + "</td>";
+    };
+    el.innerHTML = '<table class="cmp"><thead><tr><th>Brand</th><th>Offer</th>' + cols.map(function (c) { return "<th>" + c[1] + "</th>"; }).join("") + "</tr></thead><tbody>" +
+      rows.map(function (x, i) {
+        var idx = x.you ? -1 : list.indexOf(x);
+        var av = x.you ? '<span class="avatar" style="background:var(--accent)">Y</span>' : '<span class="avatar" style="background:' + AV[(state.competitors.indexOf(x)) % AV.length] + '">' + esc((x.name || "?").charAt(0).toUpperCase()) + "</span>";
+        return '<tr class="' + (x.you ? "you" : "") + '"><td><div class="who">' + av + esc(x.name || "Unnamed") + "</div></td><td>" + esc(x.you ? compHeadline(x) : (x.title || compHeadline(x))) + "</td>" + cols.map(function (c) { return cell(x, c); }).join("") + "</tr>";
+      }).join("") + "</tbody></table>";
+  }
+
+  // image helpers
+  function loadImage(file) {
+    return new Promise(function (res, rej) {
+      var url = URL.createObjectURL(file), img = new Image();
+      img.onload = function () { res({ img: img, url: url }); };
+      img.onerror = function () { URL.revokeObjectURL(url); rej(new Error("That file isn't an image the browser can read.")); };
+      img.src = url;
+    });
+  }
+  function scaled(img, maxEdge, maxW, quality) {
+    var w = img.naturalWidth, h = img.naturalHeight, k = Math.min(1, maxEdge / Math.max(w, h), maxW ? maxW / w : 1);
+    var c = document.createElement("canvas"); c.width = Math.max(1, Math.round(w * k)); c.height = Math.max(1, Math.round(h * k));
+    var g = c.getContext("2d"); g.fillStyle = "#FFFFFF"; g.fillRect(0, 0, c.width, c.height); g.drawImage(img, 0, 0, c.width, c.height);
+    return c.toDataURL("image/jpeg", quality);
+  }
+  async function handleFiles(files) {
+    files = Array.prototype.filter.call(files, function (f) { return /^image\//.test(f.type); });
+    if (!files.length) { toast("Choose PNG, JPG, WebP or GIF screenshots."); return; }
+    if (files.length > 5) { toast("Using the first 5 screenshots. Add one competitor at a time."); files = files.slice(0, 5); }
+    var shots = [], thumbs = [];
+    try {
+      for (var i = 0; i < files.length; i++) {
+        var L = await loadImage(files[i]);
+        shots.push({ type: "image", source: { type: "base64", media_type: "image/jpeg", data: scaled(L.img, 1568, 0, 0.85).split(",")[1] } });
+        thumbs.push(scaled(L.img, 400, 220, 0.7)); URL.revokeObjectURL(L.url);
+      }
+    } catch (err) { toast(err.message); return; }
+    commit();
+    var x = { id: uid(), name: "", title: "", conditions: [], uncertain: [], thumbs: thumbs, status: getKey() ? "reading" : "done", addedAt: new Date().toISOString() };
+    state.competitors.unshift(x); imageCache[x.id] = shots; save(); renderCompetitors();
+    if (!getKey()) { ui.compSel = x.id; renderCompDrawer(); toast("Connect Claude to read screenshots automatically. For now, fill in the offer by hand."); return; }
+    readOffer(x.id);
+  }
+
+  async function readOffer(id) {
+    var x = findComp(id), shots = imageCache[id]; if (!x || !shots) return;
+    x.status = "reading"; x.error = ""; renderCompetitors();
+    try {
+      var mod = await import(SDK_URL);
+      var Anthropic = mod.default;
+      var client = new Anthropic({ apiKey: getKey(), dangerouslyAllowBrowser: true });
+      try {
+        var res = await client.beta.messages.create({
+          model: MODEL,
+          max_tokens: 16000,
+          betas: ["server-side-fallback-2026-07-01"],
+          fallbacks: "default",
+          output_config: { effort: "medium", format: { type: "json_schema", schema: SCHEMA } },
+          system: SYSTEM,
+          messages: [{ role: "user", content: shots.concat([{ type: "text", text: "Extract the main welcome offer from these " + shots.length + " screenshot(s)." }]) }]
+        });
+      } catch (err) {
+        if (err instanceof Anthropic.AuthenticationError) throw new Error("Your API key was rejected. Remove it and connect again with a valid key.");
+        if (err instanceof Anthropic.RateLimitError) throw new Error("Too many requests right now. Wait a minute and try again.");
+        if (err instanceof Anthropic.BadRequestError) throw new Error("Claude couldn't accept these images (" + (err.message || "bad request") + ").");
+        if (err instanceof Anthropic.APIConnectionError) throw new Error("Couldn't reach Anthropic. Check your internet connection.");
+        if (err instanceof Anthropic.APIError) throw new Error("Anthropic returned an error (" + (err.status || "unknown") + "). Try again.");
+        throw err;
+      }
+      if (res.stop_reason === "refusal") throw new Error("Claude declined to read these screenshots. Fill in the offer by hand.");
+      if (res.stop_reason === "max_tokens") throw new Error("The answer was cut off. Try fewer screenshots at once.");
+      var text = res.content.filter(function (b) { return b.type === "text"; }).map(function (b) { return b.text; }).join("");
+      var d = JSON.parse(text);
+      x = findComp(id); if (!x) return; // deleted while reading
+      commit();
+      Object.assign(x, {
+        status: "done", name: d.competitor || "", title: d.offer_title || "", type: d.offer_type,
+        match_pct: d.match_pct, max_bonus: d.max_bonus, currency: d.currency, free_spins: d.free_spins, free_bet: d.free_bet_value,
+        wagering: d.wagering_x, wager_on: d.wagering_on, min_deposit: d.min_deposit, max_bet: d.max_bet, expiry_days: d.expiry_days,
+        max_cashout: d.max_cashout, games: d.eligible_games, conditions: d.other_conditions || [],
+        uncertain: (d.uncertain_fields || []).map(function (u) { return UNSURE_MAP[u] || u; })
+      });
+      save(); renderCompetitors(); toast("Read " + (x.name || "the offer") + ". Check the highlighted fields.");
+    } catch (err) {
+      x = findComp(id); if (!x) return;
+      x.status = "error";
+      x.error = err instanceof SyntaxError ? "Claude's answer wasn't in the expected format. Try again." : /Failed to fetch|import|module/i.test(err.message || "") && !/Anthropic/.test(err.message) ? "Couldn't load the Claude library. Check your connection, or open the tool from its GitHub Pages link." : err.message;
+      save(); renderCompetitors();
+    }
+  }
+
+  function renderCompDrawer() {
+    var x = findComp(ui.compSel), dr = document.getElementById("drawer");
+    if (!x) { closeDrawer(); return; }
+    var uns = x.uncertain || [];
+    var f = function (F) {
+      var v = x[F[0]];
+      return '<label class="field"><span>' + F[1] + (uns.indexOf(F[0]) >= 0 ? ' <b style="color:var(--warn)">· check</b>' : "") + '</span><input class="inp" data-c="' + F[0] + '" id="c-' + F[0] + '" type="' + (F[2] === "num" ? "number" : "text") + '"' + (F[2] === "num" ? ' min="0" step="any"' : "") + ' value="' + esc(has(v) ? v : "") + '"></label>';
+    };
+    dr.innerHTML = '<div class="dhead"><span class="avatar" style="background:var(--coral-bg)">' + esc((x.name || "?").charAt(0).toUpperCase()) + '</span><h3 id="dTitle">Competitor offer</h3><button type="button" class="iconbtn" id="dClose" aria-label="Close">' + svg('<path d="M5 5l10 10M15 5L5 15"/>') + "</button></div>" +
+      '<div class="dbody">' + f(FIELDS[0]) + f(FIELDS[1]) +
+      '<div class="grid2">' + FIELDS.slice(2, 12).map(f).join("") + "</div>" + '<div class="grid2">' + f(FIELDS[12]) + f(FIELDS[13]) + "</div>" +
+      '<label class="field"><span>Other conditions (one per line)</span><textarea class="inp" id="c-conds" data-c="conditions" rows="5">' + esc((x.conditions || []).join("\n")) + "</textarea></label></div>" +
+      '<div class="dfoot"><span></span><button type="button" class="btn danger' + (ui.armed === "comp" ? " armed" : "") + '" id="cDel">' + (ui.armed === "comp" ? "Click again to delete" : "Delete offer") + "</button></div>";
+    dr.hidden = false;
+  }
+
+  // events
+  var drop = document.getElementById("drop"), shotFile = document.getElementById("shotFile");
+  drop.addEventListener("click", function () { shotFile.click(); });
+  drop.addEventListener("keydown", function (e) { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); shotFile.click(); } });
+  shotFile.addEventListener("change", function (e) { handleFiles(e.target.files); e.target.value = ""; });
+  ["dragenter", "dragover"].forEach(function (t) { drop.addEventListener(t, function (e) { e.preventDefault(); drop.classList.add("over"); }); });
+  ["dragleave", "drop"].forEach(function (t) { drop.addEventListener(t, function (e) { e.preventDefault(); drop.classList.remove("over"); }); });
+  drop.addEventListener("drop", function (e) { if (e.dataTransfer && e.dataTransfer.files.length) handleFiles(e.dataTransfer.files); });
+  document.addEventListener("paste", function (e) {
+    if (document.getElementById("view-competitors").hidden) return;
+    var files = Array.prototype.map.call((e.clipboardData && e.clipboardData.items) || [], function (it) { return it.kind === "file" ? it.getAsFile() : null; }).filter(Boolean);
+    if (files.length) { e.preventDefault(); handleFiles(files); }
+  });
+  document.getElementById("addManual").addEventListener("click", function () {
+    commit(); var x = { id: uid(), name: "", title: "", conditions: [], uncertain: [], thumbs: [], status: "done", addedAt: new Date().toISOString() };
+    state.competitors.unshift(x); save(); renderCompetitors(); ui.compSel = x.id; ui.armed = null; renderCompDrawer();
+    setTimeout(function () { var n = document.getElementById("c-name"); if (n) n.focus(); }, 0);
+  });
+  document.getElementById("keyPanel").addEventListener("click", function (e) {
+    if (e.target.closest("#keySave")) {
+      var v = (document.getElementById("keyInput").value || "").trim();
+      if (!/^sk-ant-/.test(v)) { toast("That doesn't look like an Anthropic API key. It starts with sk-ant-."); return; }
+      try { localStorage.setItem(KEY_STORE, v); } catch (err) { toast("This browser won't save the key. Check your privacy settings."); return; }
+      renderKeyPanel(); toast("Connected. Drop screenshots to read them.");
+    }
+    if (e.target.closest("#keyRemove")) { try { localStorage.removeItem(KEY_STORE); } catch (err) {} renderKeyPanel(); toast("Key removed from this browser"); }
+  });
+  document.getElementById("keyPanel").addEventListener("keydown", function (e) { if (e.target.id === "keyInput" && e.key === "Enter") document.getElementById("keySave").click(); });
+  document.getElementById("ccards").addEventListener("click", function (e) {
+    var t;
+    if ((t = e.target.closest("[data-cedit]"))) { ui.sel = null; ui.compSel = t.getAttribute("data-cedit"); ui.armed = null; lastKey = null; renderCompDrawer(); }
+    if ((t = e.target.closest("[data-cretry]"))) readOffer(t.getAttribute("data-cretry"));
+  });
+  drawer.addEventListener("input", function (e) {
+    var t = e.target, k = t.getAttribute("data-c"); if (!k || !ui.compSel) return;
+    var x = findComp(ui.compSel); if (!x) return;
+    var key = x.id + ":" + k; if (key !== lastKey) { commit(); lastKey = key; }
+    if (k === "conditions") x.conditions = t.value.split("\n").map(function (l) { return l.trim(); }).filter(Boolean);
+    else if (t.type === "number") x[k] = t.value === "" ? null : +t.value;
+    else x[k] = t.value;
+    x.uncertain = (x.uncertain || []).filter(function (u) { return u !== k; });
+    var lbl = t.parentNode.querySelector("span b"); if (lbl) lbl.remove();
+    save(); renderCompetitors();
+  });
+  drawer.addEventListener("click", function (e) {
+    if (!ui.compSel || !e.target.closest("#cDel")) return;
+    if (ui.armed !== "comp") { ui.armed = "comp"; renderCompDrawer(); return; }
+    commit(); var id = ui.compSel; state.competitors = state.competitors.filter(function (x) { return x.id !== id; }); delete imageCache[id];
+    closeDrawer(); save(); renderCompetitors(); toast("Offer deleted. Undo to bring it back.");
+  });
+
   // ---------- export / import ----------
   function copy(text, done) {
     var fb = function () { var ta = document.createElement("textarea"); ta.value = text; document.body.appendChild(ta); ta.select(); try { document.execCommand("copy"); toast(done); } catch (err) { toast("Copy failed"); } ta.remove(); };
@@ -672,7 +1056,7 @@ footer { color: var(--muted); font-size: 12px; margin-top: 24px; text-align: cen
     copy(rows.join("\n"), "Copied. Paste into a spreadsheet.");
   });
   document.getElementById("exportBtn").addEventListener("click", function () {
-    var text = JSON.stringify({ app: "conversion-cycle-planner", version: 2, cycles: state.cycles }, null, 2);
+    var text = JSON.stringify({ app: "conversion-cycle-planner", version: 3, cycles: state.cycles, competitors: state.competitors || [] }, null, 2);
     try {
       var a = document.createElement("a"); a.href = URL.createObjectURL(new Blob([text], { type: "application/json" })); a.download = "cycles.json";
       document.body.appendChild(a); a.click(); a.remove();
@@ -687,14 +1071,17 @@ footer { color: var(--muted); font-size: 12px; margin-top: 24px; text-align: cen
       try {
         var data = JSON.parse(String(r.result)); var list = Array.isArray(data) ? data : data.cycles ? data.cycles : [data];
         list = list.filter(function (c) { return c && Array.isArray(c.steps); });
-        if (!list.length) throw new Error("none");
+        var comps = Array.isArray(data.competitors) ? data.competitors.filter(function (x) { return x && typeof x === "object"; }) : [];
+        if (!list.length && !comps.length) throw new Error("none");
         commit();
         list.forEach(function (c) {
           c.id = uid(); c.stage = STAGES[c.stage] ? c.stage : "custom"; c.days = Array.isArray(c.days) ? c.days : [0];
           c.steps.forEach(function (s) { s.id = uid(); if (!CH[s.channel]) s.channel = "email"; s.audience = AUD[s.audience] ? s.audience : "all"; s.offer = s.offer || { type: "none" }; s.day = +s.day || 0; });
           state.cycles.push(c);
         });
-        state.activeId = list[list.length - 1].id; closeDrawer(); render(); save(); toast("Imported " + list.length + (list.length === 1 ? " cycle" : " cycles"));
+        comps.forEach(function (x) { x.id = uid(); x.status = "done"; x.conditions = Array.isArray(x.conditions) ? x.conditions : []; x.uncertain = Array.isArray(x.uncertain) ? x.uncertain : []; x.thumbs = Array.isArray(x.thumbs) ? x.thumbs : []; state.competitors.push(x); });
+        if (list.length) state.activeId = list[list.length - 1].id;
+        closeDrawer(); render(); save(); toast("Imported " + list.length + (list.length === 1 ? " cycle" : " cycles") + (comps.length ? " and " + comps.length + " competitor offers" : ""));
       } catch (err) { toast("That file isn't a cycle export."); }
     };
     r.readAsText(f); e.target.value = "";
@@ -710,6 +1097,7 @@ footer { color: var(--muted); font-size: 12px; margin-top: 24px; text-align: cen
   var tt;
   function toast(msg) { var el = document.getElementById("toast"); el.textContent = msg; el.hidden = false; clearTimeout(tt); tt = setTimeout(function () { el.hidden = true; }, 2600); }
 
+  setView();
   render();
 })();
 </script>
