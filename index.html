@@ -215,6 +215,22 @@ textarea.inp { resize: vertical; min-height: 70px; }
 .addform label { font-size: 12px; font-weight: 500; color: var(--muted); }
 .addform .inp { background: var(--surface); }
 
+/* Offer tray */
+.tray { display: flex; flex-direction: column; gap: 10px; }
+.trayhead { display: flex; align-items: center; justify-content: space-between; gap: 8px; background: var(--coral-soft); color: var(--coral); border-radius: 12px; padding: 8px 10px; font-size: 13px; font-weight: 500; }
+.trayhead button { border: 0; background: none; color: inherit; cursor: pointer; font-weight: 600; font-size: 12px; text-decoration: underline; }
+.shots { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 6px; }
+.shot { position: relative; aspect-ratio: 3 / 4; max-width: 100%; border-radius: 10px; overflow: hidden; background: var(--sunk); }
+.shot img { width: 100%; height: 100%; object-fit: cover; object-position: top; display: block; }
+.shot button { position: absolute; top: 4px; right: 4px; width: 22px; height: 22px; border-radius: 50%; border: 0; background: rgba(20, 17, 43, .7); color: #FFFFFF; cursor: pointer; display: grid; place-items: center; font-size: 13px; line-height: 1; }
+.shot button:focus-visible { outline: 2px solid var(--accent); }
+.drop.compact { padding: 14px 10px; flex-direction: row; text-align: left; }
+.drop.compact .ci { width: 36px; height: 36px; border-radius: 11px; }
+.drop.compact .ci svg { width: 18px; height: 18px; }
+.traycount { font-size: 12px; color: var(--muted); }
+.tray .btn.primary { justify-content: center; }
+.tray .btn:disabled { opacity: .5; cursor: default; }
+
 /* View switch */
 .viewnav { display: flex; gap: 4px; background: var(--surface); padding: 5px; border-radius: 16px; box-shadow: var(--shadow-sm); width: max-content; max-width: 100%; margin-bottom: 16px; overflow-x: auto; scrollbar-width: none; }
 .viewnav a { display: inline-flex; align-items: center; gap: 8px; padding: 9px 16px; border-radius: 12px; font-weight: 500; color: var(--muted); text-decoration: none; white-space: nowrap; }
@@ -267,7 +283,7 @@ textarea.inp { resize: vertical; min-height: 70px; }
 @keyframes shimmer { from { background-position: 200% 0; } to { background-position: -200% 0; } }
 @media (prefers-reduced-motion: reduce) { .reading .bar { animation: none; } }
 .errbox { background: var(--coral-soft); color: var(--coral); border-radius: 12px; padding: 8px 10px; font-size: 12px; }
-.cmpwrap { overflow-x: auto; }
+.cmpwrap { overflow-x: auto; position: relative; }
 .cmp { border-collapse: separate; border-spacing: 0; width: 100%; min-width: 720px; font-size: 13px; }
 .cmp th { text-align: left; font-size: 11px; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); font-weight: 500; background: var(--sunk); padding: 9px 10px; }
 .cmp th:first-child { border-radius: 12px 0 0 12px; } .cmp th:last-child { border-radius: 0 12px 12px 0; }
@@ -432,12 +448,18 @@ footer { color: var(--muted); font-size: 12px; margin-top: 24px; text-align: cen
       <div class="side">
         <section class="panel stack" aria-labelledby="upH">
           <h2 class="ptitle" id="upH">Add a competitor</h2>
-          <div class="drop" id="drop" role="button" tabindex="0" aria-label="Upload screenshots">
-            <i class="ci"><svg viewBox="0 0 20 20" fill="none" stroke="#FFFFFF" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="14" height="12" rx="2"/><circle cx="7.5" cy="8.5" r="1.5"/><path d="M17 13l-4-4-7 7"/></svg></i>
-            <b>Drop screenshots here</b>
-            <small>or click to choose, or paste with Ctrl+V. Add the promo page and the terms together, up to 5 images per competitor.</small>
+          <div class="tray">
+            <div class="trayhead" id="trayTarget" hidden></div>
+            <div class="drop" id="drop" role="button" tabindex="0" aria-label="Add screenshots">
+              <i class="ci"><svg viewBox="0 0 20 20" fill="none" stroke="#FFFFFF" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="14" height="12" rx="2"/><circle cx="7.5" cy="8.5" r="1.5"/><path d="M17 13l-4-4-7 7"/></svg></i>
+              <span><b>Drop screenshots here</b><br><small>or click to choose, or paste with Ctrl+V. Add as many as the offer needs, up to 10.</small></span>
+            </div>
+            <input type="file" id="shotFile" accept="image/png,image/jpeg,image/webp,image/gif" multiple hidden>
+            <div class="shots" id="trayShots" hidden></div>
+            <label class="field"><span>Terms and conditions (optional)</span><textarea class="inp" id="trayTerms" rows="4" placeholder="Paste the bonus terms as text"></textarea></label>
+            <div class="row" style="justify-content:space-between"><span class="traycount" id="trayCount"></span><button class="btn" type="button" id="trayClear" hidden>Clear</button></div>
+            <button class="btn primary" type="button" id="trayRead" disabled>Read offer</button>
           </div>
-          <input type="file" id="shotFile" accept="image/png,image/jpeg,image/webp,image/gif" multiple hidden>
           <button class="btn" type="button" id="addManual">Add an offer by hand</button>
         </section>
         <section class="panel stack" aria-labelledby="keyH">
@@ -1120,10 +1142,12 @@ footer { color: var(--muted); font-size: 12px; margin-top: 24px; text-align: cen
           (uns.length ? '<p class="small" style="color:var(--warn)">Check: ' + esc(uns.map(function (u) { var f = FIELDS.filter(function (F) { return F[0] === u; })[0]; return f ? f[1] : u; }).join(", ")) + "</p>" : "");
       }
       var del = '<button class="btn danger" type="button" data-cdelete="' + x.id + '" style="margin-left:auto">' + svg('<path d="M4 6h12M8 6V4h4v2M6 6l1 10h6l1-10"/>') + "Delete</button>";
-      var foot = x.status === "reading" ? '<div class="cfoot">' + del + "</div>" : '<div class="cfoot"><button class="btn" type="button" data-cedit="' + x.id + '">Edit</button>' + (x.status === "error" && imageCache[x.id] ? '<button class="btn" type="button" data-cretry="' + x.id + '">Try again</button>' : "") + del + "</div>";
+      var canRetry = x.status === "error" && aiReady() && ((imageCache[x.id] || []).length || x.terms);
+      var foot = x.status === "reading" ? '<div class="cfoot">' + del + "</div>" : '<div class="cfoot" style="flex-wrap:wrap"><button class="btn" type="button" data-cedit="' + x.id + '">Edit</button><button class="btn" type="button" data-cmore="' + x.id + '">Add screenshots or terms</button>' + (canRetry ? '<button class="btn" type="button" data-cretry="' + x.id + '">Try again</button>' : "") + del + "</div>";
       return '<article class="ccard"><div class="thumbs">' + th + '</div><div class="cbody">' + body + "</div>" + foot + "</article>";
     }).join("");
     renderCompare(list.filter(function (x) { return x.status !== "reading"; }));
+    renderTray();
   }
 
   function yourOffer() {
@@ -1178,30 +1202,72 @@ footer { color: var(--muted); font-size: 12px; margin-top: 24px; text-align: cen
     var g = c.getContext("2d"); g.fillStyle = "#FFFFFF"; g.fillRect(0, 0, c.width, c.height); g.drawImage(img, 0, 0, c.width, c.height);
     return c.toDataURL("image/jpeg", quality);
   }
+  // The tray collects screenshots and terms text, then reads them together.
+  var tray = { images: [], targetId: null };
+  var MAX_SHOTS = 10;
   async function handleFiles(files) {
     files = Array.prototype.filter.call(files, function (f) { return /^image\//.test(f.type); });
     if (!files.length) { toast("Choose PNG, JPG, WebP or GIF screenshots."); return; }
-    if (files.length > 5) { toast("Using the first 5 screenshots. Add one competitor at a time."); files = files.slice(0, 5); }
-    var shots = [], thumbs = [];
+    var room = MAX_SHOTS - tray.images.length;
+    if (room <= 0) { toast("The tray holds " + MAX_SHOTS + " screenshots. Read the offer first, then add more to it."); return; }
+    if (files.length > room) { toast("Added the first " + room + ". The tray holds " + MAX_SHOTS + " screenshots."); files = files.slice(0, room); }
     try {
       for (var i = 0; i < files.length; i++) {
         var L = await loadImage(files[i]);
-        shots.push({ type: "image", source: { type: "base64", media_type: "image/jpeg", data: scaled(L.img, 1568, 0, 0.85).split(",")[1] } });
-        thumbs.push(scaled(L.img, 400, 220, 0.7)); URL.revokeObjectURL(L.url);
+        tray.images.push({ media_type: "image/jpeg", data: scaled(L.img, 1568, 0, 0.85).split(",")[1], thumb: scaled(L.img, 400, 220, 0.7) });
+        URL.revokeObjectURL(L.url);
       }
-    } catch (err) { toast(err.message); return; }
+    } catch (err) { toast(err.message); }
+    renderTray();
+  }
+  function renderTray() {
+    var t = tray.targetId ? findComp(tray.targetId) : null; if (tray.targetId && !t) tray.targetId = null;
+    var head = document.getElementById("trayTarget");
+    head.hidden = !t;
+    if (t) head.innerHTML = "<span>Adding to <b>" + esc(t.name || "this offer") + "</b></span><button type=\"button\" id=\"trayUntarget\">Make a new offer instead</button>";
+    var shots = document.getElementById("trayShots");
+    shots.hidden = !tray.images.length;
+    shots.innerHTML = tray.images.map(function (im, i) { return '<div class="shot"><img src="' + im.thumb + '" alt="Screenshot ' + (i + 1) + '"><button type="button" data-unshot="' + i + '" aria-label="Remove screenshot ' + (i + 1) + '">×</button></div>'; }).join("");
+    document.getElementById("drop").classList.toggle("compact", tray.images.length > 0);
+    var terms = document.getElementById("trayTerms").value.trim();
+    var n = tray.images.length;
+    document.getElementById("trayCount").textContent = (n ? n + (n === 1 ? " screenshot" : " screenshots") : "") + (n && terms ? " + terms" : terms ? "Terms text" : "");
+    document.getElementById("trayClear").hidden = !(n || terms || t);
+    var btn = document.getElementById("trayRead");
+    btn.disabled = !(n || terms);
+    btn.textContent = !aiReady() ? (t ? "Add to offer" : "Add offer") : t ? "Update offer" : "Read offer";
+  }
+  function clearTray() { tray = { images: [], targetId: null }; document.getElementById("trayTerms").value = ""; renderTray(); }
+  function knownFields(x) {
+    return { competitor: x.name || null, offer_title: x.title || null, offer_type: x.type || null, match_pct: x.match_pct, max_bonus: x.max_bonus, currency: x.currency || null,
+      free_spins: x.free_spins, free_bet_value: x.free_bet, wagering_x: x.wagering, wagering_on: x.wager_on || null, min_deposit: x.min_deposit, max_bet: x.max_bet,
+      expiry_days: x.expiry_days, max_cashout: x.max_cashout, eligible_games: x.games || null, other_conditions: x.conditions || [] };
+  }
+  function submitTray() {
+    var terms = document.getElementById("trayTerms").value.trim();
+    if (!tray.images.length && !terms) return;
+    var thumbs = tray.images.map(function (im) { return im.thumb; });
+    var images = tray.images.map(function (im) { return { media_type: im.media_type, data: im.data }; });
     commit();
-    var x = { id: uid(), name: "", title: "", conditions: [], uncertain: [], thumbs: thumbs, status: aiReady() ? "reading" : "done", addedAt: new Date().toISOString() };
-    state.competitors.unshift(x); imageCache[x.id] = shots; save(); renderCompetitors();
-    if (!aiReady()) { ui.compSel = x.id; renderCompDrawer(); toast("AI isn't connected yet, so fill in this offer by hand."); return; }
-    readOffer(x.id);
+    var x = tray.targetId ? findComp(tray.targetId) : null, isNew = !x;
+    if (isNew) { x = { id: uid(), name: "", title: "", conditions: [], uncertain: [], thumbs: [], terms: "", status: "done", addedAt: new Date().toISOString() }; state.competitors.unshift(x); }
+    x.thumbs = (x.thumbs || []).concat(thumbs).slice(-MAX_SHOTS);
+    if (terms) x.terms = ((x.terms ? x.terms + "\n\n" : "") + terms).slice(0, 40000);
+    var known = isNew ? null : knownFields(x);
+    // keep this session's screenshots so "Try again" can resend them
+    imageCache[x.id] = (imageCache[x.id] || []).concat(images).slice(-MAX_SHOTS);
+    clearTray(); save(); renderCompetitors();
+    if (!aiReady()) { ui.compSel = x.id; renderCompDrawer(); toast("AI isn't set up yet, so fill in this offer by hand."); return; }
+    readOffer(x.id, { images: images, terms: x.terms || "", known: known });
   }
 
-  async function readOffer(id) {
-    var x = findComp(id), shots = imageCache[id]; if (!x || !shots) return;
+  async function readOffer(id, input) {
+    var x = findComp(id); if (!x) return;
+    input = input || { images: imageCache[id] || [], terms: x.terms || "", known: x.name || x.title ? knownFields(x) : null };
+    if (!input.images.length && !input.terms) { toast("Add screenshots or terms text to read this offer again."); return; }
     x.status = "reading"; x.error = ""; renderCompetitors();
     try {
-      var d = await backend("read_offer", { images: shots.map(function (im) { return { media_type: im.source.media_type, data: im.source.data }; }) });
+      var d = await backend("read_offer", { images: input.images, terms_text: input.terms || "", known: input.known || null });
       x = findComp(id); if (!x) return; // deleted while reading
       commit();
       Object.assign(x, {
@@ -1231,7 +1297,8 @@ footer { color: var(--muted); font-size: 12px; margin-top: 24px; text-align: cen
     dr.innerHTML = '<div class="dhead"><span class="avatar" style="background:var(--coral-bg)">' + esc((x.name || "?").charAt(0).toUpperCase()) + '</span><h3 id="dTitle">Competitor offer</h3><button type="button" class="iconbtn" id="dClose" aria-label="Close">' + svg('<path d="M5 5l10 10M15 5L5 15"/>') + "</button></div>" +
       '<div class="dbody">' + f(FIELDS[0]) + f(FIELDS[1]) +
       '<div class="grid2">' + FIELDS.slice(2, 12).map(f).join("") + "</div>" + '<div class="grid2">' + f(FIELDS[12]) + f(FIELDS[13]) + "</div>" +
-      '<label class="field"><span>Other conditions (one per line)</span><textarea class="inp" id="c-conds" data-c="conditions" rows="5">' + esc((x.conditions || []).join("\n")) + "</textarea></label></div>" +
+      '<label class="field"><span>Other conditions (one per line)</span><textarea class="inp" id="c-conds" data-c="conditions" rows="5">' + esc((x.conditions || []).join("\n")) + "</textarea></label>" +
+      '<label class="field"><span>Terms and conditions text</span><textarea class="inp" id="c-terms" data-c="terms" rows="6" placeholder="Paste the bonus terms here to keep them with the offer">' + esc(x.terms || "") + "</textarea></label></div>" +
       '<div class="dfoot"><span></span><button type="button" class="btn danger' + (ui.armed === "comp" ? " armed" : "") + '" id="cDel">' + (ui.armed === "comp" ? "Click again to delete" : "Delete offer") + "</button></div>";
     dr.hidden = false;
   }
@@ -1241,6 +1308,11 @@ footer { color: var(--muted); font-size: 12px; margin-top: 24px; text-align: cen
   drop.addEventListener("click", function () { shotFile.click(); });
   drop.addEventListener("keydown", function (e) { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); shotFile.click(); } });
   shotFile.addEventListener("change", function (e) { handleFiles(e.target.files); e.target.value = ""; });
+  document.getElementById("trayRead").addEventListener("click", submitTray);
+  document.getElementById("trayClear").addEventListener("click", clearTray);
+  document.getElementById("trayTerms").addEventListener("input", renderTray);
+  document.getElementById("trayShots").addEventListener("click", function (e) { var b = e.target.closest("[data-unshot]"); if (!b) return; tray.images.splice(+b.getAttribute("data-unshot"), 1); renderTray(); });
+  document.getElementById("trayTarget").addEventListener("click", function (e) { if (e.target.closest("#trayUntarget")) { tray.targetId = null; renderTray(); } });
   ["dragenter", "dragover"].forEach(function (t) { drop.addEventListener(t, function (e) { e.preventDefault(); drop.classList.add("over"); }); });
   ["dragleave", "drop"].forEach(function (t) { drop.addEventListener(t, function (e) { e.preventDefault(); drop.classList.remove("over"); }); });
   drop.addEventListener("drop", function (e) { if (e.dataTransfer && e.dataTransfer.files.length) handleFiles(e.dataTransfer.files); });
@@ -1258,6 +1330,11 @@ footer { color: var(--muted); font-size: 12px; margin-top: 24px; text-align: cen
     var t;
     if ((t = e.target.closest("[data-cedit]"))) { ui.sel = null; ui.compSel = t.getAttribute("data-cedit"); ui.armed = null; lastKey = null; renderCompDrawer(); }
     if ((t = e.target.closest("[data-cretry]"))) readOffer(t.getAttribute("data-cretry"));
+    if ((t = e.target.closest("[data-cmore]"))) {
+      tray.targetId = t.getAttribute("data-cmore"); renderTray();
+      var panel = document.getElementById("upH"); panel.scrollIntoView({ behavior: "smooth", block: "start" });
+      toast("Add screenshots or paste terms on the left, then click Update offer.");
+    }
   });
   function deleteComp(id) {
     var x = findComp(id); if (!x) return;
@@ -1271,6 +1348,7 @@ footer { color: var(--muted); font-size: 12px; margin-top: 24px; text-align: cen
     var x = findComp(ui.compSel); if (!x) return;
     var key = x.id + ":" + k; if (key !== lastKey) { commit(); lastKey = key; }
     if (k === "conditions") x.conditions = t.value.split("\n").map(function (l) { return l.trim(); }).filter(Boolean);
+    else if (k === "terms") x.terms = t.value.slice(0, 40000);
     else if (t.type === "number") x[k] = t.value === "" ? null : +t.value;
     else x[k] = t.value;
     x.uncertain = (x.uncertain || []).filter(function (u) { return u !== k; });
@@ -1914,7 +1992,7 @@ footer { color: var(--muted); font-size: 12px; margin-top: 24px; text-align: cen
     } catch (err) {
       proxy = { loading: false, checked: true, connected: false, ai: false, account: "", canSync: false, problem: err.message, missingFn: true };
     }
-    renderKeyPanel(); renderInboxPanel(); renderEmails();
+    renderKeyPanel(); renderInboxPanel(); renderEmails(); renderTray();
   }
   function renderProxyPanel(el, kind) {
     var guide = '<a href="' + SETUP_URL + '#8-keep-the-token-on-the-server-signed-in-planner" target="_blank" rel="noopener">Setup guide</a>';

@@ -119,7 +119,8 @@ var OFFER_SCHEMA = {
   required: ['competitor', 'offer_title', 'offer_type', 'match_pct', 'max_bonus', 'currency', 'free_spins', 'free_bet_value', 'wagering_x', 'wagering_on', 'min_deposit', 'max_bet', 'expiry_days', 'max_cashout', 'eligible_games', 'other_conditions', 'uncertain_fields']
 };
 var OFFER_SYSTEM = 'You read screenshots of online casino and sportsbook promotion pages and their bonus terms, and extract the main welcome offer into the given JSON schema.\n' +
-  'Use only what is visible in the screenshots. When a value is not shown, return null for it and add the field name to uncertain_fields. Also add a field to uncertain_fields when the text is blurry, cut off or ambiguous.\n' +
+  'You may also receive the terms and conditions as pasted text, and the values found earlier for the same offer. Combine all sources. The terms text is usually the most precise source for conditions. Keep earlier values unless the new material corrects or completes them.\n' +
+  'Use only what is shown in the screenshots and text. When a value is not shown, return null for it and add the field name to uncertain_fields. Also add a field to uncertain_fields when the text is blurry, cut off or ambiguous.\n' +
   'Write amounts as plain numbers without currency symbols and put the ISO currency code in currency. If the welcome offer is split across several deposits, use the first deposit for match_pct and max_bonus, and describe the rest in other_conditions.\n' +
   'wagering_on says what the wagering applies to, for example "bonus" or "deposit + bonus". expiry_days is how long the player has to meet the wagering. other_conditions lists any other rules a player would care about, each as one short plain sentence.';
 
@@ -148,12 +149,18 @@ function readOffer_(key, body) {
   var allowed = ['image/jpeg', 'image/png', 'image/webp', 'image/gif'];
   var images = (body.images || []).filter(function (im) {
     return im && allowed.indexOf(im.media_type) >= 0 && typeof im.data === 'string' && im.data.length > 0;
-  }).slice(0, 5);
-  if (!images.length) throw new Error('No screenshots were received.');
+  }).slice(0, 10);
+  var terms = typeof body.terms_text === 'string' ? body.terms_text.trim().slice(0, 40000) : '';
+  var known = body.known && typeof body.known === 'object' ? JSON.stringify(body.known).slice(0, 8000) : '';
+  if (!images.length && !terms) throw new Error('Add at least one screenshot or some terms text.');
   var content = images.map(function (im) {
     return { type: 'image', source: { type: 'base64', media_type: im.media_type, data: im.data } };
   });
-  content.push({ type: 'text', text: 'Extract the main welcome offer from these ' + images.length + ' screenshot(s).' });
+  var parts = [];
+  if (known) parts.push('Values found earlier for this offer (JSON):\n' + known);
+  if (terms) parts.push('Terms and conditions, pasted as text:\n<terms>\n' + terms + '\n</terms>');
+  parts.push('Extract the main welcome offer from ' + (images.length ? images.length + ' screenshot(s)' : 'the material above') + (images.length && terms ? ' and the terms text' : '') + '.');
+  content.push({ type: 'text', text: parts.join('\n\n') });
   return callClaude_(key, OFFER_SYSTEM, content, OFFER_SCHEMA);
 }
 

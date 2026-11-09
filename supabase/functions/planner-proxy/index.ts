@@ -66,7 +66,8 @@ const OFFER_SCHEMA = {
 };
 const OFFER_SYSTEM = [
   "You read screenshots of online casino and sportsbook promotion pages and their bonus terms, and extract the main welcome offer into the given JSON schema.",
-  "Use only what is visible in the screenshots. When a value is not shown, return null for it and add the field name to uncertain_fields. Also add a field to uncertain_fields when the text is blurry, cut off or ambiguous.",
+  "You may also receive the terms and conditions as pasted text, and the values found earlier for the same offer. Combine all sources. The terms text is usually the most precise source for conditions. Keep earlier values unless the new material corrects or completes them.",
+  "Use only what is shown in the screenshots and text. When a value is not shown, return null for it and add the field name to uncertain_fields. Also add a field to uncertain_fields when the text is blurry, cut off or ambiguous.",
   "Write amounts as plain numbers without currency symbols and put the ISO currency code in currency. If the welcome offer is split across several deposits, use the first deposit for match_pct and max_bonus, and describe the rest in other_conditions.",
   'wagering_on says what the wagering applies to, for example "bonus" or "deposit + bonus". expiry_days is how long the player has to meet the wagering. other_conditions lists any other rules a player would care about, each as one short plain sentence.',
 ].join("\n");
@@ -135,10 +136,16 @@ const IMAGE_TYPES = ["image/jpeg", "image/png", "image/webp", "image/gif"];
 function readOffer(apiKey: string, body: Record<string, unknown>) {
   const images = (Array.isArray(body.images) ? body.images : [])
     .filter((im: { media_type?: string; data?: string }) => im && IMAGE_TYPES.includes(im.media_type ?? "") && typeof im.data === "string" && im.data.length > 0)
-    .slice(0, 5) as { media_type: "image/jpeg" | "image/png" | "image/webp" | "image/gif"; data: string }[];
-  if (!images.length) throw new UserFacingError("bad_request", "No screenshots were received.");
+    .slice(0, 10) as { media_type: "image/jpeg" | "image/png" | "image/webp" | "image/gif"; data: string }[];
+  const terms = typeof body.terms_text === "string" ? body.terms_text.trim().slice(0, 40000) : "";
+  const known = body.known && typeof body.known === "object" ? JSON.stringify(body.known).slice(0, 8000) : "";
+  if (!images.length && !terms) throw new UserFacingError("bad_request", "Add at least one screenshot or some terms text.");
   const content: Anthropic.Beta.BetaContentBlockParam[] = images.map((im) => ({ type: "image", source: { type: "base64", media_type: im.media_type, data: im.data } }));
-  content.push({ type: "text", text: `Extract the main welcome offer from these ${images.length} screenshot(s).` });
+  const parts: string[] = [];
+  if (known) parts.push("Values found earlier for this offer (JSON):\n" + known);
+  if (terms) parts.push("Terms and conditions, pasted as text:\n<terms>\n" + terms + "\n</terms>");
+  parts.push(`Extract the main welcome offer from ${images.length ? images.length + " screenshot(s)" : "the material above"}${images.length && terms ? " and the terms text" : ""}.`);
+  content.push({ type: "text", text: parts.join("\n\n") });
   return askClaude(apiKey, OFFER_SYSTEM, content, OFFER_SCHEMA);
 }
 
