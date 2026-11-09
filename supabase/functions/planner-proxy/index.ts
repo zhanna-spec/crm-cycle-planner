@@ -165,9 +165,12 @@ function summariseEmails(apiKey: string, body: Record<string, unknown>) {
 
 const PAGE_SCHEMA = {
   type: "object", additionalProperties: false,
-  required: ["title", "summary", "steps", "key_facts", "strengths", "friction", "ideas", "uncertain"],
+  required: ["title", "summary", "steps", "key_facts", "strengths", "friction", "ideas", "uncertain", "rating", "rating_reason", "comparison"],
   properties: {
     title: { type: "string" },
+    rating: { type: "integer", enum: [1, 2, 3, 4, 5] },
+    rating_reason: { type: "string" },
+    comparison: { type: "array", items: { type: "object", additionalProperties: false, required: ["field", "value"], properties: { field: { type: "string" }, value: { type: "string" } } } },
     summary: { type: "string" },
     steps: { type: "array", items: { type: "object", additionalProperties: false, required: ["name", "detail"], properties: { name: { type: "string" }, detail: { type: "string" } } } },
     key_facts: { type: "array", items: { type: "object", additionalProperties: false, required: ["label", "value"], properties: { label: { type: "string" }, value: { type: "string" } } } },
@@ -185,6 +188,8 @@ const PAGE_SYSTEM = [
   "key_facts: short label and value pairs with concrete details. For registration, for example: number of steps, fields asked, verification, whether a bonus is shown, how soon a deposit is asked for. For a deposit page: payment methods, minimum deposit, how the bonus is opted into.",
   "strengths: what works well for conversion. friction: what could make players drop off. ideas: concrete things a competitor could learn from or test. uncertain: anything you couldn't see clearly.",
   "If you also get an earlier review of the same page, keep what still holds and update it with the new material.",
+  "rating: how conversion-friendly this part of the site is for a new player, from 1 (poor) to 5 (excellent). rating_reason: one short sentence explaining it.",
+  "comparison: answer every comparison field the user lists, in that order, using exactly the given field names. Keep each value short (a few words or a number). Write \"Not shown\" when the material doesn't show it.",
 ].join("\n");
 
 function analysePage(apiKey: string, body: Record<string, unknown>) {
@@ -200,6 +205,8 @@ function analysePage(apiKey: string, body: Record<string, unknown>) {
   const parts: string[] = [];
   if (known) parts.push("Earlier review of this page (JSON):\n" + known);
   if (text) parts.push("Text and notes about the page:\n<page>\n" + text + "\n</page>");
+  const fields = (Array.isArray(body.compare_fields) ? body.compare_fields : []).map((f) => String(f).slice(0, 60)).filter(Boolean).slice(0, 12);
+  if (fields.length) parts.push("Comparison fields:\n" + fields.map((f) => "- " + f).join("\n"));
   parts.push(`Review the ${section}${operator ? " of " + operator : ""}.`);
   content.push({ type: "text", text: parts.join("\n\n") });
   return askClaude(apiKey, PAGE_SYSTEM, content, PAGE_SCHEMA);

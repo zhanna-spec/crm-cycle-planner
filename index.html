@@ -266,6 +266,12 @@ textarea.inp { resize: vertical; min-height: 70px; }
 .psteps ol { margin: 8px 0 0; padding-left: 20px; font-size: 13px; display: grid; gap: 4px; }
 .psteps b { font-weight: 600; }
 
+.stars { color: var(--sun); letter-spacing: 1px; white-space: nowrap; }
+.stars i { color: var(--line); font-style: normal; }
+.cmp td.why { font-size: 12px; color: var(--muted); max-width: 220px; }
+.cmp td.val { max-width: 200px; }
+.rowupd { font-size: 12px; padding: 5px 9px; }
+
 /* View switch */
 .viewnav { display: flex; gap: 4px; background: var(--surface); padding: 5px; border-radius: 16px; box-shadow: var(--shadow-sm); width: max-content; max-width: 100%; margin-bottom: 16px; overflow-x: auto; scrollbar-width: none; }
 .viewnav a { display: inline-flex; align-items: center; gap: 8px; padding: 9px 16px; border-radius: 12px; font-weight: 500; color: var(--muted); text-decoration: none; white-space: nowrap; }
@@ -525,7 +531,7 @@ footer { color: var(--muted); font-size: 12px; margin-top: 24px; text-align: cen
           </div>
         </section>
         <section class="panel" aria-labelledby="cmpH">
-          <div class="row" style="justify-content:space-between;margin-bottom:12px"><h2 class="ptitle" id="cmpH" style="margin:0">Offers side by side</h2><label class="row" style="gap:6px"><span class="small">Offer type</span><select class="inp" id="cmpKind" style="width:auto"></select></label></div><p class="small" id="cmpNote" style="margin:-4px 0 10px"></p>
+          <div class="row" style="justify-content:space-between;margin-bottom:12px"><h2 class="ptitle" id="cmpH" style="margin:0">Offers side by side</h2><label class="row" style="gap:6px"><span class="small">Compare</span><select class="inp" id="cmpKind" style="width:auto"></select></label></div><p class="small" id="cmpNote" style="margin:-4px 0 10px"></p>
           <div class="cmpwrap" id="cmp"></div>
         </section>
         <div class="stack" id="ccards" style="gap:14px"></div>
@@ -1193,6 +1199,17 @@ footer { color: var(--muted); font-size: 12px; margin-top: 24px; text-align: cen
   function offersOf(op) { return state.competitors.filter(function (x) { return x.opId === op.id; }); }
   var OFFER_KINDS = [["welcome", "Welcome offer"], ["second", "2nd deposit offer"], ["third", "3rd deposit offer"], ["reload", "Reload offer"], ["cashback", "Cashback"], ["freespins", "Free spins offer"], ["vip", "Loyalty / VIP reward"], ["sports", "Sportsbook offer"], ["other_offer", "Other offer"]];
   var PAGE_KINDS = [["registration", "Registration process"], ["deposit", "Deposit / cashier"], ["homepage", "Homepage"], ["promotions", "Promotions page"], ["loyalty", "Loyalty programme"], ["gamification", "Missions / gamification"], ["app", "Mobile app"], ["rg", "Responsible gambling"], ["other_page", "Other page"]];
+  var COMPARE_FIELDS = {
+    registration: ["Number of steps", "Fields asked", "Verification before play", "Bonus shown during sign-up", "One-click or social sign-up", "Asks for a deposit right after"],
+    deposit: ["Payment methods", "Minimum deposit", "How the bonus is opted into", "Steps to deposit", "Fees or limits shown"],
+    homepage: ["Main message", "Welcome offer visible", "Main call to action", "Shown first (games, sports…)", "Trust signals"],
+    promotions: ["Number of promotions", "Types of offers", "Terms easy to find", "Personalised offers"],
+    loyalty: ["Programme type", "Number of levels", "How points are earned", "Main rewards", "Where it's shown"],
+    gamification: ["Mechanics", "Rewards", "Time limits", "Progress shown"],
+    app: ["Platforms", "App-only offers", "Sign-up in the app", "Push notification prompt"],
+    rg: ["Tools offered", "Limits offered at sign-up", "Reality checks", "Where it's shown"],
+    other_page: ["Purpose", "Main call to action", "Offer shown"]
+  };
   function kindLabel(k) { var a = OFFER_KINDS.concat(PAGE_KINDS).filter(function (x) { return x[0] === k; })[0]; return a ? a[1] : "Welcome offer"; }
   function isPageKind(k) { return PAGE_KINDS.some(function (x) { return x[0] === k; }); }
   function offerKind(x) { return x.kind || "welcome"; }
@@ -1213,7 +1230,7 @@ footer { color: var(--muted); font-size: 12px; margin-top: 24px; text-align: cen
   function renderOpHead(op) {
     var el = document.getElementById("opHead");
     if (!op) {
-      el.innerHTML = '<div class="ophead"><span class="avatar" style="background:var(--accent)">' + svg('<rect x="3" y="4" width="6" height="12" rx="1.5"/><rect x="11" y="4" width="6" height="12" rx="1.5"/>', "#FFFFFF") + '</span><div class="grow"><h2>All operators</h2><div class="sub2">Every offer side by side. Select an operator on the left to add or change its offers.</div></div></div>';
+      el.innerHTML = '<div class="ophead"><span class="avatar" style="background:var(--accent)">' + svg('<rect x="3" y="4" width="6" height="12" rx="1.5"/><rect x="11" y="4" width="6" height="12" rx="1.5"/>', "#FFFFFF") + '</span><div class="grow"><h2>All operators</h2><div class="sub2">Offers and website sections side by side. Select an operator on the left to add to it.</div></div></div>';
       return;
     }
     if (ui.opEditing === op.id) {
@@ -1237,6 +1254,7 @@ footer { color: var(--muted); font-size: 12px; margin-top: 24px; text-align: cen
     else {
       var list = function (items, cls, label) { return items && items.length ? '<div><p class="plabel ' + cls + '">' + label + '</p><ul class="plist">' + items.map(function (t) { return "<li>" + esc(t) + "</li>"; }).join("") + "</ul></div>" : ""; };
       body = head + (x.status === "error" ? '<div class="errbox">' + esc(x.error || "Couldn't review the page.") + "</div>" : "") +
+        (x.rating ? '<p class="small" style="margin:0">Conversion-friendliness ' + stars(x.rating) + (x.rating_reason ? " · " + esc(x.rating_reason) : "") + "</p>" : "") +
         (x.summary ? '<p class="psum">' + esc(x.summary) + "</p>" : '<p class="small">No review yet.' + (aiReady() ? "" : " Turn on AI to have Claude review this page.") + "</p>") +
         (x.key_facts && x.key_facts.length ? '<div class="facts">' + x.key_facts.slice(0, 8).map(function (f) { return '<div class="fact"><small>' + esc(f.label) + "</small><span>" + esc(f.value) + "</span></div>"; }).join("") + "</div>" : "") +
         (x.steps && x.steps.length ? '<details class="psteps"><summary>' + plural(x.steps.length, "step", "steps") + " for the player</summary><ol>" + x.steps.map(function (st) { return "<li><b>" + esc(st.name) + "</b>" + (st.detail ? " · " + esc(st.detail) : "") + "</li>"; }).join("") + "</ol></details>" : "") +
@@ -1253,16 +1271,18 @@ footer { color: var(--muted); font-size: 12px; margin-top: 24px; text-align: cen
     ensureOperators();
     var op = curOp();
     var allOffers = op ? offersOf(op) : state.competitors;
-    var list = allOffers.filter(function (x) { return ui.cmpKind === "all" || offerKind(x) === ui.cmpKind; });
+    var offerFilter = isPageKind(ui.cmpKind) ? "all" : ui.cmpKind;
+    var list = allOffers.filter(function (x) { return offerFilter === "all" || offerKind(x) === offerFilter; });
     document.getElementById("compCount").textContent = state.operators.length;
     document.getElementById("undoBtn").disabled = !history.length;
     renderKeyPanel(); renderOpList(); renderOpHead(op);
     document.getElementById("trayPanel").hidden = !op;
     document.getElementById("upH").textContent = op ? "Add to " + op.name : "Add";
-    document.getElementById("cmpKind").innerHTML = '<option value="all"' + (ui.cmpKind === "all" ? " selected" : "") + '>All offer types</option>' + OFFER_KINDS.map(function (k) { return '<option value="' + k[0] + '"' + (ui.cmpKind === k[0] ? " selected" : "") + ">" + k[1] + "</option>"; }).join("");
+    var optK = function (k) { return '<option value="' + k[0] + '"' + (ui.cmpKind === k[0] ? " selected" : "") + ">" + k[1] + "</option>"; };
+    document.getElementById("cmpKind").innerHTML = '<optgroup label="Offers"><option value="all"' + (ui.cmpKind === "all" ? " selected" : "") + '>All offer types</option>' + OFFER_KINDS.map(optK).join("") + '</optgroup><optgroup label="Website sections">' + PAGE_KINDS.map(optK).join("") + "</optgroup>";
     // cards
     var cards = document.getElementById("ccards");
-    var kindName = ui.cmpKind === "all" ? "offers" : kindLabel(ui.cmpKind).toLowerCase() + "s";
+    var kindName = offerFilter === "all" ? "offers" : kindLabel(offerFilter).toLowerCase() + "s";
     var offerHtml = !list.length ? '<div class="panel empty-c">' + (!state.operators.length ? "Start by adding an operator on the left." : allOffers.length ? "No " + esc(kindName) + (op ? " for " + esc(op.name) : "") + " yet. Change the offer type above to see the others." : op ? "No offers for " + esc(op.name) + " yet. Choose what you're adding above, then add screenshots or text." : "No offers yet. Select an operator on the left to add them.") + "</div>"
     : '<div class="ccards">' + list.map(function (x) {
       var o = findOp(x.opId) || { name: x.name || "?" };
@@ -1296,10 +1316,15 @@ footer { color: var(--muted); font-size: 12px; margin-top: 24px; text-align: cen
     var pageFilter = !op && secs.length ? '<label class="row" style="gap:6px"><span class="small">Section</span><select class="inp" id="pageSec"><option value="all">All sections</option>' + secs.map(function (k) { return '<option value="' + k[0] + '"' + (ui.pageSec === k[0] ? " selected" : "") + ">" + k[1] + "</option>"; }).join("") + "</select></label>" : "";
     var pageHtml = shownPages.length ? '<div class="ccards">' + shownPages.map(function (x) { return pageCard(x, !op); }).join("") + "</div>"
       : '<div class="panel empty-c">' + (op ? "No pages reviewed for " + esc(op.name) + " yet. Choose a page, such as Registration process, under “What are you adding?” above." : "No pages reviewed yet. Select an operator and add screenshots of its registration, deposit or other pages.") + "</div>";
-    cards.innerHTML = '<div class="sechead"><h3>' + (op ? "Offers" : "All offers") + (ui.cmpKind !== "all" ? ' <span class="kindpill">' + esc(kindLabel(ui.cmpKind)) + "</span>" : "") + "</h3></div>" + offerHtml +
+    cards.innerHTML = '<div class="sechead"><h3>' + (op ? "Offers" : "All offers") + (offerFilter !== "all" ? ' <span class="kindpill">' + esc(kindLabel(offerFilter)) + "</span>" : "") + "</h3></div>" + offerHtml +
       '<div class="sechead" style="margin-top:8px"><h3>Pages and journeys</h3>' + pageFilter + "</div>" + pageHtml;
-    document.getElementById("cmpH").textContent = op ? op.name + " compared with you" : "Offers side by side";
-    renderCompare(list.filter(function (x) { return x.status !== "reading"; }));
+    if (isPageKind(ui.cmpKind)) {
+      document.getElementById("cmpH").textContent = kindLabel(ui.cmpKind) + (op ? " at " + op.name : " side by side");
+      renderSectionCompare(op);
+    } else {
+      document.getElementById("cmpH").textContent = op ? op.name + " compared with you" : "Offers side by side";
+      renderCompare(list.filter(function (x) { return x.status !== "reading"; }));
+    }
     renderTray();
   }
 
@@ -1313,9 +1338,26 @@ footer { color: var(--muted); font-size: 12px; margin-top: 24px; text-align: cen
     if (o.type === "freebet") { r.free_bet = o.value; }
     return r;
   }
+  function stars(n) { n = Math.max(0, Math.min(5, +n || 0)); return '<span class="stars" aria-label="' + n + ' out of 5">' + "★".repeat(n) + "<i>" + "★".repeat(5 - n) + "</i></span>"; }
+  function renderSectionCompare(op) {
+    var el = document.getElementById("cmp"), sec = ui.cmpKind, fields = COMPARE_FIELDS[sec] || [];
+    document.getElementById("cmpNote").textContent = "Each operator's " + kindLabel(sec).toLowerCase() + " answered the same questions, so they line up.";
+    var rows = (op ? pagesOf(op) : state.research).filter(function (x) { return x.section === sec && x.status !== "reading"; });
+    if (!rows.length) { el.innerHTML = '<p class="small">No ' + esc(kindLabel(sec).toLowerCase()) + " reviewed yet. Select an operator, choose “" + esc(kindLabel(sec)) + "” under What are you adding, and add screenshots or notes.</p>"; return; }
+    var best = Math.max.apply(null, rows.map(function (x) { return +x.rating || 0; }));
+    el.innerHTML = '<table class="cmp"><thead><tr><th>Operator</th><th>Rating</th>' + fields.map(function (f) { return "<th>" + esc(f) + "</th>"; }).join("") + "<th>Why</th><th></th></tr></thead><tbody>" +
+      rows.map(function (x) {
+        var o = findOp(x.opId) || { name: "?" }, cmpv = x.comparison || {}, missing = !x.rating || fields.some(function (f) { return !(f in cmpv); });
+        return '<tr><td><div class="who"><span class="avatar" style="background:' + opColor(o) + '">' + esc(o.name.charAt(0).toUpperCase()) + "</span>" + esc(o.name) + "</div></td>" +
+          "<td>" + (x.rating ? (rows.length > 1 && +x.rating === best ? '<span class="best">' + stars(x.rating) + "</span>" : stars(x.rating)) : '<span class="small">–</span>') + "</td>" +
+          fields.map(function (f) { var v = cmpv[f]; return '<td class="val">' + (v && v !== "Not shown" ? esc(v) : '<span class="small">' + (v ? "Not shown" : "–") + "</span>") + "</td>"; }).join("") +
+          '<td class="why">' + esc(x.rating_reason || "") + "</td>" +
+          "<td>" + (missing && aiReady() ? '<button class="btn rowupd" type="button" data-pretry="' + x.id + '" title="Fill in the comparison columns">Update</button>' : "") + "</td></tr>";
+      }).join("") + "</tbody></table>";
+  }
   function renderCompare(list) {
     var el = document.getElementById("cmp"), you = ui.cmpKind === "welcome" || ui.cmpKind === "all" ? yourOffer() : null;
-    document.getElementById("cmpNote").textContent = you ? "Your row uses the first offer in " + cyc().name : "Add an offer to a cycle to compare yourself";
+    document.getElementById("cmpNote").textContent = you ? "Your row uses the first offer in " + cyc().name : (ui.cmpKind === "welcome" || ui.cmpKind === "all") ? "Add an offer to a cycle to compare yourself" : "";
     if (!list.length) { el.innerHTML = '<p class="small">' + (ui.cmpKind === "all" ? "Offers you add appear here, with the best value in each column highlighted." : "No " + esc(kindLabel(ui.cmpKind).toLowerCase()) + "s to compare yet.") + "</p>"; return; }
     var rows = (you ? [Object.assign({ you: true }, you)] : []).concat(list);
     var cols = [["max_bonus", "Max bonus", "high"], ["free_spins", "Free spins", "high"], ["wagering", "Wagering", "low"], ["min_deposit", "Min deposit", "low"], ["max_bet", "Max bet", "high"], ["expiry_days", "Days to wager", "high"]];
@@ -1519,10 +1561,11 @@ footer { color: var(--muted); font-size: 12px; margin-top: 24px; text-align: cen
     p.status = "reading"; p.error = ""; renderCompetitors();
     try {
       var op = findOp(p.opId) || {};
-      var d = await backend("analyse_page", { images: input.images, page_text: input.text || "", known: input.known || null, section: kindLabel(p.section).toLowerCase(), operator: op.name || "" });
+      var d = await backend("analyse_page", { images: input.images, page_text: input.text || "", known: input.known || null, section: kindLabel(p.section).toLowerCase(), operator: op.name || "", compare_fields: COMPARE_FIELDS[p.section] || [] });
       p = findPage(id); if (!p) return;
       commit();
-      Object.assign(p, { status: "done", error: "", title: d.title || kindLabel(p.section), summary: d.summary || "", steps: d.steps || [], key_facts: d.key_facts || [], strengths: d.strengths || [], friction: d.friction || [], ideas: d.ideas || [], uncertain: d.uncertain || [] });
+      Object.assign(p, { status: "done", error: "", title: d.title || kindLabel(p.section), summary: d.summary || "", steps: d.steps || [], key_facts: d.key_facts || [], strengths: d.strengths || [], friction: d.friction || [], ideas: d.ideas || [], uncertain: d.uncertain || [],
+        rating: d.rating || null, rating_reason: d.rating_reason || "", comparison: (d.comparison || []).reduce(function (m, c) { if (c && c.field) m[c.field] = c.value; return m; }, {}) });
       save(); renderCompetitors(); toast("Reviewed the " + kindLabel(p.section).toLowerCase() + (op.name ? " for " + op.name : ""));
     } catch (err) {
       p = findPage(id); if (!p) return;
@@ -1663,8 +1706,9 @@ footer { color: var(--muted); font-size: 12px; margin-top: 24px; text-align: cen
     var u = e.target.closest("[data-pdelete]");
     if (u) { var id = u.getAttribute("data-pdelete"), pg = findPage(id); if (!pg) return; commit(); state.research = state.research.filter(function (x) { return x.id !== id; }); save(); renderCompetitors(); toast(kindLabel(pg.section) + " deleted. Click Undo to bring it back."); }
   });
+  document.getElementById("cmp").addEventListener("click", function (e) { var b = e.target.closest("[data-pretry]"); if (b) readPage(b.getAttribute("data-pretry")); });
   document.getElementById("view-competitors").addEventListener("change", function (e) {
-    if (e.target.id === "cmpKind") { ui.cmpKind = e.target.value; renderCompetitors(); }
+    if (e.target.id === "cmpKind") { ui.cmpKind = e.target.value; if (isPageKind(ui.cmpKind)) ui.pageSec = ui.cmpKind; renderCompetitors(); }
     if (e.target.id === "pageSec") { ui.pageSec = e.target.value; renderCompetitors(); }
     if (e.target.id === "trayKind") { tray.kind = e.target.value; renderTray(); }
   });
