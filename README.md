@@ -1,6 +1,7 @@
 # Conversion Cycle Planner
 
-A prototype CRM planning tool for iGaming. Pick the lifecycle focus, vertical, player segment, budget, regulation and channels, and it generates a step-by-step conversion-cycle plan. Upload competitor offers as CSV to benchmark each stage and position your offers as aggressive, in line, or differentiated.
+A visual builder for iGaming CRM conversion cycles. Drag channels (email, SMS, push, popup, mission, call) onto a day-by-day timeline, set who gets each step and what offer it carries, and keep several cycles side by side.
 
-- `src/app.html` – the app (single file, no dependencies)
-- `index.html` – built from `src/app.html` by `./build.sh`, served by GitHub Pages
+- Start blank or from suggested steps for acquisition, early life, retention or reactivation
+- Cycles are saved in your browser; use Export / Import to back up or share them
+- `src/app.html` is the source; `./build.sh` builds `index.html` for GitHub Pages

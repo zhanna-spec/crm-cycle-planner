@@ -9,166 +9,185 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Rubik:wght@400;500;600;700&display=swap">
 <style>
-/* Layout: violet hero band, then a rounded control card on the left and the plan cards on the right; stacks on phones. */
+/* Layout: violet hero band, cycle tabs, then a channel palette beside a horizontal day-by-day board; an edit drawer slides in from the right. */
 :root {
   --bg: #F1F0FB; --surface: #FFFFFF; --sunk: #EFEDFC; --ink: #1E1B3A; --muted: #6E6A8F; --line: #E6E3F7;
-  --accent: #6A5AE0; --accent-2: #8F83F0; --accent-soft: #E8E5FD; --on-accent: #FFFFFF; --hero: #6A5AE0; --hero-deep: #5A4BD0;
+  --accent: #6A5AE0; --accent-2: #8F83F0; --accent-soft: #E8E5FD; --on-accent: #FFFFFF; --hero: #6A5AE0;
   --coral: #E5566F; --coral-bg: #FF8FA2; --coral-soft: #FFE5EA;
-  --mint: #18936F; --mint-bg: #4CC9A0; --mint-soft: #DBF5EC;
-  --sky-bg: #5AA9F5; --sun: #FFC94D;
-  --aggr: var(--coral); --aggr-soft: var(--coral-soft); --inline: var(--accent); --inline-soft: var(--accent-soft); --diff: var(--mint); --diff-soft: var(--mint-soft);
-  --good: #18936F; --warn: #C27A00; --bad: #E5566F;
-  --shadow: 0 8px 24px rgba(74, 58, 190, 0.08);
-  --f-display: "Rubik", "Segoe UI", system-ui, sans-serif;
-  --f-body: "Rubik", "Segoe UI", system-ui, sans-serif;
-  --f-mono: "Rubik", "Segoe UI", system-ui, sans-serif;
+  --mint: #18936F; --mint-bg: #4CC9A0; --mint-soft: #DBF5EC; --sky-bg: #5AA9F5; --sun: #FFC94D;
+  --c-email: #8F83F0; --c-sms: #FF8FA2; --c-push: #5AA9F5; --c-popup: #4CC9A0; --c-mission: #FFC94D; --c-call: #C08AF5;
+  --warn: #C27A00; --bad: #E5566F;
+  --shadow: 0 8px 24px rgba(74, 58, 190, 0.08); --shadow-sm: 0 2px 8px rgba(74, 58, 190, 0.08);
+  --font: "Rubik", "Segoe UI", system-ui, sans-serif;
   color-scheme: light;
 }
 @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
   --bg: #14112B; --surface: #201B44; --sunk: #2A2455; --ink: #F2F0FF; --muted: #A9A4CF; --line: #332C63;
-  --accent: #9184F5; --accent-2: #A79CF8; --accent-soft: #2F2868; --on-accent: #14112B; --hero: #4F42C4; --hero-deep: #4236AE;
+  --accent: #9184F5; --accent-2: #A79CF8; --accent-soft: #2F2868; --on-accent: #14112B; --hero: #4F42C4;
   --coral: #FF8FA2; --coral-soft: #4A2237; --mint: #5ED6AE; --mint-soft: #173E36;
-  --good: #5ED6AE; --warn: #FFC94D; --bad: #FF8FA2; --shadow: 0 8px 24px rgba(0, 0, 0, 0.25); color-scheme: dark; } }
+  --warn: #FFC94D; --bad: #FF8FA2; --shadow: 0 8px 24px rgba(0,0,0,.25); --shadow-sm: 0 2px 8px rgba(0,0,0,.25); color-scheme: dark; } }
 :root[data-theme="dark"] {
   --bg: #14112B; --surface: #201B44; --sunk: #2A2455; --ink: #F2F0FF; --muted: #A9A4CF; --line: #332C63;
-  --accent: #9184F5; --accent-2: #A79CF8; --accent-soft: #2F2868; --on-accent: #14112B; --hero: #4F42C4; --hero-deep: #4236AE;
+  --accent: #9184F5; --accent-2: #A79CF8; --accent-soft: #2F2868; --on-accent: #14112B; --hero: #4F42C4;
   --coral: #FF8FA2; --coral-soft: #4A2237; --mint: #5ED6AE; --mint-soft: #173E36;
-  --good: #5ED6AE; --warn: #FFC94D; --bad: #FF8FA2; --shadow: 0 8px 24px rgba(0, 0, 0, 0.25); color-scheme: dark; }
+  --warn: #FFC94D; --bad: #FF8FA2; --shadow: 0 8px 24px rgba(0,0,0,.25); --shadow-sm: 0 2px 8px rgba(0,0,0,.25); color-scheme: dark; }
 
 * { box-sizing: border-box; }
-body { background: var(--bg); color: var(--ink); font-family: var(--f-body); font-size: 14px; line-height: 1.5; }
-.wrap { max-width: 1320px; margin: 0 auto; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); padding-block: 20px 48px; }
+body { background: var(--bg); color: var(--ink); font-family: var(--font); font-size: 14px; line-height: 1.45; }
+body.dragging, body.dragging * { cursor: grabbing !important; user-select: none; }
+.wrap { max-width: 1440px; margin: 0 auto; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); padding-block: 20px 48px; }
+button { font: inherit; color: inherit; }
 
-/* Hero band */
-header.top { position: relative; overflow: hidden; display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 20px; padding: 28px clamp(20px, 4vw, 40px); margin-bottom: 24px; background: var(--hero); color: #FFFFFF; border-radius: 28px; }
-header.top::before, header.top::after { content: ""; position: absolute; border-radius: 50%; pointer-events: none; }
-header.top::before { width: 340px; height: 340px; right: -80px; top: -160px; border: 1.5px solid rgba(255,255,255,.14); box-shadow: 0 0 0 60px rgba(255,255,255,.04); }
-header.top::after { width: 14px; height: 14px; right: 38%; top: 22px; background: var(--coral-bg); box-shadow: -280px 110px 0 -3px rgba(255,255,255,.35), 160px 90px 0 -4px rgba(255,255,255,.3); }
-.brand { display: flex; flex-wrap: wrap; align-items: center; gap: 16px; position: relative; z-index: 1; min-width: 0; }
-.logo { flex: none; width: 56px; height: 56px; border-radius: 16px; background: #FFFFFF; display: grid; place-items: center; box-shadow: 0 6px 0 rgba(0,0,0,.08); }
-.logo svg { width: 32px; height: 32px; }
-h1 { font-family: var(--f-display); font-weight: 700; font-size: clamp(26px, 3.4vw, 36px); letter-spacing: -0.01em; margin: 0; text-wrap: balance; line-height: 1.15; }
-.ver { display: inline-block; vertical-align: middle; font-size: 13px; font-weight: 500; padding: 3px 10px; border-radius: 999px; background: rgba(255,255,255,.2); margin-left: 8px; }
-.sub { color: rgba(255,255,255,.82); margin: 6px 0 0; max-width: 62ch; }
-header.top .row { position: relative; z-index: 1; }
-header.top .btn { background: #FFFFFF; color: #4B3DC8; border-color: transparent; }
-header.top .btn.ghost { background: rgba(255,255,255,.16); color: #FFFFFF; }
+/* Hero */
+header.top { position: relative; overflow: hidden; display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 16px; padding: 22px clamp(20px, 4vw, 36px); margin-bottom: 18px; background: var(--hero); color: #FFFFFF; border-radius: 28px; }
+header.top::before { content: ""; position: absolute; border-radius: 50%; pointer-events: none; width: 340px; height: 340px; right: -80px; top: -170px; border: 1.5px solid rgba(255,255,255,.14); box-shadow: 0 0 0 60px rgba(255,255,255,.04); }
+header.top::after { content: ""; position: absolute; border-radius: 50%; pointer-events: none; width: 14px; height: 14px; right: 40%; top: 18px; background: var(--coral-bg); box-shadow: 160px 60px 0 -4px rgba(255,255,255,.3); }
+.brand { display: flex; align-items: center; gap: 14px; position: relative; z-index: 1; min-width: 0; }
+.logo { flex: none; width: 50px; height: 50px; border-radius: 15px; background: #FFFFFF; display: grid; place-items: center; box-shadow: 0 5px 0 rgba(0,0,0,.08); }
+.logo svg { width: 28px; height: 28px; }
+h1 { font-weight: 700; font-size: clamp(22px, 3vw, 30px); letter-spacing: -0.01em; margin: 0; line-height: 1.15; text-wrap: balance; }
+.sub { color: rgba(255,255,255,.82); margin: 4px 0 0; }
+.hero-actions { position: relative; z-index: 1; display: flex; flex-wrap: wrap; gap: 8px; }
+.hbtn { display: inline-flex; align-items: center; gap: 6px; border: 0; border-radius: 13px; padding: 9px 14px; font-weight: 500; font-size: 13px; cursor: pointer; background: rgba(255,255,255,.16); color: #FFFFFF; }
+.hbtn.solid { background: #FFFFFF; color: #4B3DC8; }
+.hbtn:disabled { opacity: .45; cursor: default; }
+.hbtn svg { width: 16px; height: 16px; }
 
-h2 { font-family: var(--f-display); font-weight: 600; font-size: 19px; margin: 0; }
-.grid { display: grid; grid-template-columns: 330px minmax(0, 1fr); gap: 24px; align-items: start; }
-@media (max-width: 900px) { .grid { grid-template-columns: minmax(0, 1fr); } }
+/* Cycle tabs */
+.tabs { display: flex; gap: 8px; overflow-x: auto; padding: 2px 2px 10px; margin-bottom: 8px; scrollbar-width: thin; }
+.tab { flex: none; display: inline-flex; align-items: center; gap: 8px; border: 0; border-radius: 14px; padding: 9px 14px; background: var(--surface); color: var(--muted); font-weight: 500; cursor: pointer; box-shadow: var(--shadow-sm); }
+.tab .dot { width: 9px; height: 9px; border-radius: 50%; }
+.tab.on { background: var(--accent); color: var(--on-accent); }
+.tab.new { background: transparent; box-shadow: inset 0 0 0 1.5px var(--line); color: var(--accent); }
 
-/* Control card */
-aside.rail { background: var(--surface); border-radius: 24px; padding: 22px; display: flex; flex-direction: column; gap: 20px; position: sticky; top: calc(env(safe-area-inset-top, 0px) + 12px); box-shadow: var(--shadow); }
-@media (max-width: 900px) { aside.rail { position: static; } }
-fieldset { border: 0; margin: 0; padding: 0; min-width: 0; }
-legend { font-size: 15px; color: var(--ink); font-weight: 600; margin-bottom: 10px; padding: 0; }
-.seg { display: flex; flex-wrap: wrap; gap: 4px; background: var(--sunk); border-radius: 14px; padding: 4px; }
-.seg label { flex: 1 1 0; min-width: max-content; text-align: center; }
-.seg input, .tiles input, .chk input { position: absolute; opacity: 0; pointer-events: none; }
-.seg span { display: block; padding: 8px 10px; border-radius: 11px; cursor: pointer; font-size: 13px; font-weight: 500; color: var(--muted); white-space: nowrap; transition: background .15s, color .15s; }
-.seg input:checked + span { background: var(--accent); color: var(--on-accent); }
-.seg input:focus-visible + span, .chk input:focus-visible + span, .tiles input:focus-visible + span { outline: 2px solid var(--accent); outline-offset: 2px; }
-
-/* Lifecycle tiles, coloured like category cards */
-.tiles { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
-.tiles span { position: relative; display: flex; flex-direction: column; align-items: center; gap: 6px; padding: 14px 8px 12px; border-radius: 16px; cursor: pointer; color: #FFFFFF; font-weight: 600; font-size: 13px; text-align: center; opacity: .78; transition: opacity .15s; }
-.tiles small { font-weight: 400; font-size: 11px; opacity: .9; }
-.tiles .ic { width: 36px; height: 36px; border-radius: 11px; background: rgba(255,255,255,.22); display: grid; place-items: center; }
-.tiles .ic svg { width: 20px; height: 20px; }
-.tiles label:nth-child(1) span { background: var(--accent-2); }
-.tiles label:nth-child(2) span { background: var(--coral-bg); }
-.tiles label:nth-child(3) span { background: var(--mint-bg); }
-.tiles label:nth-child(4) span { background: var(--sky-bg); }
-.tiles span:hover { opacity: .92; }
-.tiles input:checked + span { opacity: 1; box-shadow: 0 0 0 3px var(--surface), 0 0 0 5px var(--accent); }
-.tiles input:checked + span::after { content: ""; position: absolute; top: 8px; right: 8px; width: 16px; height: 16px; border-radius: 50%; background: #FFFFFF url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath d='M4 8.5l2.5 2.5L12 5.5' fill='none' stroke='%236A5AE0' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") center/12px no-repeat; }
-
-.chks { display: flex; flex-wrap: wrap; gap: 8px; }
-.chk span { display: inline-block; padding: 7px 12px; border-radius: 12px; cursor: pointer; font-size: 13px; font-weight: 500; color: var(--muted); background: var(--sunk); }
-.chk input:checked + span { background: var(--accent-soft); color: var(--accent); box-shadow: inset 0 0 0 1.5px var(--accent); }
-.num input { width: 100%; font: 500 15px var(--f-body); padding: 11px 14px; border: 0; border-radius: 14px; background: var(--sunk); color: var(--ink); font-variant-numeric: tabular-nums; }
-.hint { font-size: 12px; color: var(--muted); margin: 6px 0 0; }
-
-/* Output */
-main { display: flex; flex-direction: column; gap: 24px; min-width: 0; }
-.panel { background: var(--surface); border-radius: 24px; padding: 22px; min-width: 0; box-shadow: var(--shadow); }
-.panel-head { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 16px; }
-.summary { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 14px; }
-@media (max-width: 1100px) { .summary { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
-.stat { background: var(--surface); padding: 16px 18px; min-width: 0; border-radius: 20px; box-shadow: var(--shadow); display: flex; flex-direction: column; gap: 2px; }
-.stat .k { display: flex; align-items: center; gap: 8px; font-size: 12px; color: var(--muted); font-weight: 500; }
-.stat .k i { width: 26px; height: 26px; border-radius: 8px; display: grid; place-items: center; flex: none; }
-.stat .k i svg { width: 15px; height: 15px; }
-.stat .v { font: 700 24px var(--f-display); margin-top: 6px; font-variant-numeric: tabular-nums; }
+/* Summary strip */
+.summary { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; margin-bottom: 18px; }
+@media (max-width: 1000px) { .summary { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+.stat { background: var(--surface); padding: 14px 16px; border-radius: 20px; box-shadow: var(--shadow-sm); min-width: 0; }
+.stat .k { font-size: 12px; color: var(--muted); font-weight: 500; }
+.stat .v { font-weight: 700; font-size: 22px; margin-top: 2px; font-variant-numeric: tabular-nums; }
 .stat .n { font-size: 12px; color: var(--muted); }
 .stat.feature { background: var(--hero); color: #FFFFFF; }
 .stat.feature .k, .stat.feature .n { color: rgba(255,255,255,.8); }
-.meter { height: 8px; border-radius: 4px; background: var(--sunk); margin-top: 10px; overflow: hidden; }
-.meter i { display: block; height: 100%; border-radius: 4px; }
+.mix { display: flex; height: 10px; border-radius: 5px; overflow: hidden; margin-top: 10px; background: var(--sunk); gap: 2px; }
+.mix i { display: block; height: 100%; }
+.legend { display: flex; flex-wrap: wrap; gap: 4px 10px; margin-top: 8px; font-size: 11px; color: var(--muted); }
+.legend span { display: inline-flex; align-items: center; gap: 4px; }
+.legend b { width: 8px; height: 8px; border-radius: 3px; display: inline-block; }
 
-.pos { display: inline-flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 600; padding: 4px 10px; border-radius: 999px; white-space: nowrap; font-family: var(--f-body); }
-.pos::before { content: ""; width: 7px; height: 7px; border-radius: 50%; background: currentColor; }
-.pos.aggressive { color: var(--aggr); background: var(--aggr-soft); }
-.pos.inline { color: var(--inline); background: var(--inline-soft); }
-.pos.differentiated { color: var(--diff); background: var(--diff-soft); }
-
-.reco { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 6px 14px; align-items: start; padding: 16px 18px; border-radius: 18px; background: var(--sunk); }
-.reco ul { margin: 4px 0 0; padding-left: 18px; color: var(--muted); }
-.reco li + li { margin-top: 2px; }
-.reco b { color: var(--ink); font-weight: 600; }
-
-/* Timeline */
-.timeline { list-style: none; margin: 0; padding: 0; position: relative; }
-.timeline::before { content: ""; position: absolute; left: 45px; top: 20px; bottom: 20px; width: 2px; background: repeating-linear-gradient(to bottom, var(--accent-soft) 0 6px, transparent 6px 12px); }
-.step { display: grid; grid-template-columns: 92px minmax(0, 1fr); gap: 14px; padding-block: 8px; position: relative; }
-.day { text-align: center; position: relative; z-index: 1; }
-.day b { display: inline-grid; place-items: center; min-width: 46px; height: 46px; padding: 0 6px; background: var(--accent); color: var(--on-accent); border-radius: 15px; font-weight: 600; font-size: 14px; box-shadow: 0 0 0 5px var(--surface); }
-.day small { display: block; color: var(--muted); font-size: 11px; margin-top: 8px; background: var(--surface); line-height: 1.3; }
-.card { border-radius: 18px; padding: 14px 16px; min-width: 0; background: var(--surface); border: 1.5px solid var(--line); }
-.card.special { background: var(--sunk); border-color: transparent; }
-.card-top { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; justify-content: space-between; }
-.card h4 { margin: 0; font-size: 15px; font-weight: 600; }
-.chans { display: flex; gap: 4px; flex-wrap: wrap; }
-.chan { font: 500 11px var(--f-body); padding: 3px 8px; border-radius: 8px; background: var(--accent-soft); color: var(--accent); }
-.chan.fb { background: transparent; box-shadow: inset 0 0 0 1px var(--accent-soft); }
-.msg { margin: 6px 0 0; color: var(--ink); }
-.meta { display: flex; flex-wrap: wrap; gap: 6px 18px; margin-top: 10px; font-size: 12px; color: var(--muted); }
-.meta b { color: var(--ink); font-weight: 500; }
-.offer { margin-top: 12px; display: flex; flex-wrap: wrap; align-items: center; gap: 6px 10px; padding: 10px 12px; border-radius: 14px; background: var(--coral-soft); font: 500 13px var(--f-body); color: var(--ink); }
-.offer .lbl { font-size: 10px; letter-spacing: .1em; text-transform: uppercase; color: var(--coral); font-weight: 600; width: 100%; }
-.flag { font-size: 12px; color: var(--warn); margin-top: 6px; }
-
-/* Market */
-.tbl-wrap { overflow-x: auto; }
-table { border-collapse: separate; border-spacing: 0; width: 100%; min-width: 760px; font-size: 13px; }
-th, td { text-align: left; padding: 11px 10px; border-bottom: 1px solid var(--line); vertical-align: top; }
-th { font-size: 11px; text-transform: uppercase; letter-spacing: 0.06em; color: var(--muted); font-weight: 500; background: var(--sunk); border: 0; }
-th:first-child { border-radius: 12px 0 0 12px; } th:last-child { border-radius: 0 12px 12px 0; }
-td.mono { font-variant-numeric: tabular-nums; }
-.delta { font-weight: 600; }
-.delta.up { color: var(--good); } .delta.down { color: var(--bad); }
-select { font: 500 13px var(--f-body); padding: 7px 10px; border-radius: 10px; border: 0; background: var(--sunk); color: var(--ink); }
-.btn { font: 500 13px var(--f-body); padding: 10px 16px; border-radius: 14px; border: 0; background: var(--sunk); color: var(--accent); cursor: pointer; display: inline-block; }
-.btn:hover { filter: brightness(.97); }
-.btn.primary { background: var(--accent); color: var(--on-accent); }
-.btn:focus-visible, select:focus-visible, .num input:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+/* Builder */
+.app { display: grid; grid-template-columns: 250px minmax(0, 1fr); gap: 18px; align-items: start; }
+@media (max-width: 860px) { .app { grid-template-columns: minmax(0, 1fr); } }
+.side { display: flex; flex-direction: column; gap: 18px; position: sticky; top: calc(env(safe-area-inset-top, 0px) + 12px); }
+@media (max-width: 860px) { .side { display: contents; } #palette { order: 1; } #boardwrap { order: 2; } #settings { order: 3; } }
+.panel { background: var(--surface); border-radius: 24px; padding: 18px; box-shadow: var(--shadow); min-width: 0; }
+.ptitle { font-size: 15px; font-weight: 600; margin: 0 0 4px; }
+.phint { font-size: 12px; color: var(--muted); margin: 0 0 12px; }
+.blocks { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+@media (max-width: 860px) { .blocks { grid-template-columns: repeat(6, minmax(92px, 1fr)); overflow-x: auto; } }
+.block { display: flex; flex-direction: column; align-items: center; gap: 6px; padding: 12px 6px; border: 0; border-radius: 16px; background: var(--sunk); cursor: grab; touch-action: manipulation; -webkit-touch-callout: none; user-select: none; font-weight: 500; font-size: 13px; transition: transform .12s; }
+.block:hover { transform: translateY(-2px); }
+.ci { flex: none; width: 34px; height: 34px; border-radius: 11px; display: grid; place-items: center; }
+.ci svg { width: 18px; height: 18px; }
+.ci.sm { width: 26px; height: 26px; border-radius: 8px; }
+.ci.sm svg { width: 14px; height: 14px; }
+.field { display: flex; flex-direction: column; gap: 6px; min-width: 0; }
+.field > span { font-size: 12px; font-weight: 500; color: var(--muted); }
+.inp { width: 100%; font: inherit; font-size: 14px; color: var(--ink); background: var(--sunk); border: 0; border-radius: 12px; padding: 10px 12px; }
+textarea.inp { resize: vertical; min-height: 70px; }
+.inp:focus-visible, .btn:focus-visible, .block:focus-visible, .tab:focus-visible, .hbtn:focus-visible, .card:focus-visible, .daybtn:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.stack { display: flex; flex-direction: column; gap: 12px; }
 .row { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
-.src { font-size: 12px; color: var(--muted); }
-.tag-ex { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.06em; color: var(--warn); background: color-mix(in srgb, var(--sun) 22%, transparent); border-radius: 8px; padding: 3px 8px; }
-details.tpl { margin-top: 14px; }
-details.tpl summary { cursor: pointer; color: var(--accent); font-weight: 500; }
-code { font-family: ui-monospace, "SFMono-Regular", Menlo, monospace; font-size: 12px; }
-pre { background: var(--sunk); padding: 12px 14px; border-radius: 12px; overflow-x: auto; font: 12px/1.6 ui-monospace, "SFMono-Regular", Menlo, monospace; margin: 8px 0; }
-.comp-list { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; }
-.comp-list span { display: inline-flex; align-items: center; gap: 6px; font-size: 12px; padding: 4px 10px 4px 4px; border-radius: 999px; background: var(--sunk); }
-.comp-list span i { width: 20px; height: 20px; border-radius: 50%; display: grid; place-items: center; color: #FFFFFF; font-style: normal; font-size: 10px; font-weight: 600; }
-.tests { margin: 0; padding: 0; list-style: none; display: grid; gap: 10px; counter-reset: t; }
-.tests li { counter-increment: t; display: grid; grid-template-columns: 30px minmax(0, 1fr); gap: 12px; align-items: start; padding: 12px 14px; background: var(--sunk); border-radius: 14px; }
-.tests li::before { content: counter(t); width: 30px; height: 30px; border-radius: 10px; background: var(--accent); color: var(--on-accent); display: grid; place-items: center; font-weight: 600; }
-.toast { position: fixed; right: max(16px, env(safe-area-inset-right, 0px)); bottom: calc(16px + env(safe-area-inset-bottom, 0px)); background: var(--accent); color: var(--on-accent); padding: 12px 16px; border-radius: 14px; font-weight: 500; z-index: 20; box-shadow: var(--shadow); }
-footer { color: var(--muted); font-size: 12px; margin-top: 28px; text-align: center; }
-@media (prefers-reduced-motion: no-preference) { .step { animation: rise .25s ease both; } @keyframes rise { from { transform: translateY(4px); } to { transform: none; } } }
+.btn { display: inline-flex; align-items: center; gap: 6px; border: 0; border-radius: 12px; padding: 9px 13px; background: var(--sunk); color: var(--accent); font-weight: 500; font-size: 13px; cursor: pointer; }
+.btn.primary { background: var(--accent); color: var(--on-accent); }
+.btn.danger { color: var(--bad); }
+.btn.danger.armed { background: var(--bad); color: #FFFFFF; }
+.btn svg { width: 15px; height: 15px; }
+
+/* Board */
+.boardwrap { overflow-x: auto; padding: 18px; scrollbar-width: thin; }
+.board { position: relative; display: flex; align-items: flex-start; gap: 14px; width: max-content; min-width: 100%; }
+.board::before { content: ""; position: absolute; left: 30px; right: 30px; top: 21px; height: 2px; background: repeating-linear-gradient(to right, var(--accent-soft) 0 8px, transparent 8px 14px); }
+.col { position: relative; flex: none; width: 224px; display: flex; flex-direction: column; gap: 10px; }
+.colhead { display: flex; align-items: center; gap: 8px; height: 44px; }
+.daybtn { display: inline-grid; place-items: center; height: 44px; min-width: 76px; padding: 0 14px; border: 0; border-radius: 15px; background: var(--accent); color: var(--on-accent); font-weight: 600; cursor: pointer; box-shadow: 0 0 0 5px var(--surface); }
+.dayinput { width: 90px; height: 44px; text-align: center; font-weight: 600; box-shadow: 0 0 0 5px var(--surface); }
+.cnt { font-size: 12px; color: var(--muted); background: var(--surface); padding: 2px 6px; border-radius: 8px; }
+.colx { margin-left: auto; border: 0; background: transparent; color: var(--muted); cursor: pointer; width: 28px; height: 28px; border-radius: 8px; display: grid; place-items: center; }
+.colx:hover { background: var(--sunk); color: var(--bad); }
+.colx svg { width: 14px; height: 14px; }
+.colbody { display: flex; flex-direction: column; gap: 8px; min-height: 280px; padding: 8px; border-radius: 18px; background: var(--sunk); transition: box-shadow .12s; }
+.colbody.over { box-shadow: inset 0 0 0 2px var(--accent); }
+.addin { border: 1.5px dashed var(--line); background: transparent; border-radius: 14px; padding: 10px; color: var(--muted); cursor: pointer; font-weight: 500; }
+.addin:hover { color: var(--accent); border-color: var(--accent); }
+.empty { text-align: center; color: var(--muted); font-size: 12px; padding: 18px 8px 6px; }
+.card { background: var(--surface); border-radius: 14px; padding: 10px 12px; box-shadow: var(--shadow-sm); cursor: grab; touch-action: manipulation; -webkit-touch-callout: none; user-select: none; display: flex; flex-direction: column; gap: 6px; transition: box-shadow .12s, opacity .12s; }
+.card:hover { box-shadow: 0 0 0 1.5px var(--accent-soft), var(--shadow-sm); }
+.card.sel { box-shadow: 0 0 0 2px var(--accent); }
+.card.src { opacity: .35; }
+.lifting { transform: scale(1.03); box-shadow: 0 0 0 2px var(--accent); }
+.ctop { display: flex; align-items: center; gap: 8px; font-size: 12px; color: var(--muted); }
+.ctop .time { margin-left: auto; font-variant-numeric: tabular-nums; }
+.ctitle { font-weight: 600; font-size: 14px; color: var(--ink); overflow-wrap: anywhere; }
+.badges { display: flex; flex-wrap: wrap; gap: 4px; }
+.bdg { font-size: 11px; font-weight: 500; padding: 3px 8px; border-radius: 8px; }
+.bdg.offer { background: var(--coral-soft); color: var(--coral); }
+.bdg.aud { background: var(--accent-soft); color: var(--accent); }
+.ph { height: 4px; border-radius: 2px; background: var(--accent); flex: none; }
+.ghost { position: fixed; z-index: 70; pointer-events: none; width: 210px; transform: rotate(2deg); box-shadow: 0 16px 40px rgba(40, 30, 120, .3); opacity: .96; }
+.bookend { width: 160px; }
+.bk { display: flex; flex-direction: column; align-items: center; text-align: center; gap: 8px; padding: 18px 12px; border-radius: 18px; }
+.bk small { font-size: 11px; text-transform: uppercase; letter-spacing: .08em; font-weight: 600; }
+.bk b { font-size: 14px; overflow-wrap: anywhere; }
+.bk.start { background: var(--mint-soft); color: var(--mint); }
+.bk.goal { background: var(--hero); color: #FFFFFF; }
+.bk .ci { background: var(--surface); }
+.bk.goal .ci { background: rgba(255,255,255,.2); }
+.colhead.bkhead { justify-content: center; }
+.bkpin { width: 14px; height: 14px; border-radius: 50%; background: var(--mint-bg); box-shadow: 0 0 0 5px var(--surface); }
+.bkpin.goal { background: var(--hero); }
+.addday { width: 120px; min-height: 120px; border: 1.5px dashed var(--line); background: transparent; border-radius: 18px; color: var(--accent); font-weight: 500; cursor: pointer; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px; }
+.addday:hover { border-color: var(--accent); background: var(--accent-soft); }
+.addday svg { width: 22px; height: 22px; }
+
+/* Segmented and chips */
+.seg { display: flex; flex-wrap: wrap; gap: 4px; background: var(--sunk); border-radius: 13px; padding: 4px; }
+.seg label { flex: 1 1 0; min-width: max-content; text-align: center; }
+.seg input, .chips input { position: absolute; opacity: 0; pointer-events: none; }
+.seg span { display: block; padding: 7px 10px; border-radius: 10px; cursor: pointer; font-size: 13px; font-weight: 500; color: var(--muted); white-space: nowrap; }
+.seg input:checked + span { background: var(--accent); color: var(--on-accent); }
+.chips { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 6px; }
+.chips span { display: flex; align-items: center; gap: 8px; padding: 7px 8px; border-radius: 12px; background: var(--sunk); cursor: pointer; font-size: 13px; font-weight: 500; }
+.chips input:checked + span { box-shadow: inset 0 0 0 2px var(--accent); background: var(--accent-soft); }
+.seg input:focus-visible + span, .chips input:focus-visible + span { outline: 2px solid var(--accent); outline-offset: 2px; }
+.grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.grid3 { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; }
+
+/* Drawer */
+.drawer { position: fixed; z-index: 40; top: calc(12px + env(safe-area-inset-top, 0px)); bottom: calc(12px + env(safe-area-inset-bottom, 0px)); right: max(12px, env(safe-area-inset-right, 0px)); width: min(400px, calc(100% - 24px)); background: var(--surface); border-radius: 24px; box-shadow: 0 20px 60px rgba(30, 20, 100, .25); display: flex; flex-direction: column; overflow: hidden; }
+@media (max-width: 700px) { .drawer { top: auto; left: 0; right: 0; bottom: 0; width: 100%; max-height: 85%; border-radius: 24px 24px 0 0; padding-bottom: env(safe-area-inset-bottom, 0px); } }
+.dhead { display: flex; align-items: center; gap: 10px; padding: 16px 18px; border-bottom: 1px solid var(--line); }
+.dhead h3 { margin: 0; font-size: 16px; font-weight: 600; flex: 1; min-width: 0; }
+.iconbtn { border: 0; background: var(--sunk); width: 34px; height: 34px; border-radius: 10px; display: grid; place-items: center; cursor: pointer; color: var(--muted); }
+.iconbtn svg { width: 16px; height: 16px; }
+.dbody { padding: 16px 18px; overflow-y: auto; display: flex; flex-direction: column; gap: 14px; }
+.dfoot { padding: 12px 18px; border-top: 1px solid var(--line); display: flex; gap: 8px; justify-content: space-between; }
+
+/* Modal */
+.modal { position: fixed; inset: 0; z-index: 60; background: rgba(20, 17, 43, .45); display: grid; place-items: center; padding: 16px; }
+.dialog { background: var(--surface); border-radius: 24px; padding: 22px; width: min(540px, 100%); max-height: 100%; overflow-y: auto; display: flex; flex-direction: column; gap: 16px; box-shadow: 0 20px 60px rgba(30, 20, 100, .3); }
+.dialog h3 { margin: 0; font-size: 19px; }
+.stages { display: grid; grid-template-columns: repeat(auto-fit, minmax(92px, 1fr)); gap: 8px; }
+.stages input { position: absolute; opacity: 0; pointer-events: none; }
+.stages span { display: flex; flex-direction: column; align-items: center; gap: 6px; padding: 12px 6px; border-radius: 16px; color: #FFFFFF; font-weight: 600; font-size: 12px; text-align: center; cursor: pointer; opacity: .7; }
+.stages small { font-weight: 400; font-size: 11px; opacity: .9; }
+.stages input:checked + span { opacity: 1; box-shadow: 0 0 0 3px var(--surface), 0 0 0 5px var(--accent); }
+.stages input:focus-visible + span { outline: 2px solid var(--accent); outline-offset: 6px; }
+.stages .ci { background: rgba(255,255,255,.22); }
+
+.toast { position: fixed; left: 50%; transform: translateX(-50%); bottom: calc(18px + env(safe-area-inset-bottom, 0px)); background: var(--ink); color: var(--bg); padding: 10px 16px; border-radius: 14px; font-weight: 500; z-index: 80; box-shadow: var(--shadow); }
+footer { color: var(--muted); font-size: 12px; margin-top: 24px; text-align: center; }
+@media (prefers-reduced-motion: reduce) { .block, .card { transition: none; } }
 </style>
 
 <style>body{margin:0}[hidden]{display:none!important}</style>
@@ -179,544 +198,518 @@ footer { color: var(--muted); font-size: 12px; margin-top: 28px; text-align: cen
     <div class="brand">
       <div class="logo" aria-hidden="true"><svg viewBox="0 0 32 32"><path d="M16 5a11 11 0 1 0 10.4 7.4" fill="none" stroke="#6A5AE0" stroke-width="3.2" stroke-linecap="round"/><path d="M27.5 5.5l-1 7-6.5-2.5" fill="none" stroke="#6A5AE0" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"/><circle cx="16" cy="16" r="4" fill="#FF8FA2"/></svg></div>
       <div style="min-width:0">
-        <h1>Conversion Cycle Planner <span class="ver">v1.1</span></h1>
-        <p class="sub">Choose your conditions and get a step-by-step CRM plan. Add competitor offers to see where you stand and whether to be aggressive, stay in line, or differentiate.</p>
+        <h1>Conversion Cycle Planner</h1>
+        <p class="sub">Drag channels onto the timeline to build your cycle.</p>
       </div>
     </div>
-    <div class="row">
-      <button class="btn" id="copyMd" type="button">Copy plan (Markdown)</button>
-      <button class="btn ghost" id="copyCsv" type="button">Copy as CSV</button>
+    <div class="hero-actions">
+      <button class="hbtn" id="undoBtn" type="button" title="Undo (Ctrl+Z)"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M5 3L2 6l3 3"/><path d="M2 6h7.5a4 4 0 0 1 0 8H7"/></svg>Undo</button>
+      <button class="hbtn" id="csvBtn" type="button">Copy as CSV</button>
+      <button class="hbtn" id="exportBtn" type="button">Export</button>
+      <button class="hbtn" id="importBtn" type="button">Import</button>
+      <input type="file" id="importFile" accept=".json,application/json" hidden>
     </div>
   </header>
 
-  <div class="grid">
-    <aside class="rail" aria-label="Plan conditions">
-      <fieldset><legend>Lifecycle focus</legend>
-        <div class="tiles">
-          <label><input type="radio" name="focus" id="f-acq" value="acquisition" checked><span><i class="ic"><svg viewBox="0 0 20 20" fill="none" stroke="#fff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="8" cy="7" r="3"/><path d="M2.5 16.5c.8-3 3-4.5 5.5-4.5s4.7 1.5 5.5 4.5M15 6v5M12.5 8.5h5"/></svg></i>Acquisition<small>Reg → FTD</small></span></label>
-          <label><input type="radio" name="focus" id="f-early" value="early"><span><i class="ic"><svg viewBox="0 0 20 20" fill="none" stroke="#fff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 15l4-4 3 3 7-7M12 7h5v5"/></svg></i>Early life<small>FTD → 3rd deposit</small></span></label>
-          <label><input type="radio" name="focus" id="f-ret" value="retention"><span><i class="ic"><svg viewBox="0 0 20 20" fill="none" stroke="#fff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M10 17s-6.5-3.8-6.5-8.5A3.5 3.5 0 0 1 10 6.3a3.5 3.5 0 0 1 6.5 2.2C16.5 13.2 10 17 10 17z"/></svg></i>Retention<small>Active players</small></span></label>
-          <label><input type="radio" name="focus" id="f-react" value="reactivation"><span><i class="ic"><svg viewBox="0 0 20 20" fill="none" stroke="#fff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 10a6 6 0 1 0 1.8-4.3M4 3v3.5h3.5"/></svg></i>Reactivation<small>Lapsed 30d+</small></span></label>
-        </div>
-      </fieldset>
-      <fieldset><legend>Vertical</legend>
-        <div class="seg">
-          <label><input type="radio" name="vertical" id="v-c" value="casino" checked><span>Casino</span></label>
-          <label><input type="radio" name="vertical" id="v-s" value="sports"><span>Sportsbook</span></label>
-          <label><input type="radio" name="vertical" id="v-h" value="hybrid"><span>Hybrid</span></label>
-        </div>
-      </fieldset>
-      <fieldset><legend>Player value segment</legend>
-        <div class="seg">
-          <label><input type="radio" name="segment" id="s-l" value="low"><span>Low</span></label>
-          <label><input type="radio" name="segment" id="s-m" value="mid" checked><span>Mid</span></label>
-          <label><input type="radio" name="segment" id="s-v" value="vip"><span>VIP</span></label>
-        </div>
-      </fieldset>
-      <fieldset><legend>Bonus budget</legend>
-        <div class="seg">
-          <label><input type="radio" name="budget" id="b-l" value="low"><span>Low</span></label>
-          <label><input type="radio" name="budget" id="b-m" value="medium" checked><span>Medium</span></label>
-          <label><input type="radio" name="budget" id="b-h" value="high"><span>High</span></label>
-        </div>
-      </fieldset>
-      <fieldset><legend>Market regulation</legend>
-        <div class="seg">
-          <label><input type="radio" name="regulation" id="r-s" value="strict"><span>Strict</span></label>
-          <label><input type="radio" name="regulation" id="r-m" value="moderate" checked><span>Moderate</span></label>
-          <label><input type="radio" name="regulation" id="r-l" value="light"><span>Light</span></label>
-        </div>
-        <p class="hint">Strict caps wagering at 10x, removes no-deposit offers and adds safer-gambling checks.</p>
-      </fieldset>
-      <fieldset><legend>Channels available</legend>
-        <div class="chks">
-          <label class="chk"><input type="checkbox" name="ch" id="c-email" value="email" checked><span>Email</span></label>
-          <label class="chk"><input type="checkbox" name="ch" id="c-sms" value="sms" checked><span>SMS</span></label>
-          <label class="chk"><input type="checkbox" name="ch" id="c-push" value="push" checked><span>Push</span></label>
-          <label class="chk"><input type="checkbox" name="ch" id="c-popup" value="popup" checked><span>On-site popup</span></label>
-          <label class="chk"><input type="checkbox" name="ch" id="c-gam" value="gamification" checked><span>Missions</span></label>
-          <label class="chk"><input type="checkbox" name="ch" id="c-call" value="call"><span>Account manager</span></label>
-        </div>
-      </fieldset>
-      <fieldset><legend>Average deposit (€)</legend>
-        <div class="num"><input type="number" id="dep" min="5" max="5000" step="5" value="50" inputmode="numeric"></div>
-        <p class="hint">Used to size match bonuses and compare real offer value.</p>
-      </fieldset>
-      <fieldset><legend>Offer position</legend>
-        <div class="seg">
-          <label><input type="radio" name="mode" id="m-auto" value="auto" checked><span>Auto</span></label>
-          <label><input type="radio" name="mode" id="m-ag" value="aggressive"><span>Aggressive</span></label>
-          <label><input type="radio" name="mode" id="m-in" value="inline"><span>In line</span></label>
-          <label><input type="radio" name="mode" id="m-df" value="differentiated"><span>Differentiate</span></label>
-        </div>
-      </fieldset>
-    </aside>
+  <nav class="tabs" id="tabs" aria-label="Your cycles"></nav>
+  <section class="summary" id="summary" aria-label="Cycle summary"></section>
 
-    <main>
-      <section class="summary" id="summary" aria-label="Plan summary"></section>
-
-      <section class="panel" aria-labelledby="recoH">
-        <div class="panel-head"><h2 id="recoH">Positioning</h2><span id="recoPill"></span></div>
-        <div id="reco"></div>
+  <div class="app">
+    <div class="side">
+      <section class="panel" id="palette" aria-labelledby="palH">
+        <h2 class="ptitle" id="palH">Add a step</h2>
+        <p class="phint">Drag onto a day, or click to add to the selected day. On a phone, press and hold to drag.</p>
+        <div class="blocks" id="blocks"></div>
       </section>
-
-      <section class="panel" aria-labelledby="planH">
-        <div class="panel-head"><h2 id="planH">Conversion cycle</h2><span class="src" id="planNote"></span></div>
-        <ol class="timeline" id="timeline"></ol>
-      </section>
-
-      <section class="panel" aria-labelledby="mktH">
-        <div class="panel-head">
-          <h2 id="mktH">Market benchmark</h2>
-          <div class="row">
-            <label class="btn" for="csvFile" tabindex="0" id="uploadLbl">Upload competitor CSV</label>
-            <input type="file" id="csvFile" accept=".csv,text/csv" hidden>
-            <button class="btn" type="button" id="loadSample">Load example data</button>
-            <button class="btn" type="button" id="clearComp">Clear</button>
-          </div>
+      <section class="panel stack" id="settings" aria-labelledby="setH">
+        <h2 class="ptitle" id="setH">Cycle settings</h2>
+        <label class="field"><span>Name</span><input class="inp" id="cName" type="text"></label>
+        <label class="field"><span>Starts when</span><input class="inp" id="cEntry" type="text"></label>
+        <label class="field"><span>Goal</span><input class="inp" id="cGoal" type="text"></label>
+        <div class="row">
+          <button class="btn" id="dupCycle" type="button">Duplicate</button>
+          <button class="btn danger" id="delCycle" type="button">Delete cycle</button>
         </div>
-        <div class="row" id="compSrc"></div>
-        <div class="comp-list" id="compList"></div>
-        <div class="tbl-wrap" style="margin-top:14px"><table id="bench"></table></div>
-        <details class="tpl">
-          <summary>CSV format</summary>
-          <p class="hint">One row per competitor offer. <code>stage</code> is one of: welcome, second, third, reload, cashback, reactivation. <code>vertical</code> is casino or sports (optional). Missing numbers count as 0.</p>
-          <pre id="tplText"></pre>
-          <button class="btn" type="button" id="copyTpl">Copy template</button>
-        </details>
       </section>
-
-      <section class="panel" aria-labelledby="testH">
-        <h2 id="testH" style="margin-bottom:10px">What to A/B test first</h2>
-        <ul class="tests" id="tests"></ul>
-      </section>
-    </main>
+    </div>
+    <section class="panel boardwrap" id="boardwrap" aria-label="Cycle timeline">
+      <div class="board" id="board"></div>
+    </section>
   </div>
-  <footer>Prototype. Conversion targets and offer values are rule-of-thumb estimates to validate against your own data, not forecasts.</footer>
+  <footer>Your cycles are saved in this browser. Use Export to back them up or move them to another computer.</footer>
+</div>
+
+<aside class="drawer" id="drawer" hidden aria-labelledby="dTitle"></aside>
+
+<div class="modal" id="newModal" hidden>
+  <form class="dialog" id="newForm" aria-labelledby="nTitle">
+    <h3 id="nTitle">New cycle</h3>
+    <label class="field"><span>Name</span><input class="inp" id="nName" type="text" value="New cycle" required></label>
+    <div class="field"><span>Lifecycle stage</span><div class="stages" id="nStages"></div></div>
+    <div class="field"><span>Start with</span>
+      <div class="seg">
+        <label><input type="radio" name="nStart" id="nStartT" value="template" checked><span>Suggested steps</span></label>
+        <label><input type="radio" name="nStart" id="nStartB" value="blank"><span>Blank cycle</span></label>
+      </div>
+    </div>
+    <div class="row" style="justify-content:flex-end">
+      <button class="btn" type="button" id="nCancel">Cancel</button>
+      <button class="btn primary" type="submit">Create cycle</button>
+    </div>
+  </form>
 </div>
 <div class="toast" id="toast" hidden></div>
 
 <script>
 (function () {
   "use strict";
-  var SPIN = 0.2; // € value per free spin
-  var STAGES = { welcome: "Welcome (FTD)", second: "2nd deposit", third: "3rd deposit", reload: "Weekly reload", cashback: "Cashback", reactivation: "Reactivation" };
-  var FIELDS = ["match_pct", "max_bonus", "free_spins", "free_bet", "wagering", "cashback_pct"];
-  var CH_LABEL = { email: "Email", sms: "SMS", push: "Push", popup: "Popup", gamification: "Mission", call: "Call" };
-  var FALLBACK = { sms: ["push", "email"], push: ["sms", "email"], popup: ["push", "email"], gamification: ["popup", "email"], call: ["email"], email: ["push", "popup"] };
-  var POS_LABEL = { aggressive: "Aggressive", inline: "In line", differentiated: "Differentiated" };
-
-  function O(m, b, fs, fb, w, cb) { return { match_pct: m, max_bonus: b, free_spins: fs, free_bet: fb, wagering: w, cashback_pct: cb }; }
-  var BASE = {
-    casino: { welcome: O(100, 200, 50, 0, 35, 0), second: O(75, 150, 25, 0, 35, 0), third: O(50, 100, 20, 0, 35, 0), reload: O(25, 100, 0, 0, 30, 0), cashback: O(0, 0, 0, 0, 1, 10), reactivation: O(50, 100, 20, 0, 30, 0) },
-    sports: { welcome: O(100, 50, 0, 20, 6, 0), second: O(50, 50, 0, 10, 6, 0), third: O(50, 50, 0, 10, 6, 0), reload: O(25, 50, 0, 5, 5, 0), cashback: O(0, 0, 0, 0, 1, 10), reactivation: O(0, 0, 0, 15, 1, 0) }
+  var CH = {
+    email:   { label: "Email",   color: "var(--c-email)",   fg: "#FFFFFF", icon: '<rect x="3" y="5" width="14" height="10" rx="2"/><path d="M3.5 6l6.5 5 6.5-5"/>' },
+    sms:     { label: "SMS",     color: "var(--c-sms)",     fg: "#FFFFFF", icon: '<path d="M4 4h12a1 1 0 0 1 1 1v7a1 1 0 0 1-1 1H8l-4 3V5a1 1 0 0 1 1-1z"/>' },
+    push:    { label: "Push",    color: "var(--c-push)",    fg: "#FFFFFF", icon: '<path d="M6 8.5a4 4 0 0 1 8 0V12l1.5 2h-11L6 12z"/><path d="M8.5 16.5a1.6 1.6 0 0 0 3 0"/>' },
+    popup:   { label: "Popup",   color: "var(--c-popup)",   fg: "#FFFFFF", icon: '<rect x="3" y="4" width="14" height="12" rx="2"/><path d="M3 8h14M6 6h.01"/>' },
+    mission: { label: "Mission", color: "var(--c-mission)", fg: "#5A3D00", icon: '<path d="M10 3l2.1 4.3 4.7.7-3.4 3.3.8 4.7L10 13.8 5.8 16l.8-4.7L3.2 8l4.7-.7z"/>' },
+    call:    { label: "Call",    color: "var(--c-call)",    fg: "#FFFFFF", icon: '<path d="M5.5 3H8l1.3 3.5-1.8 1.1a8 8 0 0 0 4 4l1.1-1.8L16 11v2.5A1.5 1.5 0 0 1 14.5 15 11.5 11.5 0 0 1 4 4.5 1.5 1.5 0 0 1 5.5 3z"/>' }
   };
-  BASE.hybrid = JSON.parse(JSON.stringify(BASE.casino));
-  BASE.hybrid.welcome.free_bet = 10;
+  var CH_ORDER = ["email", "sms", "push", "popup", "mission", "call"];
+  var TIMES = ["Immediately", "+1 hour", "09:00", "12:00", "18:00", "20:00"];
+  var AUD = { all: "Everyone", pending: "Not converted yet", converted: "Converted" };
+  var OFFERS = { none: "No offer", match: "Match bonus", freespins: "Free spins", freebet: "Free bet", cashback: "Cashback" };
+  var STAGES = {
+    acquisition:  { label: "Acquisition",  sub: "Reg → FTD",   color: "var(--accent-2)", entry: "Player registers",      goal: "First deposit",            icon: '<circle cx="8" cy="7" r="3"/><path d="M2.5 16.5c.8-3 3-4.5 5.5-4.5s4.7 1.5 5.5 4.5M15 6v5M12.5 8.5h5"/>' },
+    early:        { label: "Early life",   sub: "FTD → 3rd",   color: "var(--coral-bg)", entry: "First deposit made",    goal: "Third deposit",            icon: '<path d="M3 15l4-4 3 3 7-7M12 7h5v5"/>' },
+    retention:    { label: "Retention",    sub: "Active",      color: "var(--mint-bg)",  entry: "Player is active",      goal: "Deposits again this week", icon: '<path d="M10 17s-6.5-3.8-6.5-8.5A3.5 3.5 0 0 1 10 6.3a3.5 3.5 0 0 1 6.5 2.2C16.5 13.2 10 17 10 17z"/>' },
+    reactivation: { label: "Reactivation", sub: "Lapsed 30d+", color: "var(--sky-bg)",   entry: "30 days without login", goal: "Returns and deposits",     icon: '<path d="M4 10a6 6 0 1 0 1.8-4.3M4 3v3.5h3.5"/>' },
+    custom:       { label: "Custom",       sub: "Your own",    color: "var(--c-call)",   entry: "Cycle starts",          goal: "Goal reached",             icon: '<path d="M10 4v12M4 10h12"/>' }
+  };
+  var SPIN = 0.2;
 
-  var SAMPLE = [
-    "competitor,vertical,stage,match_pct,max_bonus,free_spins,free_bet,wagering,cashback_pct",
-    "Competitor A,casino,welcome,100,300,100,0,40,0",
-    "Competitor B,casino,welcome,150,200,50,0,35,0",
-    "Competitor C,casino,welcome,100,500,0,0,45,0",
-    "Competitor D,casino,welcome,100,100,30,0,10,0",
-    "Competitor A,casino,second,50,200,50,0,40,0",
-    "Competitor B,casino,second,75,150,0,0,35,0",
-    "Competitor C,casino,second,100,250,25,0,40,0",
-    "Competitor A,casino,third,50,200,25,0,40,0",
-    "Competitor C,casino,third,50,150,50,0,40,0",
-    "Competitor A,casino,reload,25,150,0,0,35,0",
-    "Competitor B,casino,reload,50,100,20,0,35,0",
-    "Competitor D,casino,reload,25,50,20,0,10,0",
-    "Competitor A,casino,cashback,0,0,0,0,1,10",
-    "Competitor B,casino,cashback,0,0,0,0,1,15",
-    "Competitor C,casino,cashback,0,0,0,0,5,20",
-    "Competitor B,casino,reactivation,100,100,30,0,35,0",
-    "Competitor C,casino,reactivation,50,200,0,0,40,0",
-    "Competitor A,sports,welcome,100,100,0,30,8,0",
-    "Competitor B,sports,welcome,0,0,0,30,1,0",
-    "Competitor D,sports,welcome,100,50,0,10,5,0"
-  ].join("\n");
+  function svg(paths, stroke) { return '<svg viewBox="0 0 20 20" fill="none" stroke="' + (stroke || "currentColor") + '" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">' + paths + "</svg>"; }
+  function chIcon(ch, small) { var c = CH[ch]; return '<i class="ci' + (small ? " sm" : "") + '" style="background:' + c.color + '">' + svg(c.icon, c.fg) + "</i>"; }
+  function esc(s) { return String(s == null ? "" : s).replace(/[&<>"]/g, function (ch) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[ch]; }); }
+  function uid() { return Math.random().toString(36).slice(2, 10); }
+
+  // ---------- templates ----------
+  function S(day, time, ch, title, msg, aud, offer) { return { id: uid(), day: day, time: time, channel: ch, title: title, message: msg, audience: aud || "all", offer: offer || { type: "none" } }; }
+  function M(pct, cap, wager) { return { type: "match", pct: pct, cap: cap, wager: wager }; }
+  var TEMPLATES = {
+    acquisition: function () { return [
+      S(0, "Immediately", "email", "Welcome + offer", "Confirm the account and show the welcome offer.", "all", M(100, 200, 35)),
+      S(0, "Immediately", "popup", "Offer reveal", "Show the welcome offer with one deposit button.", "pending"),
+      S(0, "+1 hour", "push", "Deposit nudge", "Your welcome bonus is waiting.", "pending"),
+      S(1, "12:00", "email", "Why play with us", "Payment methods, payout speed and licence.", "pending"),
+      S(3, "18:00", "sms", "Offer ends in 48h", "Countdown on the welcome offer.", "pending", M(100, 200, 35)),
+      S(7, "18:00", "email", "Last chance", "Final reminder before the offer expires.", "pending")
+    ]; },
+    early: function () { return [
+      S(0, "Immediately", "email", "Thanks for depositing", "Bonus is active. Preview the 2nd deposit offer.", "all"),
+      S(1, "12:00", "mission", "First-week missions", "Three easy missions to build a habit.", "all", { type: "freespins", count: 20, wager: 0 }),
+      S(2, "18:00", "push", "2nd deposit offer", "Personal 2nd deposit offer.", "pending", M(75, 150, 35)),
+      S(4, "18:00", "sms", "Offer ends soon", "Reminder of the 2nd deposit offer.", "pending"),
+      S(6, "12:00", "email", "3rd deposit offer", "Complete the welcome package.", "pending", M(50, 100, 35)),
+      S(10, "09:00", "email", "First cashback", "Cashback on first-week losses.", "all", { type: "cashback", pct: 10 })
+    ]; },
+    retention: function () { return [
+      S(0, "18:00", "email", "Weekend reload", "Reload offer for the weekend.", "all", M(25, 100, 30)),
+      S(3, "09:00", "popup", "Weekly cashback", "Cashback on last week's losses.", "all", { type: "cashback", pct: 10 }),
+      S(7, "12:00", "mission", "Weekly missions", "Missions with a leaderboard.", "all"),
+      S(14, "18:00", "sms", "Deposit-drop rescue", "Personal reload when deposits fall.", "pending", M(50, 100, 30)),
+      S(28, "09:00", "call", "VIP check-in", "Account manager call.", "all")
+    ]; },
+    reactivation: function () { return [
+      S(0, "12:00", "email", "We miss you", "What's new, plus a return offer.", "all", M(50, 100, 30)),
+      S(3, "18:00", "sms", "Quick reminder", "Link to the return offer.", "pending"),
+      S(7, "18:00", "push", "No-wager spins", "10 free spins just for logging in.", "pending", { type: "freespins", count: 10, wager: 0 }),
+      S(14, "12:00", "email", "Stronger offer", "A bigger return offer.", "pending", M(100, 100, 30)),
+      S(30, "09:00", "email", "Close the flow", "Final message, then move to dormant.", "pending")
+    ]; },
+    custom: function () { return []; }
+  };
+  function uniqDays(arr) { return arr.filter(function (d, i) { return arr.indexOf(d) === i; }).sort(function (a, b) { return a - b; }); }
+  function makeCycle(name, stage, withTemplate) {
+    var steps = withTemplate ? TEMPLATES[stage]() : [];
+    var days = steps.length ? uniqDays(steps.map(function (s) { return s.day; })) : [0, 1, 3];
+    return { id: uid(), name: name, stage: stage, entry: STAGES[stage].entry, goal: STAGES[stage].goal, days: days, steps: steps };
+  }
 
   // ---------- state ----------
-  var comp = { rows: [], source: null, skipped: 0 };
-  var overrides = {}; // stage -> position
-  var lastPlan = null;
+  var state, history = [], ui = { sel: null, focusDay: null, editingDay: null, armed: null };
+  try { state = JSON.parse(localStorage.getItem("ccp2_state")); } catch (e) { state = null; }
+  if (!state || !Array.isArray(state.cycles) || !state.cycles.length) {
+    var first = makeCycle("Welcome journey", "acquisition", true);
+    state = { cycles: [first], activeId: first.id };
+  }
+  function save() { try { localStorage.setItem("ccp2_state", JSON.stringify(state)); } catch (e) {} }
+  function commit() { history.push(JSON.stringify(state)); if (history.length > 80) history.shift(); }
+  function undo() {
+    if (!history.length) return;
+    state = JSON.parse(history.pop()); lastKey = null;
+    if (ui.sel && !findStep(ui.sel)) closeDrawer();
+    render(); if (ui.sel) renderDrawer(); save(); toast("Undone");
+  }
+  function cyc() { return state.cycles.filter(function (c) { return c.id === state.activeId; })[0] || state.cycles[0]; }
+  function findStep(id) { return cyc().steps.filter(function (s) { return s.id === id; })[0]; }
 
-  function store(k, v) { try { localStorage.setItem("ccp_" + k, JSON.stringify(v)); } catch (e) {} }
-  function load(k) { try { var v = localStorage.getItem("ccp_" + k); return v ? JSON.parse(v) : null; } catch (e) { return null; } }
-
-  function readConditions() {
-    var get = function (n) { var el = document.querySelector('input[name="' + n + '"]:checked'); return el ? el.value : null; };
-    var ch = Array.prototype.map.call(document.querySelectorAll('input[name="ch"]:checked'), function (e) { return e.value; });
-    var dep = parseFloat(document.getElementById("dep").value);
-    if (!(dep > 0)) dep = 50;
-    return { focus: get("focus"), vertical: get("vertical"), segment: get("segment"), budget: get("budget"), regulation: get("regulation"), mode: get("mode"), channels: ch, dep: dep };
-  }
-  function applyConditions(c) {
-    if (!c) return;
-    ["focus", "vertical", "segment", "budget", "regulation", "mode"].forEach(function (n) {
-      var el = document.querySelector('input[name="' + n + '"][value="' + c[n] + '"]'); if (el) el.checked = true;
-    });
-    if (Array.isArray(c.channels)) document.querySelectorAll('input[name="ch"]').forEach(function (e) { e.checked = c.channels.indexOf(e.value) >= 0; });
-    if (c.dep) document.getElementById("dep").value = c.dep;
-  }
-
-  // ---------- CSV ----------
-  function parseCSV(text) {
-    var rows = [], row = [], cur = "", q = false;
-    for (var i = 0; i < text.length; i++) {
-      var ch = text[i];
-      if (q) { if (ch === '"') { if (text[i + 1] === '"') { cur += '"'; i++; } else q = false; } else cur += ch; }
-      else if (ch === '"') q = true;
-      else if (ch === "," || ch === ";") { row.push(cur); cur = ""; }
-      else if (ch === "\n" || ch === "\r") { if (ch === "\r" && text[i + 1] === "\n") i++; row.push(cur); rows.push(row); row = []; cur = ""; }
-      else cur += ch;
-    }
-    if (cur !== "" || row.length) { row.push(cur); rows.push(row); }
-    return rows.filter(function (r) { return r.some(function (x) { return x.trim() !== ""; }); });
-  }
-  function normStage(s) {
-    s = (s || "").toLowerCase().trim();
-    if (/welcome|ftd|first|^1st/.test(s)) return "welcome";
-    if (/second|2nd/.test(s)) return "second";
-    if (/third|3rd/.test(s)) return "third";
-    if (/reload/.test(s)) return "reload";
-    if (/cash ?back/.test(s)) return "cashback";
-    if (/reactiv|win ?back|winback/.test(s)) return "reactivation";
-    return null;
-  }
-  function ingest(text, source) {
-    var rows = parseCSV(text);
-    if (rows.length < 2) { toast("That file has no data rows."); return; }
-    var head = rows[0].map(function (h) { return h.toLowerCase().trim().replace(/\s+/g, "_"); });
-    if (head.indexOf("stage") < 0) { toast("Missing a 'stage' column. See the CSV format below."); return; }
-    var out = [], skipped = 0;
-    rows.slice(1).forEach(function (r) {
-      var o = {}; head.forEach(function (h, i) { o[h] = (r[i] || "").trim(); });
-      var st = normStage(o.stage); if (!st) { skipped++; return; }
-      var rec = { competitor: o.competitor || "Unnamed", vertical: (o.vertical || "").toLowerCase(), stage: st };
-      FIELDS.forEach(function (f) { var v = parseFloat((o[f] || "").replace(/[^0-9.\-]/g, "")); rec[f] = isFinite(v) ? v : 0; });
-      out.push(rec);
-    });
-    comp = { rows: out, source: source, skipped: skipped };
-    overrides = {};
-    store("comp", comp);
-    render();
-    toast("Loaded " + out.length + " offers" + (skipped ? ", skipped " + skipped + " with an unknown stage" : ""));
-  }
-
-  // ---------- maths ----------
-  function quant(arr, q) { var a = arr.slice().sort(function (x, y) { return x - y; }); if (!a.length) return 0; var p = (a.length - 1) * q, lo = Math.floor(p), hi = Math.ceil(p); return a[lo] + (a[hi] - a[lo]) * (p - lo); }
-  function nice(v) { if (v <= 0) return 0; if (v >= 100) return Math.round(v / 10) * 10; if (v >= 20) return Math.round(v / 5) * 5; return Math.round(v); }
-  function relevantRows(vertical) {
-    return comp.rows.filter(function (r) { if (!r.vertical || vertical === "hybrid") return true; return r.vertical === vertical; });
-  }
-  function compStats(vertical) {
-    var by = {}, rows = relevantRows(vertical);
-    rows.forEach(function (r) { (by[r.stage] = by[r.stage] || []).push(r); });
-    var stats = {};
-    Object.keys(by).forEach(function (st) {
-      var list = by[st], s = { n: list.length, p25: {}, median: {}, p75: {}, rows: list };
-      FIELDS.forEach(function (f) { var vals = list.map(function (r) { return r[f]; }); s.p25[f] = quant(vals, .25); s.median[f] = quant(vals, .5); s.p75[f] = quant(vals, .75); });
-      stats[st] = s;
-    });
-    return stats;
-  }
-  function bonusAmt(o, dep) { return Math.min(o.match_pct / 100 * dep, o.max_bonus); }
-  function headline(o, dep) { return bonusAmt(o, dep) + o.free_spins * SPIN + o.free_bet + o.cashback_pct / 100 * dep; }
-  // "Real" value discounts wagered money: at 60x+ a bonus is worth ~10% of face value to the player.
-  function realValue(o, dep) { var wf = Math.max(0.1, 1 - o.wagering / 60); return bonusAmt(o, dep) * wf + o.free_spins * SPIN * 0.8 + o.free_bet * 0.7 + o.cashback_pct / 100 * dep; }
-
-  function recommend(c) {
-    var s = 0, why = [];
-    if (c.budget === "high") { s += 1; why.push("A <b>high budget</b> can fund above-market offers."); }
-    if (c.budget === "low") { s -= 1; why.push("With a <b>low budget</b>, compete on terms (lower wagering, no-wager spins) instead of headline size."); }
-    if (c.regulation === "strict") { s -= 1; why.push("In a <b>strict market</b>, wagering caps make offers look alike, so experience and terms stand out more than size."); }
-    if (c.regulation === "light") { s += 0.5; why.push("A <b>light-touch market</b> lets players compare headline offers freely."); }
-    if (c.focus === "acquisition") { s += 1; why.push("Players compare <b>welcome offers</b> across sites more than any other offer."); }
-    if (c.focus === "retention") { s -= 0.5; why.push("Existing players rarely compare <b>reloads</b> across sites, so overpaying buys little."); }
-    if (c.segment === "vip") { s += 0.5; why.push("<b>VIP</b> players are worth matching the best offers in the market to keep."); }
-    if (c.channels.indexOf("gamification") >= 0) { s -= 0.5; why.push("<b>Missions</b> add value that competitors can't match on price alone."); }
-    var pos = s >= 1.5 ? "aggressive" : s <= -1 ? "differentiated" : "inline";
-    return { pos: pos, why: why, score: s };
-  }
-
-  function positionedOffer(stage, pos, c, stats) {
-    var base = BASE[c.vertical][stage], st = stats[stage], o, notes = [];
-    if (st) {
-      var m = st.median, p = st.p75, lo = st.p25;
-      if (pos === "inline") o = { match_pct: m.match_pct, max_bonus: m.max_bonus, free_spins: m.free_spins, free_bet: m.free_bet, wagering: m.wagering, cashback_pct: m.cashback_pct };
-      else if (pos === "aggressive") o = { match_pct: Math.max(m.match_pct, p.match_pct), max_bonus: Math.max(m.max_bonus * 1.25, p.max_bonus), free_spins: Math.max(m.free_spins * 1.25, p.free_spins), free_bet: Math.max(m.free_bet * 1.25, p.free_bet), wagering: Math.min(m.wagering, lo.wagering), cashback_pct: Math.max(m.cashback_pct * 1.25, p.cashback_pct) };
-      else { o = { match_pct: m.match_pct, max_bonus: m.max_bonus * 0.75, free_spins: m.free_spins * 1.2, free_bet: m.free_bet, wagering: m.wagering * 0.4, cashback_pct: m.cashback_pct }; notes.push("Lead with the low wagering in the message"); }
-    } else {
-      o = Object.assign({}, base);
-      if (pos === "aggressive") { o.max_bonus *= 1.25; o.free_spins *= 1.25; o.free_bet *= 1.25; o.cashback_pct *= 1.25; o.wagering = Math.max(0, o.wagering - 5); }
-      if (pos === "differentiated") { o.max_bonus *= 0.75; o.free_spins *= 1.2; o.wagering *= 0.4; notes.push("Lead with the low wagering in the message"); }
-    }
-    var mult = { low: 0.6, mid: 1, vip: 2.5 }[c.segment];
-    o.max_bonus *= mult; o.free_spins *= mult; o.free_bet *= mult;
-    o.match_pct = Math.round(o.match_pct / 5) * 5;
-    o.max_bonus = nice(o.max_bonus); o.free_spins = nice(o.free_spins); o.free_bet = nice(o.free_bet);
-    o.cashback_pct = Math.round(o.cashback_pct); o.wagering = Math.round(o.wagering);
-    if (o.match_pct === 0 || o.max_bonus === 0) { o.match_pct = 0; o.max_bonus = 0; }
-    if (o.match_pct === 0 && o.free_spins === 0 && o.free_bet === 0 && o.cashback_pct === 0) o.wagering = 0;
-    if (c.regulation === "strict" && o.wagering > 10) { o.wagering = 10; notes.push("Wagering capped at 10x by regulation"); }
-    if (c.regulation === "moderate" && o.wagering > 40) { o.wagering = 40; notes.push("Wagering held at 40x"); }
-    return { offer: o, notes: notes, benchmarked: !!st };
-  }
-
+  // ---------- offer helpers ----------
   function offerLabel(o) {
-    var parts = [];
-    if (o.match_pct > 0 && o.max_bonus > 0) parts.push(o.match_pct + "% up to €" + o.max_bonus);
-    if (o.free_spins) parts.push(o.free_spins + " free spins");
-    if (o.free_bet) parts.push("€" + o.free_bet + " free bet");
-    if (o.cashback_pct) parts.push(o.cashback_pct + "% cashback");
-    if (!parts.length) return "No offer";
-    return parts.join(" + ") + " · " + (o.wagering > 1 ? o.wagering + "x wagering" : "no wagering");
+    if (!o || o.type === "none") return "";
+    var w = function (x) { return x ? " · " + x + "x" : " · no wagering"; };
+    if (o.type === "match") return (o.pct || 0) + "% up to €" + (o.cap || 0) + w(o.wager);
+    if (o.type === "freespins") return (o.count || 0) + " free spins" + w(o.wager);
+    if (o.type === "freebet") return "€" + (o.value || 0) + " free bet";
+    if (o.type === "cashback") return (o.pct || 0) + "% cashback";
+    return "";
+  }
+  function exposure(o) {
+    if (!o) return 0;
+    if (o.type === "match") return +o.cap || 0;
+    if (o.type === "freespins") return (+o.count || 0) * SPIN;
+    if (o.type === "freebet") return +o.value || 0;
+    return 0;
   }
 
-  // ---------- plan templates ----------
-  // take = share of players entering the cycle expected to claim the offer at that step.
-  function templates(c) {
-    var prod = c.vertical === "sports" ? "sportsbook" : c.vertical === "hybrid" ? "casino and sportsbook" : "casino";
-    var extra = c.vertical === "sports" ? "free bet" : "free spins";
-    return {
-      acquisition: [
-        { day: "D0", when: "On registration", title: "Welcome and offer reveal", ch: ["email", "popup"], msg: "Confirm the account, show the welcome offer and one clear deposit button.", stage: "welcome", trigger: "Registration completed", kpi: "Deposit-page visits", take: 0.18 },
-        { day: "D0", when: "+1 hour, no deposit", title: "Deposit nudge", ch: ["push", "sms"], msg: "Short reminder that the welcome offer is waiting, with a deep link to the cashier.", trigger: "No FTD 60 min after registration", kpi: "Click-to-deposit rate" },
-        { day: "D0", when: "On first login", title: "Verify-your-account mission", ch: ["gamification"], msg: "Complete profile and verification to unlock a small no-deposit reward (10 " + extra + ").", trigger: "First login", kpi: "Verification completion", noStrict: true, special: true, cost: function () { return c.vertical === "sports" ? 2 : 10 * SPIN; }, take: 0.35 },
-        { day: "D1", when: "Day 1", title: "Trust builder", ch: ["email"], msg: "Payment methods, payout speed, licence and support. Answers the reasons people hesitate to deposit.", trigger: "Still no FTD", kpi: "Email click rate" },
-        { day: "D3", when: "Day 3", title: "Urgency: offer expires in 48h", ch: ["sms", "push"], msg: "Countdown on the welcome offer. Name the most popular " + (c.vertical === "sports" ? "upcoming match" : "game") + ".", trigger: "Still no FTD", kpi: "Reg → FTD conversion", stage: "welcome", take: 0.07, aggrOnly: "Add a +20% sweetener for this window only" },
-        { day: "D5", when: "Day 5", title: "Low-entry alternative", ch: ["popup", "email"], msg: "Offer a smaller minimum deposit (€10) for players who didn't respond to the main offer.", trigger: "Still no FTD, logged in at least once", kpi: "Small-deposit FTDs", diffOnly: true },
-        { day: "D7", when: "Day 7", title: "Last chance", ch: ["email"], msg: "Final reminder before the welcome offer expires. Simple and short.", trigger: "Still no FTD", kpi: "Reg → FTD conversion", stage: "welcome", take: 0.04 },
-        { day: "D14", when: "Day 14", title: "Move to nurture pool", ch: ["email"], msg: "Stop the welcome flow. Move the player to a low-frequency newsletter and the reactivation flow.", trigger: "No FTD after 14 days", kpi: "Unsubscribe rate", special: true }
-      ],
-      early: [
-        { day: "D0", when: "Right after FTD", title: "Thank you and what's next", ch: ["email", "popup"], msg: "Confirm the bonus is active, show how wagering progress works and preview the 2nd deposit offer.", trigger: "First deposit", kpi: "Bonus activation rate" },
-        { day: "D1", when: "Day 1", title: "First-week missions", ch: ["gamification"], msg: "Three easy missions (try 3 " + (c.vertical === "sports" ? "markets" : "games") + ", log in 3 days) with small rewards to build a habit.", trigger: "Logged in after FTD", kpi: "Day-7 active rate", special: true, cost: function () { return c.vertical === "sports" ? 3 : 15 * SPIN; }, take: 0.4 },
-        { day: "D2", when: "Day 2", title: "2nd deposit offer", ch: ["email", "push"], msg: "Personalised 2nd deposit offer based on what they played first.", stage: "second", trigger: "No 2nd deposit yet", kpi: "FTD → 2nd deposit", take: 0.3 },
-        { day: "D2", when: "Day 2", title: "Safer gambling check-in", ch: ["email"], msg: "Introduce deposit limits and reality checks as account features, not warnings.", trigger: "FTD completed", kpi: "Limit-setting rate", strictOnly: true, special: true },
-        { day: "D4", when: "Day 4", title: "2nd deposit reminder", ch: ["sms", "push"], msg: "Reminder that the 2nd deposit offer ends soon.", trigger: "Still no 2nd deposit", kpi: "FTD → 2nd deposit", stage: "second", take: 0.08 },
-        { day: "D5", when: "Day 5", title: "Welcome call", ch: ["call"], msg: "Account manager introduces themselves and sets up a personal offer.", trigger: "FTD above VIP threshold", kpi: "3rd deposit rate (VIP)", vipOnly: true },
-        { day: "D6", when: "After 2nd deposit", title: "3rd deposit offer", ch: ["email", "popup"], msg: "Final step of the welcome package. Frame it as completing the set.", stage: "third", trigger: "2nd deposit made", kpi: "2nd → 3rd deposit", take: 0.2 },
-        { day: "D10", when: "Day 10", title: "First cashback", ch: ["email", "push"], msg: "Weekly cashback on net losses so the first bad week doesn't end the relationship.", stage: "cashback", trigger: "Net losses in first 10 days", kpi: "Day-30 retention", take: 0.25 },
-        { day: "D14", when: "Day 14", title: "Segment and hand over", ch: ["email"], msg: "Assign a value tier from deposits and activity. Hand over to the retention programme.", trigger: "End of early-life window", kpi: "Tier distribution", special: true }
-      ],
-      retention: [
-        { day: "Fri", when: "Every Friday", title: "Weekend reload", ch: ["email", "push"], msg: "Reload offer for the weekend, personalised to their favourite " + (c.vertical === "sports" ? "league" : "game type") + ".", stage: "reload", trigger: "Active in last 14 days", kpi: "Weekend deposit rate", take: 0.25 },
-        { day: "Mon", when: "Every Monday", title: "Weekly cashback", ch: ["email", "popup"], msg: "Cashback on last week's net losses, credited on login.", stage: "cashback", trigger: "Net losses last week", kpi: "Week-on-week retention", take: 0.3 },
-        { day: "Wkly", when: "Weekly", title: "Mission series / tournament", ch: ["gamification", "popup"], msg: "Weekly missions or a leaderboard with prizes. Keeps play going without straight bonus cost.", trigger: "Active players", kpi: "Sessions per week", special: true, cost: function () { return 2; }, take: 0.35 },
-        { day: "Auto", when: "When triggered", title: "Deposit-drop rescue", ch: ["sms", "push"], msg: "Personal reload when weekly deposits fall more than 40% below the 4-week average.", stage: "reload", trigger: "Deposit drop > 40% vs 4-week avg", kpi: "Churn prevented", take: 0.1 },
-        { day: "Mo", when: "Monthly", title: "Safer gambling review", ch: ["email"], msg: "Monthly activity summary with a link to limits.", trigger: "All active players", kpi: "Limit-setting rate", strictOnly: true, special: true },
-        { day: "Mo", when: "Monthly", title: "Account manager check-in", ch: ["call"], msg: "Personal call with a tailored offer and upcoming event invitations.", trigger: "VIP tier", kpi: "VIP retention", vipOnly: true },
-        { day: "B'day", when: "Birthday", title: "Birthday gift", ch: ["email", "popup"], msg: "No-wager gift on their birthday.", trigger: "Birthday", kpi: "Login on the day", special: true, cost: function () { return c.vertical === "sports" ? 5 : 25 * SPIN; }, take: 0.08 }
-      ],
-      reactivation: [
-        { day: "D0", when: "30 days inactive", title: "We miss you", ch: ["email"], msg: "Show what's new since their last visit, plus a return offer.", stage: "reactivation", trigger: "No login for 30 days", kpi: "Reactivation rate", take: 0.06 },
-        { day: "D3", when: "Day 3", title: "Short reminder", ch: ["sms", "push"], msg: "One-line reminder of the return offer with a direct link.", trigger: "No return yet", kpi: "Click rate" },
-        { day: "D7", when: "Day 7", title: "No-wager taster", ch: ["push", "email"], msg: "Small no-wager reward (10 " + extra + ") just for logging in.", trigger: "No return yet", kpi: "Login rate", special: true, cost: function () { return c.vertical === "sports" ? 3 : 10 * SPIN; }, take: 0.08, noStrict: true },
-        { day: "D10", when: "Day 10", title: "Personal call", ch: ["call"], msg: "Account manager asks why they left and offers a tailored return package.", trigger: "VIP tier, no return", kpi: "VIP reactivation", vipOnly: true },
-        { day: "D14", when: "Day 14", title: "Stronger second offer", ch: ["email", "sms"], msg: "A bigger return offer for players who ignored the first.", stage: "reactivation", trigger: "No return after first offer", kpi: "Reactivation rate", take: 0.04, aggrOnly: "Raise the offer 25% over the D0 offer" },
-        { day: "D14", when: "Day 14", title: "Quick survey", ch: ["email"], msg: "Two-question survey on why they stopped. Feeds product and offer decisions.", trigger: "No return", kpi: "Survey responses", diffOnly: true },
-        { day: "D30", when: "Day 30", title: "Close the flow", ch: ["email"], msg: "Final message, then move to dormant. Reduce contact to protect deliverability.", trigger: "No return after 30 days", kpi: "Unsubscribe rate", special: true }
-      ]
-    };
+  // ---------- placement ----------
+  function placeStep(c, step, day, beforeId) {
+    var i = c.steps.indexOf(step); if (i >= 0) c.steps.splice(i, 1);
+    step.day = day;
+    if (c.days.indexOf(day) < 0) c.days = uniqDays(c.days.concat([day]));
+    var j = beforeId ? c.steps.map(function (s) { return s.id; }).indexOf(beforeId) : -1;
+    if (j >= 0) { c.steps.splice(j, 0, step); return; }
+    var last = -1; c.steps.forEach(function (s, k) { if (s.day === day) last = k; });
+    if (last < 0) c.steps.push(step); else c.steps.splice(last + 1, 0, step);
   }
-
-  function resolveChannels(wanted, available) {
-    var used = [], fb = false;
-    wanted.forEach(function (w) {
-      if (available.indexOf(w) >= 0) { if (used.indexOf(w) < 0) used.push(w); return; }
-      var alt = (FALLBACK[w] || []).filter(function (a) { return available.indexOf(a) >= 0 && used.indexOf(a) < 0; })[0];
-      if (alt) { used.push(alt); fb = true; }
-    });
-    return { used: used, fallback: fb };
-  }
-
-  function buildPlan(c) {
-    var stats = compStats(c.vertical);
-    var reco = recommend(c);
-    var globalPos = c.mode === "auto" ? reco.pos : c.mode;
-    var steps = [], skipped = [], cost = 0, stagesUsed = [];
-    templates(c)[c.focus].forEach(function (t) {
-      if (t.vipOnly && c.segment !== "vip") return;
-      if (t.noStrict && c.regulation === "strict") { skipped.push(t.title + " (not allowed in strict markets)"); return; }
-      if (t.strictOnly && c.regulation !== "strict") return;
-      var pos = t.stage ? (overrides[t.stage] || globalPos) : globalPos;
-      if (t.diffOnly && pos !== "differentiated") return;
-      var chs = resolveChannels(t.ch, c.channels);
-      if (!chs.used.length) { skipped.push(t.title + " (no channel available)"); return; }
-      var s = { day: t.day, when: t.when, title: t.title, channels: chs.used, fallback: chs.fallback, msg: t.msg, trigger: t.trigger, kpi: t.kpi, special: !!t.special, notes: [] };
-      if (t.stage) {
-        var po = positionedOffer(t.stage, pos, c, stats);
-        var o = po.offer;
-        if (t.aggrOnly && pos === "aggressive") { o = Object.assign({}, o); o.max_bonus = nice(o.max_bonus * 1.2); o.free_spins = nice(o.free_spins * 1.2); o.free_bet = nice(o.free_bet * 1.2); s.notes.push(t.aggrOnly); }
-        s.stage = t.stage; s.pos = pos; s.offer = o; s.notes = s.notes.concat(po.notes); s.benchmarked = po.benchmarked;
-        s.cost = realValue(o, c.dep) * t.take;
-        if (stagesUsed.indexOf(t.stage) < 0) stagesUsed.push(t.stage);
-      } else if (t.cost) { s.cost = t.cost() * t.take; }
-      if (s.cost) cost += s.cost;
-      steps.push(s);
-    });
-    var segMult = { low: 0.6, mid: 1, vip: 2.5 }[c.segment];
-    var budgetCap = { low: 15, medium: 30, high: 60 }[c.budget] * segMult;
-    return { c: c, steps: steps, skipped: skipped, cost: cost, budgetCap: budgetCap, reco: reco, globalPos: globalPos, stats: stats, stagesUsed: stagesUsed };
-  }
-
-  function kpiTarget(c, pos) {
-    var bump = pos === "aggressive" ? 3 : pos === "differentiated" ? -1 : 0;
-    var strict = c.regulation === "strict" ? -3 : 0;
-    var t = {
-      acquisition: { k: "Reg → FTD", lo: 25, hi: 35 },
-      early: { k: "FTD → 3rd deposit", lo: 30, hi: 40 },
-      retention: { k: "Monthly retention", lo: 55, hi: 65 },
-      reactivation: { k: "Reactivated in 30d", lo: 6, hi: 12 }
-    }[c.focus];
-    var adj = c.focus === "reactivation" ? Math.round((bump + strict) / 2) : bump + strict;
-    return { k: t.k, lo: t.lo + adj, hi: t.hi + adj };
+  function addStep(ch, day, beforeId) {
+    var c = cyc(); commit(); lastKey = null;
+    var s = S(day, "12:00", ch, "New " + CH[ch].label.toLowerCase(), "", "all");
+    placeStep(c, s, day, beforeId);
+    ui.sel = s.id; ui.focusDay = day; ui.armed = null;
+    render(); renderDrawer(); save();
   }
 
   // ---------- render ----------
-  function esc(s) { return String(s).replace(/[&<>"]/g, function (ch) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[ch]; }); }
-  function pill(pos) { return '<span class="pos ' + pos + '">' + POS_LABEL[pos] + "</span>"; }
-  function eur(v) { return "€" + (v >= 100 ? Math.round(v) : v.toFixed(2)); }
-
   function render() {
-    var c = readConditions();
-    store("cond", c);
-    var plan = buildPlan(c); lastPlan = plan;
-    var kt = kpiTarget(c, plan.globalPos);
-    var ratio = plan.cost / plan.budgetCap;
-    var status = ratio <= 0.85 ? ["Within budget", "var(--good)"] : ratio <= 1.05 ? ["At the limit", "var(--warn)"] : ["Over budget", "var(--bad)"];
-    var touches = plan.steps.length, offers = plan.steps.filter(function (s) { return s.offer; }).length;
-
-    var ico = function (bg, path) { return '<i style="background:' + bg + '"><svg viewBox="0 0 16 16" fill="none" stroke="#fff" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">' + path + "</svg></i>"; };
+    var c = cyc();
+    c.days = uniqDays(c.days.concat(c.steps.map(function (s) { return s.day; })));
+    renderTabs(); renderSummary(c); renderSettings(c); renderBoard(c);
+    document.getElementById("undoBtn").disabled = !history.length;
+  }
+  function renderTabs() {
+    document.getElementById("tabs").innerHTML = state.cycles.map(function (c) {
+      return '<button type="button" class="tab' + (c.id === state.activeId ? " on" : "") + '" data-cycle="' + c.id + '"><span class="dot" style="background:' + STAGES[c.stage].color + '"></span>' + esc(c.name || "Untitled") + "</button>";
+    }).join("") + '<button type="button" class="tab new" id="newCycle">+ New cycle</button>';
+  }
+  function renderSummary(c) {
+    var n = c.steps.length, offers = c.steps.filter(function (s) { return s.offer && s.offer.type !== "none"; });
+    var maxDay = n ? Math.max.apply(null, c.steps.map(function (s) { return s.day; })) : 0;
+    var exp = offers.reduce(function (a, s) { return a + exposure(s.offer); }, 0);
+    var counts = {}; c.steps.forEach(function (s) { counts[s.channel] = (counts[s.channel] || 0) + 1; });
+    var used = CH_ORDER.filter(function (k) { return counts[k]; });
+    var mix = used.map(function (k) { return '<i style="flex:' + counts[k] + ";background:" + CH[k].color + '" title="' + CH[k].label + ": " + counts[k] + '"></i>'; }).join("");
+    var legend = used.map(function (k) { return '<span><b style="background:' + CH[k].color + '"></b>' + CH[k].label + " " + counts[k] + "</span>"; }).join("");
     document.getElementById("summary").innerHTML =
-      '<div class="stat"><div class="k">' + ico("var(--accent-2)", '<path d="M2 4h12M2 8h12M2 12h7"/>') + 'Touchpoints</div><div class="v">' + touches + '</div><div class="n">' + offers + " with an offer</div></div>" +
-      '<div class="stat"><div class="k">' + ico("var(--mint-bg)", '<circle cx="8" cy="8" r="5.5"/><circle cx="8" cy="8" r="2"/>') + "Target " + esc(kt.k) + '</div><div class="v">' + kt.lo + "–" + kt.hi + '%</div><div class="n">Benchmark range to validate</div></div>' +
-      '<div class="stat feature"><div class="k">' + ico("rgba(255,255,255,.22)", '<path d="M10.5 4.5A4 4 0 1 0 10.5 11.5M3 7h6M3 9h6"/>') + 'Est. bonus cost / player</div><div class="v">' + eur(plan.cost) + '</div><div class="n">Guide for this budget: ' + eur(plan.budgetCap) + "</div></div>" +
-      '<div class="stat"><div class="k">' + ico("var(--coral-bg)", '<path d="M2 12l4-4 2.5 2.5L14 5"/>') + 'Budget fit</div><div class="v" style="color:' + status[1] + '">' + status[0] + '</div><div class="meter" role="img" aria-label="' + Math.round(ratio * 100) + '% of budget guide"><i style="width:' + Math.min(100, ratio * 100) + "%;background:" + status[1] + '"></i></div></div>';
-
-    document.getElementById("recoPill").innerHTML = pill(plan.globalPos);
-    var recoHtml = '<div class="reco"><div>' + pill(plan.reco.pos) + '</div><div><b>Recommended: ' + POS_LABEL[plan.reco.pos] + "</b>" +
-      (c.mode !== "auto" && c.mode !== plan.reco.pos ? " · you chose " + POS_LABEL[c.mode] : "") +
-      "<ul>" + plan.reco.why.map(function (w) { return "<li>" + w + "</li>"; }).join("") + "</ul></div></div>";
-    if (!comp.rows.length) recoHtml += '<p class="hint">No competitor data loaded, so offers use house defaults. Load example data or upload a CSV to position against the market.</p>';
-    document.getElementById("reco").innerHTML = recoHtml;
-
-    document.getElementById("planNote").textContent = plan.skipped.length ? plan.skipped.length + " step(s) removed: " + plan.skipped.join("; ") : "";
-    document.getElementById("timeline").innerHTML = plan.steps.map(function (s) {
-      var chans = s.channels.map(function (ch) { return '<span class="chan' + (s.fallback ? " fb" : "") + '"' + (s.fallback ? ' title="Fallback channel"' : "") + ">" + CH_LABEL[ch] + "</span>"; }).join("");
-      var offer = s.offer ? '<div class="offer"><span class="lbl">' + STAGES[s.stage] + "</span>" + esc(offerLabel(s.offer)) + " " + pill(s.pos) + "</div>" : "";
-      var notes = s.notes.length ? '<div class="flag">' + s.notes.map(esc).join(" · ") + "</div>" : "";
-      return '<li class="step"><div class="day"><b>' + esc(s.day) + "</b><small>" + esc(s.when) + '</small></div><div class="card' + (s.special ? " special" : "") + '">' +
-        '<div class="card-top"><h4>' + esc(s.title) + '</h4><div class="chans">' + chans + "</div></div>" +
-        '<p class="msg">' + esc(s.msg) + "</p>" + offer + notes +
-        '<div class="meta"><span>Trigger <b>' + esc(s.trigger) + "</b></span><span>Watch <b>" + esc(s.kpi) + "</b></span>" + (s.cost ? "<span>Est. cost <b>" + eur(s.cost) + "</b>/player</span>" : "") + "</div></div></li>";
-    }).join("");
-
-    renderBench(plan);
-    renderTests(plan);
+      '<div class="stat"><div class="k">Steps</div><div class="v">' + n + '</div><div class="n">across ' + c.days.length + " days on the board</div></div>" +
+      '<div class="stat"><div class="k">Cycle length</div><div class="v">' + maxDay + (maxDay === 1 ? " day" : " days") + '</div><div class="n">' + esc(c.entry) + " → " + esc(c.goal) + "</div></div>" +
+      '<div class="stat feature"><div class="k">Offers</div><div class="v">' + offers.length + '</div><div class="n">Max bonus if all claimed: €' + Math.round(exp) + "</div></div>" +
+      '<div class="stat"><div class="k">Channel mix</div>' + (n ? '<div class="mix">' + mix + '</div><div class="legend">' + legend + "</div>" : '<div class="n" style="margin-top:8px">Add steps to see the mix</div>') + "</div>";
+  }
+  function renderSettings(c) {
+    var set = function (id, v) { var el = document.getElementById(id); if (document.activeElement !== el) el.value = v; };
+    set("cName", c.name); set("cEntry", c.entry); set("cGoal", c.goal);
+    var del = document.getElementById("delCycle");
+    del.classList.toggle("armed", ui.armed === "cycle");
+    del.textContent = ui.armed === "cycle" ? "Click again to delete" : "Delete cycle";
+  }
+  function cardHtml(s) {
+    var o = offerLabel(s.offer);
+    return '<div class="card' + (ui.sel === s.id ? " sel" : "") + '" data-id="' + s.id + '" tabindex="0" role="button" aria-label="Edit ' + esc(s.title) + '">' +
+      '<div class="ctop">' + chIcon(s.channel, true) + "<span>" + CH[s.channel].label + '</span><span class="time">' + esc(s.time) + "</span></div>" +
+      '<div class="ctitle">' + esc(s.title || "Untitled step") + "</div>" +
+      ((o || s.audience !== "all") ? '<div class="badges">' + (o ? '<span class="bdg offer">' + esc(o) + "</span>" : "") + (s.audience !== "all" ? '<span class="bdg aud">' + AUD[s.audience] + "</span>" : "") + "</div>" : "") +
+      "</div>";
+  }
+  function renderBoard(c) {
+    if (ui.focusDay === null || c.days.indexOf(ui.focusDay) < 0) ui.focusDay = c.days[0];
+    var h = '<div class="col bookend"><div class="colhead bkhead"><span class="bkpin"></span></div><div class="bk start"><i class="ci">' + svg('<path d="M7 5l7 5-7 5z"/>') + "</i><small>Starts when</small><b>" + esc(c.entry) + "</b></div></div>";
+    c.days.forEach(function (d) {
+      var steps = c.steps.filter(function (s) { return s.day === d; });
+      var head = ui.editingDay === d
+        ? '<input class="inp dayinput" id="dayInput" type="number" min="0" max="365" value="' + d + '" aria-label="Day number">'
+        : '<button type="button" class="daybtn" data-editday="' + d + '" title="Click to change the day">Day ' + d + "</button>";
+      h += '<div class="col" data-col="' + d + '"><div class="colhead">' + head + (steps.length ? '<span class="cnt">' + steps.length + "</span>" : "") +
+        (steps.length ? "" : '<button type="button" class="colx" data-delday="' + d + '" title="Remove empty day" aria-label="Remove day ' + d + '">' + svg('<path d="M5 5l10 10M15 5L5 15"/>') + "</button>") + "</div>" +
+        '<div class="colbody" data-day="' + d + '">' + steps.map(cardHtml).join("") +
+        (steps.length ? "" : '<div class="empty">Drop a channel here</div>') +
+        '<button type="button" class="addin" data-addin="' + d + '">+ Add step</button></div></div>';
+    });
+    h += '<div class="col" style="width:auto"><div class="colhead"></div><button type="button" class="addday" id="addDay">' + svg('<path d="M10 4v12M4 10h12"/>') + "Add day</button></div>";
+    h += '<div class="col bookend"><div class="colhead bkhead"><span class="bkpin goal"></span></div><div class="bk goal"><i class="ci">' + svg('<path d="M6 3h8v4a4 4 0 0 1-8 0zM6 5H3.5a2.5 2.5 0 0 0 2.6 3M14 5h2.5a2.5 2.5 0 0 1-2.6 3M10 11v3M7 17h6"/>', "#FFFFFF") + "</i><small>Goal</small><b>" + esc(c.goal) + "</b></div></div>";
+    document.getElementById("board").innerHTML = h;
+    var di = document.getElementById("dayInput"); if (di) { di.focus(); di.select(); }
   }
 
-  function renderBench(plan) {
-    var c = plan.c;
-    var srcEl = document.getElementById("compSrc"), listEl = document.getElementById("compList"), tbl = document.getElementById("bench");
-    if (!comp.rows.length) {
-      srcEl.innerHTML = '<span class="src">No competitor data yet.</span>';
-      listEl.innerHTML = "";
-      tbl.innerHTML = "";
+  // ---------- drawer ----------
+  function closeDrawer() { ui.sel = null; ui.armed = null; document.getElementById("drawer").hidden = true; document.querySelectorAll(".card.sel").forEach(function (e) { e.classList.remove("sel"); }); }
+  function renderDrawer() {
+    var s = findStep(ui.sel), dr = document.getElementById("drawer");
+    if (!s) { closeDrawer(); return; }
+    var o = s.offer || { type: "none" };
+    var num = function (k, label, ph, step) { return '<label class="field"><span>' + label + '</span><input class="inp" type="number" min="0" step="' + (step || 1) + '" data-o="' + k + '" id="o-' + k + '" value="' + (o[k] != null ? o[k] : "") + '" placeholder="' + ph + '"></label>'; };
+    var offerFields = "";
+    if (o.type === "match") offerFields = '<div class="grid3">' + num("pct", "Match %", "%", 5) + num("cap", "Up to €", "€", 10) + num("wager", "Wagering x", "x") + "</div>";
+    if (o.type === "freespins") offerFields = '<div class="grid2">' + num("count", "Spins", "#", 5) + num("wager", "Wagering x", "x") + "</div>";
+    if (o.type === "freebet") offerFields = '<div class="grid2">' + num("value", "Free bet €", "€", 5) + "</div>";
+    if (o.type === "cashback") offerFields = '<div class="grid2">' + num("pct", "Cashback %", "%") + "</div>";
+    dr.innerHTML =
+      '<div class="dhead">' + chIcon(s.channel) + '<h3 id="dTitle">Edit step</h3><button type="button" class="iconbtn" id="dClose" aria-label="Close">' + svg('<path d="M5 5l10 10M15 5L5 15"/>') + "</button></div>" +
+      '<div class="dbody">' +
+      '<label class="field"><span>Title</span><input class="inp" id="s-title" data-f="title" type="text" value="' + esc(s.title) + '"></label>' +
+      '<div class="field"><span>Channel</span><div class="chips">' + CH_ORDER.map(function (k) { return '<label><input type="radio" name="s-ch" id="s-ch-' + k + '" value="' + k + '"' + (s.channel === k ? " checked" : "") + "><span>" + chIcon(k, true) + CH[k].label + "</span></label>"; }).join("") + "</div></div>" +
+      '<div class="grid2"><label class="field"><span>Day</span><input class="inp" id="s-day" data-f="day" type="number" min="0" max="365" value="' + s.day + '"></label>' +
+      '<label class="field"><span>Send</span><select class="inp" id="s-time" data-f="time">' + TIMES.map(function (t) { return "<option" + (t === s.time ? " selected" : "") + ">" + t + "</option>"; }).join("") + "</select></label></div>" +
+      '<div class="field"><span>Who gets it</span><div class="seg">' + Object.keys(AUD).map(function (k) { return '<label><input type="radio" name="s-aud" id="s-aud-' + k + '" value="' + k + '"' + (s.audience === k ? " checked" : "") + "><span>" + AUD[k] + "</span></label>"; }).join("") + "</div></div>" +
+      '<label class="field"><span>Message</span><textarea class="inp" id="s-msg" data-f="message" rows="3" placeholder="What does this step say?">' + esc(s.message) + "</textarea></label>" +
+      '<div class="field"><span>Offer</span><div class="seg">' + Object.keys(OFFERS).map(function (k) { return '<label><input type="radio" name="s-offer" id="s-offer-' + k + '" value="' + k + '"' + (o.type === k ? " checked" : "") + "><span>" + OFFERS[k] + "</span></label>"; }).join("") + "</div></div>" +
+      offerFields + "</div>" +
+      '<div class="dfoot"><button type="button" class="btn" id="sDup">Duplicate</button><button type="button" class="btn danger' + (ui.armed === "step" ? " armed" : "") + '" id="sDel">' + (ui.armed === "step" ? "Click again to delete" : "Delete step") + "</button></div>";
+    dr.hidden = false;
+  }
+  var lastKey = null;
+  function editStep(field, value) {
+    var s = findStep(ui.sel); if (!s) return;
+    var key = s.id + ":" + field; if (key !== lastKey) { commit(); lastKey = key; }
+    if (field === "day") { if (value === "") return; var d = Math.max(0, Math.min(365, parseInt(value, 10) || 0)); placeStep(cyc(), s, d); ui.focusDay = d; }
+    else if (field.indexOf("o.") === 0) { s.offer[field.slice(2)] = value === "" ? "" : +value; }
+    else s[field] = value;
+    render(); save();
+  }
+
+  // ---------- drag and drop (pointer based, works with touch) ----------
+  var drag = null;
+  function onDown(e) {
+    if (e.button !== undefined && e.button !== 0) return;
+    var card = e.target.closest(".card"), block = e.target.closest(".block");
+    if (!card && !block) return;
+    drag = { x: e.clientX, y: e.clientY, card: card, block: block, started: false, touch: e.pointerType === "touch" };
+    if (drag.touch) { // on touch screens, press and hold to drag so a swipe still scrolls
+      var d = drag;
+      d.timer = setTimeout(function () { if (drag === d) { (d.card || d.block).classList.add("lifting"); if (navigator.vibrate) navigator.vibrate(10); startDrag(d.x, d.y); } }, 320);
+    }
+  }
+  function startDrag(x, y) {
+    drag.started = true; document.body.classList.add("dragging");
+    var g;
+    if (drag.card) { g = drag.card.cloneNode(true); drag.card.classList.add("src"); }
+    else { var ch = drag.block.getAttribute("data-ch"); g = document.createElement("div"); g.className = "card"; g.innerHTML = '<div class="ctop">' + chIcon(ch, true) + "<span>" + CH[ch].label + '</span></div><div class="ctitle">New ' + CH[ch].label.toLowerCase() + "</div>"; }
+    g.classList.add("ghost"); g.classList.remove("sel", "lifting"); document.body.appendChild(g); drag.ghost = g;
+    g.style.left = (x - 30) + "px"; g.style.top = (y - 20) + "px";
+    drag.ph = document.createElement("div"); drag.ph.className = "ph";
+  }
+  function cleanup(d) {
+    clearTimeout(d.timer);
+    document.body.classList.remove("dragging");
+    if (d.ghost) d.ghost.remove(); if (d.ph && d.ph.parentNode) d.ph.remove();
+    if (d.card) d.card.classList.remove("src", "lifting"); if (d.block) d.block.classList.remove("lifting");
+    document.querySelectorAll(".colbody.over").forEach(function (x) { x.classList.remove("over"); });
+  }
+  function onMove(e) {
+    if (!drag) return;
+    if (!drag.started) {
+      var moved = Math.abs(e.clientX - drag.x) + Math.abs(e.clientY - drag.y);
+      if (drag.touch) { if (moved > 8) { cleanup(drag); drag = null; } return; }
+      if (moved < 6) return;
+      startDrag(e.clientX, e.clientY);
+    }
+    e.preventDefault();
+    drag.ghost.style.left = (e.clientX - 30) + "px"; drag.ghost.style.top = (e.clientY - 20) + "px";
+    var wrap = document.getElementById("boardwrap"), r = wrap.getBoundingClientRect();
+    if (e.clientY > r.top && e.clientY < r.bottom) { if (e.clientX > r.right - 50) wrap.scrollLeft += 14; else if (e.clientX < r.left + 50) wrap.scrollLeft -= 14; }
+    var el = document.elementFromPoint(e.clientX, e.clientY);
+    var col = el && el.closest(".colbody");
+    document.querySelectorAll(".colbody.over").forEach(function (x) { if (x !== col) x.classList.remove("over"); });
+    if (!col) { if (drag.ph.parentNode) drag.ph.remove(); drag.target = null; return; }
+    col.classList.add("over");
+    var cards = Array.prototype.slice.call(col.querySelectorAll(".card:not(.src)"));
+    var before = cards.filter(function (cd) { var b = cd.getBoundingClientRect(); return e.clientY < b.top + b.height / 2; })[0];
+    col.insertBefore(drag.ph, before || col.querySelector(".addin"));
+    drag.target = { day: +col.getAttribute("data-day"), beforeId: before ? before.getAttribute("data-id") : null };
+  }
+  function onCancel() { if (drag) { cleanup(drag); drag = null; } }
+  function onUp() {
+    if (!drag) return;
+    var d = drag; drag = null; cleanup(d);
+    if (!d.started) { // a click or tap
+      if (d.card) { ui.sel = d.card.getAttribute("data-id"); ui.armed = null; lastKey = null; ui.focusDay = findStep(ui.sel).day; render(); renderDrawer(); }
+      else if (d.block) addStep(d.block.getAttribute("data-ch"), ui.focusDay != null ? ui.focusDay : cyc().days[0]);
       return;
     }
-    srcEl.innerHTML = (comp.source === "example" ? '<span class="tag-ex">Example data</span>' : "") + '<span class="src">' + (comp.source === "example" ? "Made-up offers to show how the tool works" : "Source: " + esc(comp.source)) + " · " + comp.rows.length + " offers</span>";
-    var names = {}; relevantRows(c.vertical).forEach(function (r) { names[r.competitor] = (names[r.competitor] || 0) + 1; });
-    var av = ["var(--accent-2)", "var(--coral-bg)", "var(--mint-bg)", "var(--sky-bg)"];
-    listEl.innerHTML = Object.keys(names).map(function (n, i) { var ini = n.replace(/^competitor\s+/i, "").charAt(0).toUpperCase(); return '<span><i style="background:' + av[i % av.length] + '">' + esc(ini) + "</i>" + esc(n) + " · " + names[n] + " offers</span>"; }).join("");
-    var stages = Object.keys(STAGES).filter(function (st) { return plan.stats[st] || plan.stagesUsed.indexOf(st) >= 0; });
-    var rows = stages.map(function (st) {
-      var s = plan.stats[st];
-      var pos = overrides[st] || plan.globalPos;
-      var ours = positionedOffer(st, pos, c, plan.stats).offer;
-      var inPlan = plan.stagesUsed.indexOf(st) >= 0;
-      var medO = s ? s.median : null, bestRow = null;
-      if (s) s.rows.forEach(function (r) { if (!bestRow || realValue(r, c.dep) > realValue(bestRow, c.dep)) bestRow = r; });
-      var ourV = realValue(ours, c.dep), medV = medO ? realValue(medO, c.dep) : null;
-      var delta = medV ? (ourV - medV) / medV * 100 : null;
-      var sel = '<select id="ov-' + st + '" data-stage="' + st + '" aria-label="Position for ' + STAGES[st] + '"><option value="">Follow global</option>' +
-        ["aggressive", "inline", "differentiated"].map(function (p) { return '<option value="' + p + '"' + (overrides[st] === p ? " selected" : "") + ">" + POS_LABEL[p] + "</option>"; }).join("") + "</select>";
-      return "<tr><td><b>" + STAGES[st] + "</b>" + (inPlan ? "" : '<div class="hint">Not in this plan</div>') + "</td>" +
-        '<td class="mono">' + (s ? esc(offerLabel(roundO(medO))) + '<div class="hint">' + s.n + " offers · real value " + eur(medV) + "</div>" : "No data") + "</td>" +
-        '<td class="mono">' + (bestRow ? esc(offerLabel(bestRow)) + '<div class="hint">' + esc(bestRow.competitor) + " · real value " + eur(realValue(bestRow, c.dep)) + "</div>" : "–") + "</td>" +
-        '<td class="mono">' + esc(offerLabel(ours)) + '<div class="hint">real value ' + eur(ourV) + "</div></td>" +
-        '<td class="mono">' + (delta === null ? "–" : '<span class="delta ' + (delta >= 0 ? "up" : "down") + '">' + (delta >= 0 ? "+" : "") + Math.round(delta) + "%</span>") + "</td>" +
-        "<td>" + sel + "</td></tr>";
-    }).join("");
-    tbl.innerHTML = "<thead><tr><th>Stage</th><th>Market median</th><th>Best in market</th><th>Your offer</th><th>vs median</th><th>Position</th></tr></thead><tbody>" + rows + "</tbody>";
+    if (!d.target) return;
+    if (d.card) {
+      var id = d.card.getAttribute("data-id"); if (d.target.beforeId === id) return;
+      commit(); lastKey = null; placeStep(cyc(), findStep(id), d.target.day, d.target.beforeId); ui.focusDay = d.target.day;
+      render(); if (ui.sel) renderDrawer(); save();
+    } else addStep(d.block.getAttribute("data-ch"), d.target.day, d.target.beforeId);
   }
-  function roundO(o) { return { match_pct: Math.round(o.match_pct), max_bonus: nice(o.max_bonus), free_spins: nice(o.free_spins), free_bet: nice(o.free_bet), wagering: Math.round(o.wagering), cashback_pct: Math.round(o.cashback_pct) }; }
+  document.addEventListener("pointerdown", onDown);
+  document.addEventListener("pointermove", onMove, { passive: false });
+  document.addEventListener("pointerup", onUp);
+  document.addEventListener("pointercancel", onCancel);
+  document.addEventListener("touchmove", function (e) { if (drag && drag.started) e.preventDefault(); }, { passive: false });
+  document.addEventListener("contextmenu", function (e) { if (drag && drag.touch) e.preventDefault(); });
 
-  function renderTests(plan) {
-    var c = plan.c, t = [];
-    if (plan.globalPos === "aggressive") t.push("Bigger headline offer vs the market median on the first offer step. Measure conversion <i>and</i> 30-day net revenue, since bigger offers often attract bonus hunters.");
-    if (plan.globalPos === "differentiated") t.push("Low-wagering offer vs a standard offer at the same cost. Check whether “no wagering” in the subject line beats a bigger number.");
-    if (plan.globalPos === "inline") t.push("Same offer, different framing: “€" + (plan.steps.filter(function (s) { return s.offer; })[0] ? Math.round(bonusAmt(plan.steps.filter(function (s) { return s.offer; })[0].offer, c.dep)) : 50) + " bonus” vs “double your deposit”.");
-    if (c.channels.indexOf("sms") >= 0 && c.channels.indexOf("push") >= 0) t.push("SMS vs push for the reminder steps. SMS usually converts better but costs more per message.");
-    if (c.focus === "acquisition") t.push("Timing of the first nudge: 1 hour vs 24 hours after registration.");
-    if (c.focus === "early") t.push("2nd deposit offer on day 2 vs day 4.");
-    if (c.focus === "retention") t.push("Cashback paid as cash vs as a bonus with low wagering.");
-    if (c.focus === "reactivation") t.push("Inactivity trigger at 21 vs 30 days.");
-    if (c.channels.indexOf("gamification") >= 0) t.push("Missions with a reward vs the same missions with only progress badges.");
-    document.getElementById("tests").innerHTML = t.slice(0, 4).map(function (x) { return "<li>" + x + "</li>"; }).join("");
-  }
+  // ---------- events ----------
+  document.getElementById("blocks").innerHTML = CH_ORDER.map(function (k) { return '<button type="button" class="block" data-ch="' + k + '">' + chIcon(k) + CH[k].label + "</button>"; }).join("");
+  document.getElementById("blocks").addEventListener("keydown", function (e) { var b = e.target.closest(".block"); if (b && (e.key === "Enter" || e.key === " ")) { e.preventDefault(); addStep(b.getAttribute("data-ch"), ui.focusDay != null ? ui.focusDay : cyc().days[0]); } });
 
-  // ---------- export ----------
-  function planMarkdown(p) {
-    var c = p.c, out = ["# Conversion cycle plan", "", "Focus: " + c.focus + " · Vertical: " + c.vertical + " · Segment: " + c.segment + " · Budget: " + c.budget + " · Regulation: " + c.regulation, "Position: " + POS_LABEL[p.globalPos] + " · Est. bonus cost/player: " + eur(p.cost), ""];
-    out.push("| When | Step | Channels | Offer | Trigger | KPI |", "|---|---|---|---|---|---|");
-    p.steps.forEach(function (s) { out.push("| " + [s.day + " (" + s.when + ")", s.title, s.channels.map(function (x) { return CH_LABEL[x]; }).join(", "), s.offer ? offerLabel(s.offer) + " (" + POS_LABEL[s.pos] + ")" : "", s.trigger, s.kpi].join(" | ") + " |"); });
-    return out.join("\n");
-  }
-  function planCSV(p) {
-    var q = function (v) { return '"' + String(v).replace(/"/g, '""') + '"'; };
-    var out = ["day,when,step,channels,message,offer,position,trigger,kpi,est_cost_eur"];
-    p.steps.forEach(function (s) { out.push([s.day, s.when, s.title, s.channels.map(function (x) { return CH_LABEL[x]; }).join(" + "), s.msg, s.offer ? offerLabel(s.offer) : "", s.pos ? POS_LABEL[s.pos] : "", s.trigger, s.kpi, s.cost ? s.cost.toFixed(2) : ""].map(q).join(",")); });
-    return out.join("\n");
-  }
+  document.getElementById("tabs").addEventListener("click", function (e) {
+    var t = e.target.closest("[data-cycle]");
+    if (t) { state.activeId = t.getAttribute("data-cycle"); closeDrawer(); ui.focusDay = null; render(); save(); return; }
+    if (e.target.closest("#newCycle")) openNew();
+  });
+
+  var board = document.getElementById("board");
+  board.addEventListener("click", function (e) {
+    var c = cyc(), t;
+    if ((t = e.target.closest("[data-editday]"))) { ui.editingDay = +t.getAttribute("data-editday"); renderBoard(c); return; }
+    if ((t = e.target.closest("[data-delday]"))) { commit(); var d = +t.getAttribute("data-delday"); c.days = c.days.filter(function (x) { return x !== d; }); if (!c.days.length) c.days = [0]; render(); save(); return; }
+    if ((t = e.target.closest("[data-addin]"))) { var day = +t.getAttribute("data-addin"); addStep("email", day); return; }
+    if (e.target.closest("#addDay")) {
+      commit(); var last = c.days.length ? c.days[c.days.length - 1] : -1;
+      var next = last < 0 ? 0 : last + (last < 1 ? 1 : last < 3 ? 2 : last < 7 ? 4 : 7);
+      next = Math.min(365, next);
+      c.days = uniqDays(c.days.concat([next])); ui.focusDay = next; render(); save();
+      var w = document.getElementById("boardwrap"); w.scrollLeft = w.scrollWidth; return;
+    }
+    if ((t = e.target.closest(".colbody"))) { ui.focusDay = +t.getAttribute("data-day"); }
+  });
+  board.addEventListener("keydown", function (e) {
+    var card = e.target.closest(".card");
+    if (card && (e.key === "Enter" || e.key === " ")) { e.preventDefault(); ui.sel = card.getAttribute("data-id"); lastKey = null; ui.focusDay = findStep(ui.sel).day; render(); renderDrawer(); }
+    if (e.target.id === "dayInput") { if (e.key === "Enter") e.target.blur(); if (e.key === "Escape") { ui.editingDay = null; renderBoard(cyc()); } }
+  });
+  board.addEventListener("focusout", function (e) {
+    if (e.target.id !== "dayInput" || ui.editingDay === null) return;
+    var c = cyc(), from = ui.editingDay, to = Math.max(0, Math.min(365, parseInt(e.target.value, 10)));
+    ui.editingDay = null;
+    if (isFinite(to) && to !== from) {
+      commit();
+      c.steps.forEach(function (s) { if (s.day === from) s.day = to; });
+      c.days = uniqDays(c.days.map(function (x) { return x === from ? to : x; }));
+      ui.focusDay = to; save();
+    }
+    setTimeout(function () { render(); if (ui.sel) renderDrawer(); }, 0);
+  });
+
+  ["cName", "cEntry", "cGoal"].forEach(function (id) {
+    var f = { cName: "name", cEntry: "entry", cGoal: "goal" }[id];
+    document.getElementById(id).addEventListener("input", function (e) { var c = cyc(), key = c.id + ":" + f; if (key !== lastKey) { commit(); lastKey = key; } c[f] = e.target.value; render(); save(); });
+  });
+  document.getElementById("dupCycle").addEventListener("click", function () {
+    commit(); var c = JSON.parse(JSON.stringify(cyc())); c.id = uid(); c.name = c.name + " (copy)"; c.steps.forEach(function (s) { s.id = uid(); });
+    state.cycles.push(c); state.activeId = c.id; closeDrawer(); render(); save(); toast("Cycle duplicated");
+  });
+  document.getElementById("delCycle").addEventListener("click", function () {
+    if (ui.armed !== "cycle") { ui.armed = "cycle"; renderSettings(cyc()); setTimeout(function () { if (ui.armed === "cycle") { ui.armed = null; renderSettings(cyc()); } }, 3000); return; }
+    commit(); ui.armed = null;
+    state.cycles = state.cycles.filter(function (c) { return c.id !== state.activeId; });
+    if (!state.cycles.length) state.cycles.push(makeCycle("New cycle", "custom", false));
+    state.activeId = state.cycles[0].id; closeDrawer(); render(); save(); toast("Cycle deleted. Undo to bring it back.");
+  });
+
+  var drawer = document.getElementById("drawer");
+  drawer.addEventListener("input", function (e) {
+    var t = e.target;
+    if (t.getAttribute("data-f")) editStep(t.getAttribute("data-f"), t.value);
+    else if (t.getAttribute("data-o")) editStep("o." + t.getAttribute("data-o"), t.value);
+  });
+  drawer.addEventListener("change", function (e) {
+    var t = e.target, s = findStep(ui.sel); if (!s) return;
+    if (t.name === "s-ch") { commit(); lastKey = null; s.channel = t.value; render(); renderDrawer(); save(); }
+    if (t.name === "s-aud") { commit(); lastKey = null; s.audience = t.value; render(); save(); }
+    if (t.name === "s-offer") {
+      commit(); lastKey = null;
+      var defs = { none: { type: "none" }, match: M(100, 100, 35), freespins: { type: "freespins", count: 20, wager: 0 }, freebet: { type: "freebet", value: 10 }, cashback: { type: "cashback", pct: 10 } };
+      s.offer = JSON.parse(JSON.stringify(defs[t.value])); render(); renderDrawer(); save();
+    }
+  });
+  drawer.addEventListener("click", function (e) {
+    if (e.target.closest("#dClose")) { closeDrawer(); return; }
+    if (e.target.closest("#sDup")) { var s = findStep(ui.sel); commit(); lastKey = null; var n = JSON.parse(JSON.stringify(s)); n.id = uid(); var c = cyc(); c.steps.splice(c.steps.indexOf(s) + 1, 0, n); ui.sel = n.id; render(); renderDrawer(); save(); toast("Step duplicated"); return; }
+    if (e.target.closest("#sDel")) {
+      if (ui.armed !== "step") { ui.armed = "step"; renderDrawer(); return; }
+      commit(); var c2 = cyc(), id = ui.sel; c2.steps = c2.steps.filter(function (x) { return x.id !== id; }); closeDrawer(); render(); save(); toast("Step deleted. Undo to bring it back.");
+    }
+  });
+
+  // ---------- new cycle modal ----------
+  var modal = document.getElementById("newModal");
+  document.getElementById("nStages").innerHTML = Object.keys(STAGES).map(function (k, i) {
+    var st = STAGES[k];
+    return '<label><input type="radio" name="nStage" id="nStage-' + k + '" value="' + k + '"' + (i === 0 ? " checked" : "") + '><span style="background:' + st.color + '"><i class="ci">' + svg(st.icon, "#FFFFFF") + "</i>" + st.label + "<small>" + st.sub + "</small></span></label>";
+  }).join("");
+  function openNew() { modal.hidden = false; var n = document.getElementById("nName"); n.value = "New cycle"; n.focus(); n.select(); }
+  document.getElementById("nCancel").addEventListener("click", function () { modal.hidden = true; });
+  modal.addEventListener("click", function (e) { if (e.target === modal) modal.hidden = true; });
+  document.getElementById("nStages").addEventListener("change", function (e) { var custom = e.target.value === "custom"; document.getElementById("nStartT").disabled = custom; if (custom) document.getElementById("nStartB").checked = true; });
+  document.getElementById("newForm").addEventListener("submit", function (e) {
+    e.preventDefault();
+    var stage = document.querySelector('input[name="nStage"]:checked').value;
+    var tpl = document.querySelector('input[name="nStart"]:checked').value === "template" && stage !== "custom";
+    commit();
+    var c = makeCycle(document.getElementById("nName").value.trim() || "New cycle", stage, tpl);
+    state.cycles.push(c); state.activeId = c.id; modal.hidden = true; closeDrawer(); ui.focusDay = null; render(); save();
+    toast(tpl ? "Cycle created with suggested steps" : "Blank cycle created. Drag a channel onto Day 0.");
+  });
+
+  // ---------- export / import ----------
   function copy(text, done) {
-    var fallback = function () { var ta = document.createElement("textarea"); ta.value = text; document.body.appendChild(ta); ta.select(); try { document.execCommand("copy"); toast(done); } catch (e) { toast("Copy failed. Select the text manually."); } ta.remove(); };
-    if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(text).then(function () { toast(done); }, fallback); else fallback();
+    var fb = function () { var ta = document.createElement("textarea"); ta.value = text; document.body.appendChild(ta); ta.select(); try { document.execCommand("copy"); toast(done); } catch (err) { toast("Copy failed"); } ta.remove(); };
+    if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(text).then(function () { toast(done); }, fb); else fb();
   }
+  document.getElementById("csvBtn").addEventListener("click", function () {
+    var c = cyc(), q = function (v) { return '"' + String(v == null ? "" : v).replace(/"/g, '""') + '"'; };
+    var rows = ["cycle,day,send,channel,step,who,message,offer"];
+    c.days.forEach(function (d) { c.steps.filter(function (s) { return s.day === d; }).forEach(function (s) { rows.push([c.name, s.day, s.time, CH[s.channel].label, s.title, AUD[s.audience], s.message, offerLabel(s.offer)].map(q).join(",")); }); });
+    copy(rows.join("\n"), "Copied. Paste into a spreadsheet.");
+  });
+  document.getElementById("exportBtn").addEventListener("click", function () {
+    var text = JSON.stringify({ app: "conversion-cycle-planner", version: 2, cycles: state.cycles }, null, 2);
+    try {
+      var a = document.createElement("a"); a.href = URL.createObjectURL(new Blob([text], { type: "application/json" })); a.download = "cycles.json";
+      document.body.appendChild(a); a.click(); a.remove();
+    } catch (err) {}
+    copy(text, "Exported. The cycles are also on your clipboard.");
+  });
+  document.getElementById("importBtn").addEventListener("click", function () { document.getElementById("importFile").click(); });
+  document.getElementById("importFile").addEventListener("change", function (e) {
+    var f = e.target.files[0]; if (!f) return;
+    var r = new FileReader();
+    r.onload = function () {
+      try {
+        var data = JSON.parse(String(r.result)); var list = Array.isArray(data) ? data : data.cycles ? data.cycles : [data];
+        list = list.filter(function (c) { return c && Array.isArray(c.steps); });
+        if (!list.length) throw new Error("none");
+        commit();
+        list.forEach(function (c) {
+          c.id = uid(); c.stage = STAGES[c.stage] ? c.stage : "custom"; c.days = Array.isArray(c.days) ? c.days : [0];
+          c.steps.forEach(function (s) { s.id = uid(); if (!CH[s.channel]) s.channel = "email"; s.audience = AUD[s.audience] ? s.audience : "all"; s.offer = s.offer || { type: "none" }; s.day = +s.day || 0; });
+          state.cycles.push(c);
+        });
+        state.activeId = list[list.length - 1].id; closeDrawer(); render(); save(); toast("Imported " + list.length + (list.length === 1 ? " cycle" : " cycles"));
+      } catch (err) { toast("That file isn't a cycle export."); }
+    };
+    r.readAsText(f); e.target.value = "";
+  });
+
+  document.getElementById("undoBtn").addEventListener("click", undo);
+  document.addEventListener("keydown", function (e) {
+    var typing = /INPUT|TEXTAREA|SELECT/.test(e.target.tagName || "");
+    if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "z" && !e.shiftKey && !typing) { e.preventDefault(); undo(); }
+    if (e.key === "Escape") { if (!modal.hidden) modal.hidden = true; else if (!drawer.hidden) closeDrawer(); }
+  });
+
   var tt;
   function toast(msg) { var el = document.getElementById("toast"); el.textContent = msg; el.hidden = false; clearTimeout(tt); tt = setTimeout(function () { el.hidden = true; }, 2600); }
 
-  // ---------- wire up ----------
-  document.getElementById("tplText").textContent = SAMPLE.split("\n").slice(0, 3).join("\n");
-  document.querySelector(".rail").addEventListener("change", render);
-  document.getElementById("dep").addEventListener("input", render);
-  document.getElementById("bench").addEventListener("change", function (e) {
-    var st = e.target.getAttribute("data-stage"); if (!st) return;
-    if (e.target.value) overrides[st] = e.target.value; else delete overrides[st];
-    render();
-  });
-  document.getElementById("csvFile").addEventListener("change", function (e) {
-    var f = e.target.files[0]; if (!f) return;
-    var r = new FileReader(); r.onload = function () { ingest(String(r.result), f.name); }; r.readAsText(f); e.target.value = "";
-  });
-  document.getElementById("uploadLbl").addEventListener("keydown", function (e) { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); document.getElementById("csvFile").click(); } });
-  document.getElementById("loadSample").addEventListener("click", function () { ingest(SAMPLE, "example"); });
-  document.getElementById("clearComp").addEventListener("click", function () { comp = { rows: [], source: null, skipped: 0 }; overrides = {}; store("comp", null); render(); });
-  document.getElementById("copyTpl").addEventListener("click", function () { copy(document.getElementById("tplText").textContent, "Template copied"); });
-  document.getElementById("copyMd").addEventListener("click", function () { copy(planMarkdown(lastPlan), "Plan copied as Markdown"); });
-  document.getElementById("copyCsv").addEventListener("click", function () { copy(planCSV(lastPlan), "Plan copied as CSV. Paste into a spreadsheet."); });
-
-  applyConditions(load("cond"));
-  var savedComp = load("comp");
-  if (savedComp && savedComp.rows && savedComp.rows.length) comp = savedComp;
-  else { // open in a working state with the example market loaded
-    var rows = parseCSV(SAMPLE), head = rows[0];
-    comp = { rows: rows.slice(1).map(function (r) { var o = {}; head.forEach(function (h, i) { o[h] = r[i]; }); var rec = { competitor: o.competitor, vertical: o.vertical, stage: o.stage }; FIELDS.forEach(function (f) { rec[f] = parseFloat(o[f]) || 0; }); return rec; }), source: "example", skipped: 0 };
-  }
   render();
 })();
 </script>
