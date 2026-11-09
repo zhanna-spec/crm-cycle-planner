@@ -214,6 +214,47 @@ function analysePage(apiKey: string, body: Record<string, unknown>) {
   return askClaude(apiKey, PAGE_SYSTEM, content, PAGE_SCHEMA);
 }
 
+// ---------- sorting scanned pages ----------
+
+const SORT_KINDS: Record<string, string> = {
+  welcome: "welcome offer (first deposit bonus)", second: "2nd deposit offer", third: "3rd deposit offer", reload: "reload offer",
+  cashback: "cashback", freespins: "free spins offer", vip: "loyalty or VIP reward", sports: "sportsbook offer", other_offer: "other bonus offer",
+  registration: "registration process or sign-up form", deposit: "deposit or cashier page", homepage: "homepage", promotions: "promotions overview page",
+  tournament: "one tournament, race or prize drop", loyalty: "loyalty or VIP programme page", gamification: "missions or gamification",
+  app: "mobile app page", rg: "responsible gambling page", other_page: "other page worth reviewing", irrelevant: "nothing relevant (game lobby, unrelated legal text, error page)",
+};
+const SORT_SCHEMA = {
+  type: "object", additionalProperties: false, required: ["items"],
+  properties: {
+    items: {
+      type: "array", items: {
+        type: "object", additionalProperties: false, required: ["kind", "title"],
+        properties: { kind: { type: "string", enum: Object.keys(SORT_KINDS) }, title: { type: "string" } },
+      },
+    },
+  },
+};
+const SORT_SYSTEM = [
+  "You sort screenshots and text from a page of an online casino or sportsbook website for competitor research.",
+  "List what the page contains, using these kinds:",
+  ...Object.entries(SORT_KINDS).map(([k, v]) => `- ${k}: ${v}`),
+  "A page can contain several things: a promotions page usually counts as promotions plus one item for each concrete offer or tournament on it. List each separately, at most 6 items, most important first.",
+  "A bonus terms page counts as the offer it describes. The homepage counts as homepage, plus the welcome offer if it is shown with its numbers.",
+  "title is a short name, such as the offer headline or the tournament name.",
+  "If nothing on the page is relevant, return a single item with kind irrelevant.",
+].join("\n");
+
+function sortPage(apiKey: string, body: Record<string, unknown>) {
+  const images = (Array.isArray(body.images) ? body.images : [])
+    .filter((im: { media_type?: string; data?: string }) => im && IMAGE_TYPES.includes(im.media_type ?? "") && typeof im.data === "string" && im.data.length > 0)
+    .slice(0, 4) as { media_type: "image/jpeg" | "image/png" | "image/webp" | "image/gif"; data: string }[];
+  const text = typeof body.page_text === "string" ? body.page_text.trim().slice(0, 12000) : "";
+  if (!images.length && !text) throw new UserFacingError("bad_request", "The scanned page was empty.");
+  const content: Anthropic.Beta.BetaContentBlockParam[] = images.map((im) => ({ type: "image", source: { type: "base64", media_type: im.media_type, data: im.data } }));
+  content.push({ type: "text", text: `Page address: ${String(body.url ?? "").slice(0, 300)}\nLink text that led here: ${String(body.link_text ?? "").slice(0, 100)}\n\nPage text:\n<page>\n${text}\n</page>\n\nList what this page contains.` });
+  return askClaude(apiKey, SORT_SYSTEM, content, SORT_SCHEMA);
+}
+
 // ---------- request handling ----------
 
 Deno.serve(async (req) => {
@@ -259,10 +300,11 @@ Deno.serve(async (req) => {
       return reply(await callScript(`${scriptUrl}${sep}${tokenParam}&days=${days}`));
     }
 
-    if (action === "read_offer" || action === "summarise_emails" || action === "analyse_page") {
+    if (action === "read_offer" || action === "summarise_emails" || action === "analyse_page" || action === "sort_page") {
       if (!anthropicKey) return reply({ error: "no_ai_key", message: "AI isn't set up yet. Add the ANTHROPIC_API_KEY secret in Supabase." });
       const result = action === "read_offer" ? await readOffer(anthropicKey, body)
         : action === "analyse_page" ? await analysePage(anthropicKey, body)
+        : action === "sort_page" ? await sortPage(anthropicKey, body)
         : await summariseEmails(anthropicKey, body);
       return reply({ result });
     }

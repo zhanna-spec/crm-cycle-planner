@@ -19,3 +19,10 @@ split=$(grep -n '^<div class="wrap">' "$src" | cut -d: -f1)
   echo '</html>'
 } > index.html
 echo "built index.html"
+
+# Package the site scanner extension so it can be downloaded from GitHub Pages.
+if command -v zip >/dev/null 2>&1; then
+  rm -f scanner-extension.zip
+  (cd extension && zip -qr ../scanner-extension.zip . -x '*.DS_Store' 'README.md')
+  echo "built scanner-extension.zip"
+fi

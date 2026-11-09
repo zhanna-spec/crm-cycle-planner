@@ -271,6 +271,20 @@ textarea.inp { resize: vertical; min-height: 70px; }
 .cmp td.val { max-width: 200px; }
 .rowupd { font-size: 12px; padding: 5px 9px; }
 
+/* Website scans */
+.scanbar { height: 8px; border-radius: 4px; background: var(--sunk); overflow: hidden; }
+.scanbar i { display: block; height: 100%; background: var(--accent); transition: width .3s; }
+.scanlist { display: flex; flex-direction: column; gap: 4px; max-height: 260px; overflow-y: auto; }
+.scanrow { display: flex; gap: 10px; align-items: center; background: var(--sunk); border-radius: 12px; padding: 8px 10px; cursor: pointer; }
+.scanrow img { width: 54px; height: 40px; object-fit: cover; object-position: top; border-radius: 6px; flex: none; }
+.scanrow .meta2 { flex: 1; min-width: 0; }
+.scanrow b { display: block; font-weight: 500; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.scanrow small { color: var(--muted); font-size: 11px; overflow-wrap: anywhere; }
+.srcline { display: block; font-size: 11px; color: var(--muted); font-weight: 400; margin-top: 2px; }
+.srcline a { color: var(--accent); }
+.scanhint { font-size: 12px; color: var(--muted); margin: 0; }
+.scanhint a { color: var(--accent); font-weight: 500; }
+
 /* View switch */
 .viewnav { display: flex; gap: 4px; background: var(--surface); padding: 5px; border-radius: 16px; box-shadow: var(--shadow-sm); width: max-content; max-width: 100%; margin-bottom: 16px; overflow-x: auto; scrollbar-width: none; }
 .viewnav a { display: inline-flex; align-items: center; gap: 8px; padding: 9px 16px; border-radius: 12px; font-weight: 500; color: var(--muted); text-decoration: none; white-space: nowrap; }
@@ -502,6 +516,7 @@ footer { color: var(--muted); font-size: 12px; margin-top: 24px; text-align: cen
             <div class="row"><button class="btn primary" type="submit">Add operator</button><button class="btn" type="button" id="opCancel">Cancel</button></div>
           </form>
           <button class="btn primary" type="button" id="opAdd">+ Add operator</button>
+          <p class="scanhint">Scan a whole website automatically with the <a href="https://github.com/zhanna-spec/crm-cycle-planner/blob/main/extension/README.md" target="_blank" rel="noopener">site scanner extension</a>.</p>
         </section>
         <section class="panel stack" aria-labelledby="keyH">
           <h2 class="ptitle" id="keyH">AI screenshot reading</h2>
@@ -509,6 +524,7 @@ footer { color: var(--muted); font-size: 12px; margin-top: 24px; text-align: cen
         </section>
       </div>
       <div class="stack" style="gap:18px;min-width:0">
+        <section class="panel stack" id="scanPanel" hidden aria-live="polite"></section>
         <section class="panel" id="opHead"></section>
         <section class="panel stack" id="trayPanel" aria-labelledby="upH">
           <h2 class="ptitle" id="upH">Add an offer</h2>
@@ -587,6 +603,7 @@ footer { color: var(--muted); font-size: 12px; margin-top: 24px; text-align: cen
 <div class="authwrap" id="authScreen" hidden><div class="authcard" id="authCard"></div></div>
 <div class="lightbox" id="lightbox" hidden role="dialog" aria-modal="true" aria-label="Screenshot"><img id="lbImg" alt=""><div class="lbbar"><button type="button" id="lbPrev">← Previous</button><span id="lbCount"></span><button type="button" id="lbNext">Next →</button><button type="button" id="lbClose">Close</button></div></div>
 <div class="modal" id="teamModal" hidden><div class="dialog" id="teamDialog" role="dialog" aria-modal="true" aria-labelledby="teamTitle"></div></div>
+<div class="modal" id="scanModal" hidden><form class="dialog" id="scanForm" aria-labelledby="scanTitle"></form></div>
 <div class="toast" id="toast" hidden></div>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.118.0/dist/umd/supabase.js"></script>
 
@@ -1248,7 +1265,7 @@ footer { color: var(--muted); font-size: 12px; margin-top: 24px; text-align: cen
     var o = findOp(x.opId) || { name: "?" }, pics = offerPics(x), first = pics[0];
     var th = !pics.length ? "" : '<button type="button" class="thumbs" data-lb="' + x.id + '" aria-label="View ' + plural(pics.length, "screenshot", "screenshots") + '">' + (first ? '<img src="' + first + '" alt="">' : '<span class="loadimg"></span>') + (pics.length > 1 ? '<span class="more">' + pics.length + " screenshots</span>" : "") + "</button>";
     var tour = isTour(x.section);
-    var head = '<div class="cname"><span class="avatar" style="background:' + opColor(o) + '">' + esc(o.name.charAt(0).toUpperCase()) + "</span><b>" + (showOp ? esc(o.name) + " " : "") + '<span class="kindpill ' + (tour ? "tour" : "page") + '">' + esc(kindLabel(x.section)) + "</span>" + (x.title && x.title !== kindLabel(x.section) ? '<br><small style="font-weight:400;color:var(--muted)">' + esc(x.title) + "</small>" : "") + "</b></div>";
+    var head = '<div class="cname"><span class="avatar" style="background:' + opColor(o) + '">' + esc(o.name.charAt(0).toUpperCase()) + "</span><b>" + (showOp ? esc(o.name) + " " : "") + '<span class="kindpill ' + (tour ? "tour" : "page") + '">' + esc(kindLabel(x.section)) + "</span>" + (x.title && x.title !== kindLabel(x.section) ? '<br><small style="font-weight:400;color:var(--muted)">' + esc(x.title) + "</small>" : "") + srcLine(x) + "</b></div>";
     var body;
     if (x.status === "reading") body = head + '<div class="reading"><div class="bar"></div><div class="bar" style="width:70%"></div><div class="bar" style="width:85%"></div></div><p class="small">Claude is reading this ' + (tour ? "tournament" : "page") + '. This usually takes 20 to 60 seconds.</p>';
     else {
@@ -1293,7 +1310,7 @@ footer { color: var(--muted); font-size: 12px; margin-top: 24px; text-align: cen
       var th = !pics.length ? '<div class="thumbs none">No screenshots</div>'
         : '<button type="button" class="thumbs" data-lb="' + x.id + '" aria-label="View ' + pics.length + (pics.length === 1 ? " screenshot" : " screenshots") + '">' + (first ? '<img src="' + first + '" alt="">' : '<span class="loadimg"></span>') + (pics.length > 1 ? '<span class="more">' + pics.length + " screenshots</span>" : "") + "</button>";
       var body, title = x.title || (x.status === "reading" ? "" : "Offer");
-      var nameRow = '<div class="cname"><span class="avatar" style="background:' + opColor(o) + '">' + esc((o.name || "?").charAt(0).toUpperCase()) + "</span><b>" + (op ? "" : esc(o.name) + " ") + '<span class="kindpill">' + esc(kindLabel(offerKind(x))) + "</span>" + (title ? '<br><small style="font-weight:400;color:var(--muted)">' + esc(title) + "</small>" : "") + "</b></div>";
+      var nameRow = '<div class="cname"><span class="avatar" style="background:' + opColor(o) + '">' + esc((o.name || "?").charAt(0).toUpperCase()) + "</span><b>" + (op ? "" : esc(o.name) + " ") + '<span class="kindpill">' + esc(kindLabel(offerKind(x))) + "</span>" + (title ? '<br><small style="font-weight:400;color:var(--muted)">' + esc(title) + "</small>" : "") + srcLine(x) + "</b></div>";
       if (x.status === "reading") body = '<div class="cname"><span class="avatar" style="background:' + opColor(o) + '">' + esc((o.name || "?").charAt(0).toUpperCase()) + '</span><b>Reading…</b></div><div class="reading"><div class="bar"></div><div class="bar" style="width:70%"></div><div class="bar" style="width:85%"></div></div><p class="small">This usually takes 10 to 40 seconds.</p>';
       else {
         var uns = x.uncertain || [];
@@ -1384,6 +1401,167 @@ footer { color: var(--muted); font-size: 12px; margin-top: 24px; text-align: cen
         var av = x.you ? '<span class="avatar" style="background:var(--accent)">Y</span>' : '<span class="avatar" style="background:' + opColor(findOp(x.opId)) + '">' + esc((x.name || "?").charAt(0).toUpperCase()) + "</span>";
         return '<tr class="' + (x.you ? "you" : "") + '"><td><div class="who">' + av + esc(x.name || "Unnamed") + "</div></td><td>" + (ui.cmpKind === "all" && !x.you ? '<span class="kindpill">' + esc(kindLabel(offerKind(x))) + "</span> " : "") + esc(x.you ? compHeadline(x) : (x.title || compHeadline(x))) + "</td>" + cols.map(function (c) { return cell(x, c); }).join("") + "<td>" + (x.you ? "" : '<button class="iconbtn rowdel" type="button" data-cdelete="' + x.id + '" title="Delete offer" aria-label="Delete ' + esc(x.name || "offer") + '">' + svg('<path d="M4 6h12M8 6V4h4v2M6 6l1 10h6l1-10"/>') + "</button>") + "</td></tr>";
       }).join("") + "</tbody></table>";
+  }
+
+  // ---------- website scans from the site scanner extension ----------
+  var incomingScan = null, scanJob = null;
+  function srcLine(x) {
+    if (x.source !== "scan") return "";
+    var host = ""; try { host = new URL(x.url).pathname; } catch (e) { host = ""; }
+    return '<small class="srcline">From scan · ' + (x.run === "logged-in" ? "logged in" : "logged out") + (x.url ? ' · <a href="' + esc(x.url) + '" target="_blank" rel="noopener">' + esc(host.length > 1 ? host : "page") + "</a>" : "") + "</small>";
+  }
+  window.addEventListener("message", function (e) {
+    if (e.source !== window || !e.data || e.data.type !== "ccp-scan" || !e.data.scan || !Array.isArray(e.data.scan.pages)) return;
+    if ((incomingScan && incomingScan.id === e.data.scan.id) || (scanJob && scanJob.id === e.data.scan.id)) return;
+    incomingScan = e.data.scan; offerScan();
+  });
+  function askForScan() { try { window.postMessage({ type: "ccp-scan-ready" }, "*"); } catch (e) {} }
+  function offerScan() {
+    if (!incomingScan || (cloud && (!curWs || !proxy.checked || proxy.loading)) || (scanJob && !scanJob.finished)) return;
+    if (location.hash !== "#competitors") location.hash = "#competitors";
+    openScanDialog(incomingScan);
+  }
+  function baseHost(h) { var p = String(h || "").replace(/^www\./, "").split("."); return p.slice(-2).join("."); }
+  function guessOp(scan) {
+    var host = baseHost(scan.site && scan.site.host), stem = host.split(".")[0];
+    return state.operators.filter(function (o) { return (o.website && baseHost(String(o.website).replace(/^https?:\/\//, "").split("/")[0]) === host) || o.name.toLowerCase().replace(/[^a-z0-9]/g, "") === stem.replace(/[^a-z0-9]/g, ""); })[0] || null;
+  }
+  function openScanDialog(scan) {
+    var guess = guessOp(scan), host = (scan.site && scan.site.host) || "", stem = baseHost(host).split(".")[0];
+    var newName = stem ? stem.charAt(0).toUpperCase() + stem.slice(1) : "New operator";
+    var ok = scan.pages.filter(function (pg) { return pg.shots && pg.shots.length; }), bad = scan.pages.length - ok.length;
+    var form = document.getElementById("scanForm");
+    form.innerHTML = '<h3 id="scanTitle">Website scan of ' + esc(host) + "</h3>" +
+      '<p class="small">' + plural(ok.length, "page", "pages") + " scanned " + (scan.run === "logged-in" ? "while logged in" : "while logged out") + (bad ? ", " + plural(bad, "page", "pages") + " couldn't be opened" : "") + ". Claude sorts each page into offers, tournaments and website content, then reads them. About 3 to 6 cents per page.</p>" +
+      '<label class="field"><span>Operator</span><select class="inp" id="scanOp">' + state.operators.map(function (o) { return '<option value="' + o.id + '"' + (guess && guess.id === o.id ? " selected" : "") + ">" + esc(o.name) + "</option>"; }).join("") + '<option value="__new"' + (guess ? "" : " selected") + ">New operator…</option></select></label>" +
+      '<label class="field" id="scanNewWrap"' + (guess ? " hidden" : "") + '><span>New operator name</span><input class="inp" id="scanNewName" type="text" maxlength="80" value="' + esc(newName) + '"></label>' +
+      '<div class="field"><span>This scan was</span><div class="seg"><label><input type="radio" name="scanRun" value="logged-out"' + (scan.run !== "logged-in" ? " checked" : "") + '><span>Logged out</span></label><label><input type="radio" name="scanRun" value="logged-in"' + (scan.run === "logged-in" ? " checked" : "") + "><span>Logged in</span></label></div></div>" +
+      '<div class="field"><span>Pages to import</span><div class="scanlist">' + scan.pages.map(function (pg, i) {
+        var has = pg.shots && pg.shots.length;
+        return '<label class="scanrow"><input type="checkbox" data-scanpg="' + i + '"' + (has ? " checked" : " disabled") + ">" + (has ? '<img src="' + pg.shots[0] + '" alt="">' : "") + '<span class="meta2"><b>' + esc(pg.label || pg.title || pg.url) + "</b><small>" + (has ? plural(pg.shots.length, "screenshot", "screenshots") + " · " : "Couldn't open · ") + esc(pg.url) + "</small></span></label>";
+      }).join("") + "</div></div>" +
+      (aiReady() ? "" : '<div class="errbox">AI isn\'t on, so pages can\'t be sorted automatically. Turn on AI first (see AI screenshot reading), then import.</div>') +
+      '<div class="row" style="justify-content:space-between"><button class="btn danger" type="button" id="scanDiscard">Discard scan</button><span class="row"><button class="btn" type="button" id="scanLater">Not now</button><button class="btn primary" type="submit"' + (aiReady() && ok.length ? "" : " disabled") + ">Import " + plural(ok.length, "page", "pages") + "</button></span></div>";
+    document.getElementById("scanModal").hidden = false;
+  }
+  var scanModal = document.getElementById("scanModal");
+  scanModal.addEventListener("change", function (e) {
+    if (e.target.id === "scanOp") document.getElementById("scanNewWrap").hidden = e.target.value !== "__new";
+    if (e.target.hasAttribute("data-scanpg")) { var n = scanModal.querySelectorAll("[data-scanpg]:checked").length; var b = scanModal.querySelector('button[type="submit"]'); b.textContent = "Import " + plural(n, "page", "pages"); b.disabled = !n || !aiReady(); }
+  });
+  scanModal.addEventListener("click", function (e) {
+    if (e.target.id === "scanLater") { scanModal.hidden = true; toast("The scan is kept in the extension. Open the planner again to import it."); }
+    if (e.target.id === "scanDiscard") { window.postMessage({ type: "ccp-scan-received", id: incomingScan.id }, "*"); incomingScan = null; scanModal.hidden = true; toast("Scan discarded"); }
+  });
+  document.getElementById("scanForm").addEventListener("submit", function (e) {
+    e.preventDefault();
+    var scan = incomingScan; if (!scan) return;
+    var sel = document.getElementById("scanOp").value, op;
+    commit();
+    if (sel === "__new") {
+      var name = document.getElementById("scanNewName").value.trim() || "New operator";
+      op = state.operators.filter(function (o) { return o.name.toLowerCase() === name.toLowerCase(); })[0];
+      if (!op) { op = { id: uid(), name: name, website: (scan.site && scan.site.host) || "", market: "", notes: "", addedAt: new Date().toISOString() }; state.operators.push(op); }
+    } else op = findOp(sel);
+    if (op && !op.website && scan.site && scan.site.host) op.website = scan.site.host;
+    var run = document.querySelector('input[name="scanRun"]:checked').value;
+    var pages = Array.prototype.map.call(scanModal.querySelectorAll("[data-scanpg]:checked"), function (cb) { return scan.pages[+cb.getAttribute("data-scanpg")]; });
+    window.postMessage({ type: "ccp-scan-received", id: scan.id }, "*");
+    incomingScan = null; scanModal.hidden = true; save();
+    processScan(scan.id, op, pages, run);
+  });
+  function loadSrc(src) { return new Promise(function (res, rej) { var img = new Image(); img.onload = function () { res(img); }; img.onerror = function () { rej(new Error("A screenshot couldn't be read.")); }; img.src = src; }); }
+  async function uploadPaths(images, folder) {
+    if (!(cloud && curWs)) return null;
+    var wsId = curWs.id, paths = [];
+    for (var i = 0; i < images.length; i++) {
+      var r = await sb.storage.from(BUCKET).upload(wsId + "/" + folder + "/" + uid() + uid() + ".jpg", b64ToBlob(images[i].data, images[i].media_type), { contentType: images[i].media_type });
+      if (r.error) return null;
+      paths.push(r.data.path || (wsId + "/" + folder));
+    }
+    return paths;
+  }
+  function renderScanPanel() {
+    var el = document.getElementById("scanPanel"), j = scanJob;
+    if (!j) { el.hidden = true; return; }
+    var op = findOp(j.opId) || { name: "" }, pct = j.total ? Math.round(100 * j.done / j.total) : 0;
+    el.hidden = false;
+    el.innerHTML = '<div class="row" style="justify-content:space-between"><h2 class="ptitle" style="margin:0">' + (j.finished ? "Scan imported" : "Importing website scan") + " · " + esc(op.name) + " · " + (j.run === "logged-in" ? "logged in" : "logged out") + "</h2>" + (j.finished ? '<button class="btn" type="button" id="scanClose">Close</button>' : "") + "</div>" +
+      '<div class="scanbar"><i style="width:' + pct + '%"></i></div>' +
+      '<p class="small" style="margin:0">' + (j.finished ? "Done: " : (j.phase === "read" ? "Reading " + Math.min(j.total, j.done + 1) + " of " + plural(j.total, "item", "items") : "Sorting page " + Math.min(j.total, j.done + 1) + " of " + j.total) + (j.current ? ": " + esc(j.current) : "") + " · ") + plural(j.made, "card", "cards") + " created" + (j.skipped ? " · " + plural(j.skipped, "page", "pages") + " had nothing relevant" : "") + (j.failed ? " · " + plural(j.failed, "page", "pages") + " failed" : "") + "</p>" +
+      (j.finished && j.errors.length ? '<p class="small" style="color:var(--warn);margin:0">' + esc(j.errors.slice(0, 3).join(" · ")) + "</p>" : "");
+  }
+  document.getElementById("scanPanel").addEventListener("click", function (e) { if (e.target.id === "scanClose") { scanJob = null; renderScanPanel(); offerScan(); } });
+  // Similar titles ("Daily slots race" / "Daily €1,000 slots race") count as the same tournament.
+  function titleWords(t) { return String(t || "").toLowerCase().replace(/[^a-z0-9äöüéèáíóúñ]+/g, " ").split(" ").filter(function (w) { return w.length > 2; }); }
+  function sameTitle(a, b) {
+    var A = titleWords(a), B = titleWords(b); if (!A.length || !B.length) return false;
+    var common = A.filter(function (w) { return B.indexOf(w) >= 0; }).length;
+    return common / Math.min(A.length, B.length) >= 0.6;
+  }
+  // Offers of one type, and most website sections, appear once per operator; tournaments and "other" items are told apart by name.
+  function groupKey(kind) { return kind === "tournament" || kind === "other_offer" || kind === "other_page" ? null : kind; }
+  async function processScan(id, op, pages, run) {
+    scanJob = { id: id, opId: op.id, run: run, total: pages.length, done: 0, made: 0, skipped: 0, failed: 0, current: "", errors: [], finished: false, phase: "sort" };
+    selectOp(op.id); renderScanPanel();
+    // 1. sort every page
+    var groups = [];
+    for (var i = 0; i < pages.length; i++) {
+      var pg = pages[i];
+      scanJob.current = "sorting " + (pg.label || pg.title || pg.url); renderScanPanel();
+      try {
+        pg.images = []; pg.thumbs = [];
+        for (var k = 0; k < pg.shots.length && k < 4; k++) {
+          var img = await loadSrc(pg.shots[k]);
+          pg.images.push({ media_type: "image/jpeg", data: scaled(img, 1568, 0, 0.85).split(",")[1] });
+          pg.thumbs.push(scaled(img, 1200, 900, 0.8));
+        }
+        var sorted = await backend("sort_page", { images: pg.images, page_text: pg.text || "", url: pg.url, link_text: pg.label || "" });
+        var items = (sorted.items || []).filter(function (it) { return it && it.kind && it.kind !== "irrelevant"; }).slice(0, 6);
+        if (!items.length) scanJob.skipped++;
+        items.forEach(function (it) {
+          var key = groupKey(it.kind);
+          var g = groups.filter(function (x) { return x.kind === it.kind && (key ? true : sameTitle(x.title, it.title)); })[0];
+          if (!g) { g = { kind: it.kind, title: it.title || "", pages: [] }; groups.push(g); }
+          if ((it.title || "").length > g.title.length && it.kind !== "promotions" && it.kind !== "homepage") g.title = it.title;
+          if (g.pages.indexOf(pg) < 0) g.pages.push(pg);
+        });
+      } catch (err) { scanJob.failed++; scanJob.errors.push((pg.label || pg.url) + ": " + err.message); }
+      scanJob.done++; renderScanPanel();
+    }
+    // 2. one card per item, read from every page it appeared on
+    scanJob.phase = "read"; scanJob.total = groups.length; scanJob.done = 0; renderScanPanel();
+    var stored = new Map();
+    for (var n = 0; n < groups.length; n++) {
+      var g2 = groups[n];
+      scanJob.current = kindLabel(g2.kind) + (g2.title ? ": " + g2.title : ""); renderScanPanel();
+      try {
+        var imgs = [], thumbs = [], paths = [], texts = [];
+        for (var q = 0; q < g2.pages.length; q++) {
+          var p2 = g2.pages[q];
+          if (!stored.has(p2)) stored.set(p2, await uploadPaths(p2.images, "scan-" + id));
+          var room = 8 - imgs.length; if (room <= 0) break;
+          imgs = imgs.concat(p2.images.slice(0, room)); thumbs = thumbs.concat(p2.thumbs.slice(0, room));
+          var pp = stored.get(p2); if (pp) paths = paths.concat(pp.slice(0, room));
+          texts.push("Page: " + (p2.label || "") + " (" + p2.url + ")\n" + (p2.text || ""));
+        }
+        var text = texts.join("\n\n---\n\n").slice(0, 40000);
+        var base = { opId: op.id, source: "scan", run: run, url: g2.pages[0].url, pagesSeen: g2.pages.map(function (x) { return x.url; }), thumbs: paths.length ? [] : thumbs.slice(0, 4), images: paths, status: "done", addedAt: new Date().toISOString() };
+        if (isPageKind(g2.kind)) {
+          var pgItem = Object.assign({ id: uid(), section: g2.kind, title: g2.title || kindLabel(g2.kind), summary: "", steps: [], key_facts: [], strengths: [], friction: [], ideas: [], uncertain: [], text: text }, base);
+          state.research.unshift(pgItem); imageCache[pgItem.id] = imgs; save(); renderCompetitors();
+          await readPage(pgItem.id, { images: imgs, text: text, known: { title: g2.title } });
+        } else {
+          var offer = Object.assign({ id: uid(), name: op.name, kind: g2.kind, title: g2.title || "", conditions: [], uncertain: [], terms: text }, base);
+          state.competitors.unshift(offer); imageCache[offer.id] = imgs; save(); renderCompetitors();
+          await readOffer(offer.id, { images: imgs, terms: text, known: { competitor: op.name, offer_title: g2.title || null, offer_kind: kindLabel(g2.kind) } });
+        }
+        scanJob.made++;
+      } catch (err) { scanJob.failed++; scanJob.errors.push(kindLabel(g2.kind) + ": " + err.message); }
+      scanJob.done++; renderScanPanel();
+    }
+    scanJob.finished = true; scanJob.current = ""; renderScanPanel(); save();
+    toast("Scan imported: " + plural(scanJob.made, "card", "cards") + " for " + op.name);
   }
 
   // ---------- screenshots in Supabase Storage ----------
@@ -2190,7 +2368,7 @@ footer { color: var(--muted); font-size: 12px; margin-top: 24px; text-align: cen
       var fresh = state.fresh; delete state.fresh;
       state.emails = (e.data || []).map(rowToEmail).reverse();
       history = []; lastKey = null; closeDrawer(); ui.focusDay = null; ui.pickDay = null; ui.addingDay = false; ui.opSel = null; ui.opEditing = null;
-      hideAuth(); renderAcct(); proxy.checked = false; render(); setSaveState("Saved"); loadProxyStatus();
+      hideAuth(); renderAcct(); proxy.checked = false; render(); setSaveState("Saved"); loadProxyStatus().then(function () { askForScan(); offerScan(); });
       if (fresh) queueCloudSave();
       renderImportBanner();
     } catch (err) { showAuth("error", errText(err)); }
@@ -2401,7 +2579,7 @@ footer { color: var(--muted); font-size: 12px; margin-top: 24px; text-align: cen
 
   async function boot() {
     setView();
-    if (!cloud) { render(); return; }
+    if (!cloud) { render(); askForScan(); return; }
     showAuth("loading", "Starting…");
     sb.auth.onAuthStateChange(function (event, s) {
       session = s;
