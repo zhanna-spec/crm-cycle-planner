@@ -1,6 +1,11 @@
-# Inbox collector
+# Google script: inbox and AI
 
-A small Google Apps Script that lets the planner read competitor emails from a research Gmail account. It's free and needs no server or domain.
+A small Google Apps Script that does two things for the planner:
+
+- shares competitor emails from a research Gmail account
+- runs the AI features (reading offer screenshots, summarising competitor emails) with your Anthropic API key
+
+The key is stored in the script's settings in your Google account. It never appears in the website or anyone's browser. It's free and needs no server or domain.
 
 ## 1. Create a research Gmail account
 
@@ -35,6 +40,16 @@ In the planner, open **Competitor emails**, paste the web app URL and the token,
 A person on your team signs up on each competitor site with a tagged address, for example `yourbrand.research+luckynova@gmail.com`. Gmail delivers every `+tag` to the same inbox, and the planner uses the tag to tell competitors apart. If a site rejects the `+`, use the plain address; the planner can match that competitor by sender domain instead.
 
 Tick the marketing-email opt-in when registering, otherwise you won't receive the cycle.
+
+## 7. Turn on the AI features
+
+1. In the Apps Script editor, click the gear icon (**Project Settings**) in the left sidebar.
+2. Scroll to **Script properties** and click **Add script property**.
+3. Property: `ANTHROPIC_API_KEY`. Value: your Anthropic key (it starts with `sk-ant-`). Click **Save script properties**.
+4. Run **setup** once more. If Google asks for permission again (to connect to an external service), allow it. The log should say "Anthropic key found".
+5. In the planner, open **Competitor offers** and click **Check again**. The box turns green: "AI is on".
+
+Set a monthly spend limit on the key at platform.claude.com. Anyone with the web app URL and token can use the two AI features (not the key itself), so the limit caps the cost if they ever leak.
 
 ## Changing the code later
 

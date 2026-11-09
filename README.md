@@ -8,7 +8,7 @@ A visual builder for iGaming CRM conversion cycles, plus a competitor offer trac
 
 **Competitor emails.** Register on competitor sites with a research Gmail address. A small Apps Script in that account ([setup guide](inbox-collector/README.md)) shares the emails with the planner, which places each one on "day N after registration", has Claude summarise the sequence, and can add it to the builder as a cycle.
 
-Reading screenshots and summarising emails need your own Anthropic API key, entered on the page. It is stored only in your browser and sent only to Anthropic. Without a key you can still add offers by hand.
+The AI features (reading screenshots, summarising emails) run through the same Google Apps Script, which holds your Anthropic API key in its script properties. The key never reaches the website or the browser. Without it you can still add offers by hand.
 
 Everything is saved in your browser; use Export / Import to back up or share.
 

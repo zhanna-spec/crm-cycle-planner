@@ -405,7 +405,7 @@ footer { color: var(--muted); font-size: 12px; margin-top: 24px; text-align: cen
           <button class="btn" type="button" id="addManual">Add an offer by hand</button>
         </section>
         <section class="panel stack" aria-labelledby="keyH">
-          <h2 class="ptitle" id="keyH">Screenshot reading</h2>
+          <h2 class="ptitle" id="keyH">AI screenshot reading</h2>
           <div id="keyPanel" class="stack"></div>
         </section>
       </div>
@@ -998,31 +998,8 @@ footer { color: var(--muted); font-size: 12px; margin-top: 24px; text-align: cen
 
 
   // ---------- competitor offers ----------
-  var SDK_URL = "https://cdn.jsdelivr.net/npm/@anthropic-ai/sdk@1.3.0/+esm";
-  var MODEL = "claude-opus-5-5";
-  var KEY_STORE = "ccp2_api_key";
   var AV = ["var(--accent-2)", "var(--coral-bg)", "var(--mint-bg)", "var(--sky-bg)", "var(--c-call)"];
   var imageCache = {}; // competitor id -> images sent to Claude (kept for retry in this session only)
-  var NUM = { anyOf: [{ type: "number" }, { type: "null" }] };
-  var STR = { anyOf: [{ type: "string" }, { type: "null" }] };
-  var SCHEMA = {
-    type: "object", additionalProperties: false,
-    properties: {
-      competitor: { type: "string", description: "Brand name of the casino or sportsbook" },
-      offer_title: { type: "string", description: "Headline of the welcome offer as written" },
-      offer_type: { type: "string", enum: ["match", "free_spins", "free_bet", "cashback", "no_deposit", "other"] },
-      match_pct: NUM, max_bonus: NUM, currency: STR, free_spins: NUM, free_bet_value: NUM,
-      wagering_x: NUM, wagering_on: STR, min_deposit: NUM, max_bet: NUM, expiry_days: NUM, max_cashout: NUM,
-      eligible_games: STR,
-      other_conditions: { type: "array", items: { type: "string" } },
-      uncertain_fields: { type: "array", items: { type: "string" } }
-    },
-    required: ["competitor", "offer_title", "offer_type", "match_pct", "max_bonus", "currency", "free_spins", "free_bet_value", "wagering_x", "wagering_on", "min_deposit", "max_bet", "expiry_days", "max_cashout", "eligible_games", "other_conditions", "uncertain_fields"]
-  };
-  var SYSTEM = "You read screenshots of online casino and sportsbook promotion pages and their bonus terms, and extract the main welcome offer into the given JSON schema.\n" +
-    "Use only what is visible in the screenshots. When a value is not shown, return null for it and add the field name to uncertain_fields. Also add a field to uncertain_fields when the text is blurry, cut off or ambiguous.\n" +
-    "Write amounts as plain numbers without currency symbols and put the ISO currency code in currency. If the welcome offer is split across several deposits, use the first deposit for match_pct and max_bonus, and describe the rest in other_conditions.\n" +
-    "wagering_on says what the wagering applies to, for example \"bonus\" or \"deposit + bonus\". expiry_days is how long the player has to meet the wagering. other_conditions lists any other rules a player would care about, each as one short plain sentence.";
   var FIELDS = [
     ["name", "Competitor", "text"], ["title", "Offer headline", "text"],
     ["match_pct", "Match %", "num"], ["max_bonus", "Max bonus", "num"], ["free_spins", "Free spins", "num"], ["free_bet", "Free bet", "num"],
@@ -1032,7 +1009,8 @@ footer { color: var(--muted); font-size: 12px; margin-top: 24px; text-align: cen
   var UNSURE_MAP = { competitor: "name", offer_title: "title", free_bet_value: "free_bet", wagering_x: "wagering", wagering_on: "wager_on", eligible_games: "games" };
 
   function findComp(id) { return (state.competitors || []).filter(function (x) { return x.id === id; })[0]; }
-  function getKey() { try { return localStorage.getItem(KEY_STORE) || ""; } catch (e) { return ""; } }
+  function aiReady() { var ib = inbox(); return !!(ib.url && ib.token && ib.ai); }
+  try { localStorage.removeItem("ccp2_api_key"); } catch (e) {} // keys no longer live in the browser
   function cur(x) { var c = (x.currency || "EUR").toUpperCase(); return c === "EUR" ? "€" : c === "GBP" ? "£" : c === "USD" ? "$" : c + " "; }
   function has(v) { return v !== null && v !== undefined && v !== ""; }
   function compHeadline(x) {
@@ -1055,17 +1033,24 @@ footer { color: var(--muted); font-size: 12px; margin-top: 24px; text-align: cen
   window.addEventListener("hashchange", setView);
 
   function renderKeyPanel() {
-    var k = getKey(), el = document.getElementById("keyPanel");
-    if (k) {
-      el.innerHTML = '<div class="keystate"><i></i>Claude is connected (key ending ' + esc(k.slice(-4)) + ")</div>" +
-        '<p class="small">Each screenshot set costs about 2 to 5 cents. The key stays in this browser and is only sent to Anthropic.</p>' +
-        '<button class="btn danger" type="button" id="keyRemove">Remove key</button>';
+    var ib = inbox(), el = document.getElementById("keyPanel");
+    if (aiReady()) {
+      el.innerHTML = '<div class="keystate"><i></i>AI is on. It runs through your Google script.</div>' +
+        '<p class="small">Your Anthropic key stays in the script, not in this page. Each screenshot set costs about 2 to 5 cents.</p>';
+    } else if (ib.url && ib.token) {
+      el.innerHTML = '<div class="keystate off"><i></i>Your Google script is connected, but it has no Anthropic key yet.</div>' +
+        '<p class="small">In Apps Script, open <b>Project Settings → Script properties</b>, add <b>ANTHROPIC_API_KEY</b> with your key, then deploy a new version. <a href="' + SETUP_URL + '#7-turn-on-the-ai-features" target="_blank" rel="noopener">How to do it</a></p>' +
+        '<button class="btn primary" type="button" data-act="recheck">Check again</button>';
     } else {
-      el.innerHTML = '<div class="keystate off"><i></i>Not connected yet. Add a key to read screenshots automatically.</div>' +
-        '<label class="field"><span>Anthropic API key</span><input class="inp" id="keyInput" type="password" autocomplete="off" placeholder="sk-ant-..."></label>' +
-        '<button class="btn primary" type="button" id="keySave">Connect Claude</button>' +
-        '<p class="small">No key? <a href="https://platform.claude.com/settings/keys" target="_blank" rel="noopener">Create one here</a>. The key is saved only in this browser.</p>';
+      el.innerHTML = '<div class="keystate off"><i></i>Not connected yet</div>' +
+        '<p class="small">AI runs through your own Google script, the same one that collects competitor emails, so your Anthropic key never touches this page.</p>' + connForm();
     }
+  }
+  function connForm() {
+    return '<p class="small"><a href="' + SETUP_URL + '" target="_blank" rel="noopener">Setup guide (about 10 minutes)</a></p>' +
+      '<label class="field"><span>Web app URL</span><input class="inp c-url" type="url" placeholder="https://script.google.com/macros/s/…/exec"></label>' +
+      '<label class="field"><span>Token</span><input class="inp c-token" type="password" autocomplete="off"></label>' +
+      '<button class="btn primary" type="button" data-act="connect">Connect</button>';
   }
 
   function renderCompetitors() {
@@ -1163,9 +1148,9 @@ footer { color: var(--muted); font-size: 12px; margin-top: 24px; text-align: cen
       }
     } catch (err) { toast(err.message); return; }
     commit();
-    var x = { id: uid(), name: "", title: "", conditions: [], uncertain: [], thumbs: thumbs, status: getKey() ? "reading" : "done", addedAt: new Date().toISOString() };
+    var x = { id: uid(), name: "", title: "", conditions: [], uncertain: [], thumbs: thumbs, status: aiReady() ? "reading" : "done", addedAt: new Date().toISOString() };
     state.competitors.unshift(x); imageCache[x.id] = shots; save(); renderCompetitors();
-    if (!getKey()) { ui.compSel = x.id; renderCompDrawer(); toast("Connect Claude to read screenshots automatically. For now, fill in the offer by hand."); return; }
+    if (!aiReady()) { ui.compSel = x.id; renderCompDrawer(); toast("AI isn't connected yet, so fill in this offer by hand."); return; }
     readOffer(x.id);
   }
 
@@ -1173,31 +1158,7 @@ footer { color: var(--muted); font-size: 12px; margin-top: 24px; text-align: cen
     var x = findComp(id), shots = imageCache[id]; if (!x || !shots) return;
     x.status = "reading"; x.error = ""; renderCompetitors();
     try {
-      var mod = await import(SDK_URL);
-      var Anthropic = mod.default;
-      var client = new Anthropic({ apiKey: getKey(), dangerouslyAllowBrowser: true });
-      try {
-        var res = await client.beta.messages.create({
-          model: MODEL,
-          max_tokens: 16000,
-          betas: ["server-side-fallback-2026-07-01"],
-          fallbacks: "default",
-          output_config: { effort: "medium", format: { type: "json_schema", schema: SCHEMA } },
-          system: SYSTEM,
-          messages: [{ role: "user", content: shots.concat([{ type: "text", text: "Extract the main welcome offer from these " + shots.length + " screenshot(s)." }]) }]
-        });
-      } catch (err) {
-        if (err instanceof Anthropic.AuthenticationError) throw new Error("Your API key was rejected. Remove it and connect again with a valid key.");
-        if (err instanceof Anthropic.RateLimitError) throw new Error("Too many requests right now. Wait a minute and try again.");
-        if (err instanceof Anthropic.BadRequestError) throw new Error("Claude couldn't accept these images (" + (err.message || "bad request") + ").");
-        if (err instanceof Anthropic.APIConnectionError) throw new Error("Couldn't reach Anthropic. Check your internet connection.");
-        if (err instanceof Anthropic.APIError) throw new Error("Anthropic returned an error (" + (err.status || "unknown") + "). Try again.");
-        throw err;
-      }
-      if (res.stop_reason === "refusal") throw new Error("Claude declined to read these screenshots. Fill in the offer by hand.");
-      if (res.stop_reason === "max_tokens") throw new Error("The answer was cut off. Try fewer screenshots at once.");
-      var text = res.content.filter(function (b) { return b.type === "text"; }).map(function (b) { return b.text; }).join("");
-      var d = JSON.parse(text);
+      var d = await backend("read_offer", { images: shots.map(function (im) { return { media_type: im.source.media_type, data: im.source.data }; }) });
       x = findComp(id); if (!x) return; // deleted while reading
       commit();
       Object.assign(x, {
@@ -1211,7 +1172,7 @@ footer { color: var(--muted); font-size: 12px; margin-top: 24px; text-align: cen
     } catch (err) {
       x = findComp(id); if (!x) return;
       x.status = "error";
-      x.error = err instanceof SyntaxError ? "Claude's answer wasn't in the expected format. Try again." : /Failed to fetch|import|module/i.test(err.message || "") && !/Anthropic/.test(err.message) ? "Couldn't load the Claude library. Check your connection, or open the tool from its GitHub Pages link." : err.message;
+      x.error = err.message;
       save(); renderCompetitors();
     }
   }
@@ -1250,16 +1211,6 @@ footer { color: var(--muted); font-size: 12px; margin-top: 24px; text-align: cen
     state.competitors.unshift(x); save(); renderCompetitors(); ui.compSel = x.id; ui.armed = null; renderCompDrawer();
     setTimeout(function () { var n = document.getElementById("c-name"); if (n) n.focus(); }, 0);
   });
-  document.getElementById("keyPanel").addEventListener("click", function (e) {
-    if (e.target.closest("#keySave")) {
-      var v = (document.getElementById("keyInput").value || "").trim();
-      if (!/^sk-ant-/.test(v)) { toast("That doesn't look like an Anthropic API key. It starts with sk-ant-."); return; }
-      try { localStorage.setItem(KEY_STORE, v); } catch (err) { toast("This browser won't save the key. Check your privacy settings."); return; }
-      renderKeyPanel(); toast("Connected. Drop screenshots to read them.");
-    }
-    if (e.target.closest("#keyRemove")) { try { localStorage.removeItem(KEY_STORE); } catch (err) {} renderKeyPanel(); toast("Key removed from this browser"); }
-  });
-  document.getElementById("keyPanel").addEventListener("keydown", function (e) { if (e.target.id === "keyInput" && e.key === "Enter") document.getElementById("keySave").click(); });
   document.getElementById("ccards").addEventListener("click", function (e) {
     var t;
     if ((t = e.target.closest("[data-cedit]"))) { ui.sel = null; ui.compSel = t.getAttribute("data-cedit"); ui.armed = null; lastKey = null; renderCompDrawer(); }
@@ -1328,23 +1279,55 @@ footer { color: var(--muted); font-size: 12px; margin-top: 24px; text-align: cen
     var ib = inbox(), el = document.getElementById("inboxPanel");
     if (ib.url && ib.token) {
       el.innerHTML = '<div class="keystate"><i></i>Connected' + (ib.account ? " to " + esc(ib.account) : "") + "</div>" +
-        '<p class="small">' + state.emails.length + " emails stored · last synced " + ago(ib.lastSync) + "</p>" +
-        '<div class="row"><button class="btn primary" type="button" id="syncBtn">Sync emails now</button><button class="btn danger" type="button" id="inbDisconnect">Disconnect</button></div>';
+        '<p class="small">' + state.emails.length + " emails stored · last synced " + ago(ib.lastSync) + " · AI " + (ib.ai ? "on" : "off (no key in the script)") + "</p>" +
+        '<div class="row"><button class="btn primary" type="button" data-act="sync">Sync emails now</button><button class="btn danger" type="button" data-act="disconnect">Disconnect</button></div>';
     } else {
       el.innerHTML = '<div class="keystate off"><i></i>Not connected yet</div>' +
-        '<p class="small">Collect competitor emails in a research Gmail account. A small script in that account shares them with this page. <a href="' + SETUP_URL + '" target="_blank" rel="noopener">Setup guide (about 10 minutes)</a></p>' +
-        '<label class="field"><span>Web app URL</span><input class="inp" id="inbUrl" type="url" placeholder="https://script.google.com/macros/s/…/exec"></label>' +
-        '<label class="field"><span>Token</span><input class="inp" id="inbToken" type="password" autocomplete="off"></label>' +
-        '<button class="btn primary" type="button" id="inbConnect">Connect</button>';
+        '<p class="small">Collect competitor emails in a research Gmail account. A small script in that account shares them with this page and runs the AI features.</p>' + connForm();
     }
+  }
+  function scriptUrl(url, params) { return url + (url.indexOf("?") >= 0 ? "&" : "?") + params; }
+  async function scriptStatus(url, token) {
+    var res;
+    try { res = await fetch(scriptUrl(url, "token=" + encodeURIComponent(token) + "&status=1"), { redirect: "follow" }); }
+    catch (err) { throw new Error("Couldn't reach your Google script. Check the URL, and that it's deployed as a web app with access set to Anyone."); }
+    var data; try { data = await res.json(); } catch (err) { throw new Error("The URL answered, but not like the script. Make sure you copied the web app URL ending in /exec."); }
+    if (data.error === "unauthorized") throw new Error("The token doesn't match. Copy it again from the script's execution log.");
+    if (data.error) throw new Error(data.message || "Your Google script returned an error.");
+    if (!data.ok) data = { ok: true, account: data.account, ai: false, old: true }; // first version of the script
+    return data;
+  }
+  async function connectScript(url, token, btn) {
+    if (btn) { btn.disabled = true; btn.textContent = "Connecting…"; }
+    try {
+      var st = await scriptStatus(url, token);
+      setInbox({ url: url, token: token, account: st.account || "", ai: st.ai === true, lastSync: inbox().lastSync });
+      render();
+      toast(st.old ? "Connected. Update the script to the latest version to turn on AI." : st.ai ? "Connected. AI is on." : "Connected. Add your Anthropic key to the script to turn on AI.");
+      syncInbox(url, token, true);
+    } catch (err) {
+      toast(err.message); if (btn) { btn.disabled = false; btn.textContent = "Connect"; }
+    }
+  }
+  async function backend(action, payload) {
+    var ib = inbox();
+    if (!ib.url || !ib.token) throw new Error("Connect your Google script first.");
+    var res;
+    try { res = await fetch(ib.url, { method: "POST", body: JSON.stringify(Object.assign({ token: ib.token, action: action }, payload)) }); }
+    catch (err) { throw new Error("Couldn't reach your Google script. Check your connection and try again."); }
+    var data; try { data = await res.json(); } catch (err) { throw new Error("Your Google script didn't answer as expected. Make sure its latest version is deployed."); }
+    if (data.error === "no_ai_key") { setInbox(Object.assign(inbox(), { ai: false })); renderKeyPanel(); throw new Error(data.message); }
+    if (data.error === "unauthorized") throw new Error("The token doesn't match. Reconnect with the token from the script's execution log.");
+    if (data.error === "unknown_action") throw new Error("Your Google script is an older version. Paste in the latest code and deploy a new version.");
+    if (data.error) throw new Error(data.message || "Your Google script returned an error.");
+    return data.result;
   }
 
   async function syncInbox(url, token, quiet) {
-    var btn = document.getElementById("syncBtn") || document.getElementById("inbConnect"); if (btn) { btn.disabled = true; btn.textContent = "Syncing…"; }
+    var btn = document.querySelector('#inboxPanel [data-act="sync"]'); if (btn) { btn.disabled = true; btn.textContent = "Syncing…"; }
     try {
-      var sep = url.indexOf("?") >= 0 ? "&" : "?";
       var res;
-      try { res = await fetch(url + sep + "token=" + encodeURIComponent(token) + "&days=60", { redirect: "follow" }); }
+      try { res = await fetch(scriptUrl(url, "token=" + encodeURIComponent(token) + "&days=60"), { redirect: "follow" }); }
       catch (err) { throw new Error("Couldn't reach the inbox script. Check the URL, and that it's deployed as a web app with access set to Anyone."); }
       var data; try { data = await res.json(); } catch (err) { throw new Error("The URL answered, but not with emails. Make sure you copied the web app URL ending in /exec."); }
       if (data.error === "unauthorized") throw new Error("The token doesn't match. Copy it again from the script's execution log.");
@@ -1352,7 +1335,7 @@ footer { color: var(--muted); font-size: 12px; margin-top: 24px; text-align: cen
       if (!Array.isArray(data.emails)) throw new Error("The inbox script sent an unexpected answer.");
       commit();
       var added = mergeEmails(data.emails);
-      setInbox({ url: url, token: token, account: data.account || "", lastSync: new Date().toISOString() });
+      setInbox({ url: url, token: token, account: data.account || "", ai: data.ai === true, lastSync: new Date().toISOString() });
       // registration date defaults to the first email we see for that competitor
       state.trackers.forEach(function (t) { if (!t.registered) { var f = emailsOf(t)[0]; if (f) t.registered = localDate(f.date); } });
       save(); render();
@@ -1360,7 +1343,7 @@ footer { color: var(--muted); font-size: 12px; margin-top: 24px; text-align: cen
       return true;
     } catch (err) {
       toast(err.message);
-      if (inbox().url) renderInboxPanel(); else if (btn) { btn.disabled = false; btn.textContent = "Connect"; }
+      renderInboxPanel();
       return false;
     }
   }
@@ -1422,58 +1405,14 @@ footer { color: var(--muted); font-size: 12px; margin-top: 24px; text-align: cen
     }).join("");
   }
 
-  // Claude call shared by email summaries
-  async function callClaude(system, content, schema) {
-    if (!getKey()) throw new Error("Connect Claude first: add your API key in the Competitor offers tab.");
-    var mod; try { mod = await import(SDK_URL); } catch (err) { throw new Error("Couldn't load the Claude library. Check your connection, or open the tool from its GitHub Pages link."); }
-    var Anthropic = mod.default, client = new Anthropic({ apiKey: getKey(), dangerouslyAllowBrowser: true }), res;
-    try {
-      res = await client.beta.messages.create({
-        model: MODEL, max_tokens: 16000, betas: ["server-side-fallback-2026-07-01"], fallbacks: "default",
-        output_config: { effort: "medium", format: { type: "json_schema", schema: schema } },
-        system: system, messages: [{ role: "user", content: content }]
-      });
-    } catch (err) {
-      if (err instanceof Anthropic.AuthenticationError) throw new Error("Your API key was rejected. Update it in the Competitor offers tab.");
-      if (err instanceof Anthropic.RateLimitError) throw new Error("Too many requests right now. Wait a minute and try again.");
-      if (err instanceof Anthropic.BadRequestError) throw new Error("Claude couldn't accept the request (" + (err.message || "bad request") + ").");
-      if (err instanceof Anthropic.APIConnectionError) throw new Error("Couldn't reach Anthropic. Check your internet connection.");
-      if (err instanceof Anthropic.APIError) throw new Error("Anthropic returned an error (" + (err.status || "unknown") + "). Try again.");
-      throw err;
-    }
-    if (res.stop_reason === "refusal") throw new Error("Claude declined this request.");
-    if (res.stop_reason === "max_tokens") throw new Error("The answer was cut off. Try again with fewer emails.");
-    var text = res.content.filter(function (b) { return b.type === "text"; }).map(function (b) { return b.text; }).join("");
-    try { return JSON.parse(text); } catch (err) { throw new Error("Claude's answer wasn't in the expected format. Try again."); }
-  }
-  var EMAIL_SCHEMA = {
-    type: "object", additionalProperties: false, required: ["overview", "patterns", "emails"],
-    properties: {
-      overview: { type: "string" },
-      patterns: { type: "array", items: { type: "string" } },
-      emails: { type: "array", items: { type: "object", additionalProperties: false,
-        required: ["email_id", "purpose", "offer_type", "offer_summary", "match_pct", "max_bonus", "free_spins", "free_bet_value", "cashback_pct", "wagering_x", "deadline", "cta"],
-        properties: {
-          email_id: { type: "string" },
-          purpose: { type: "string", enum: Object.keys(PURPOSE) },
-          offer_type: { type: "string", enum: ["match", "free_spins", "free_bet", "cashback", "no_deposit", "none", "other"] },
-          offer_summary: STR, match_pct: NUM, max_bonus: NUM, free_spins: NUM, free_bet_value: NUM, cashback_pct: NUM, wagering_x: NUM, deadline: STR, cta: STR
-        } } }
-    }
-  };
-  var EMAIL_SYSTEM = "You analyse the marketing emails that one online casino or sportsbook sent to a newly registered player, to help a CRM team understand that competitor's conversion cycle.\n" +
-    "For each email, return its email_id unchanged, classify its purpose, and extract any offer exactly as written. Use null for anything the email doesn't state; never guess numbers. offer_summary is a short label such as \"100% up to €200, 35x\" or null when there is no offer.\n" +
-    "overview: 3 to 5 plain sentences describing the sequence: how often they email, when offers appear, how offers change over time, and what happens near the end. Refer to timing as \"day N\" using the day numbers given.\n" +
-    "patterns: up to 5 short, concrete observations a CRM manager could act on.";
   async function summarise(id) {
     var t = state.trackers.filter(function (x) { return x.id === id; })[0]; if (!t) return;
     var list = emailsOf(t); if (!list.length) return;
     t.summarizing = true; t.sumError = ""; renderEmails();
-    var input = "Competitor: " + t.name + "\nRegistered on: " + (t.registered || "unknown") + "\n\n" + list.map(function (em) {
-      return "=== email_id: " + em.id + " | day " + dayOf(em, t) + " | " + em.date + "\nFrom: " + em.from + "\nSubject: " + em.subject + "\n\n" + (em.text || "").slice(0, 3000);
-    }).join("\n\n");
     try {
-      var d = await callClaude(EMAIL_SYSTEM, [{ type: "text", text: input }], EMAIL_SCHEMA);
+      var d = await backend("summarise_emails", { competitor: t.name, registered: t.registered || "", emails: list.map(function (em) {
+        return { id: em.id, day: dayOf(em, t), date: em.date, from: em.from, subject: em.subject, text: (em.text || "").slice(0, 3000) };
+      }) });
       var items = {}; (d.emails || []).forEach(function (it) { items[it.email_id] = it; });
       t = state.trackers.filter(function (x) { return x.id === id; })[0]; if (!t) return;
       commit(); t.summary = { overview: d.overview, patterns: d.patterns || [], items: items, at: new Date().toISOString() };
@@ -1502,15 +1441,23 @@ footer { color: var(--muted); font-size: 12px; margin-top: 24px; text-align: cen
     location.hash = "#builder"; render(); toast(t.name + "'s emails added as a cycle. Compare it with your own in the tabs.");
   }
 
-  document.getElementById("inboxPanel").addEventListener("click", function (e) {
-    if (e.target.closest("#inbConnect")) {
-      var url = (document.getElementById("inbUrl").value || "").trim(), tok = (document.getElementById("inbToken").value || "").trim();
+  function onConnPanel(e) {
+    var b = e.target.closest("[data-act]"); if (!b) return;
+    var panel = e.currentTarget, act = b.getAttribute("data-act"), ib = inbox();
+    if (act === "connect") {
+      var url = (panel.querySelector(".c-url").value || "").trim(), tok = (panel.querySelector(".c-token").value || "").trim();
       if (!/^https:\/\/script\.google(usercontent)?\.com\//.test(url)) { toast("Paste the web app URL from Apps Script. It starts with https://script.google.com/"); return; }
       if (!tok) { toast("Paste the token from the script's execution log."); return; }
-      syncInbox(url, tok);
+      connectScript(url, tok, b);
     }
-    if (e.target.closest("#syncBtn")) { var ib = inbox(); syncInbox(ib.url, ib.token); }
-    if (e.target.closest("#inbDisconnect")) { setInbox({}); renderInboxPanel(); toast("Inbox disconnected. Stored emails are kept."); }
+    if (act === "recheck") connectScript(ib.url, ib.token, b);
+    if (act === "sync") syncInbox(ib.url, ib.token);
+    if (act === "disconnect") { setInbox({}); render(); toast("Disconnected. Stored emails and offers are kept."); }
+  }
+  ["inboxPanel", "keyPanel"].forEach(function (id) {
+    var el = document.getElementById(id);
+    el.addEventListener("click", onConnPanel);
+    el.addEventListener("keydown", function (e) { if (e.key === "Enter" && e.target.classList.contains("inp")) { var c = el.querySelector('[data-act="connect"]'); if (c) c.click(); } });
   });
   document.getElementById("trkForm").addEventListener("submit", function (e) {
     e.preventDefault();
