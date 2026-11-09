@@ -254,6 +254,9 @@ textarea.inp { resize: vertical; min-height: 70px; }
 .sechead select { width: auto; }
 @media (min-width: 1150px) { .ccard.page { grid-column: span 2; } }
 .psum { margin: 0; line-height: 1.55; }
+.psum.clamp { display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
+.cbody:has(.psteps.more[open]) > .psum.clamp { display: none; }
+.ccard.page .thumbs { height: 150px; }
 .plist { margin: 0; padding-left: 18px; font-size: 13px; display: grid; gap: 3px; }
 .plabel { font-size: 11px; text-transform: uppercase; letter-spacing: .06em; font-weight: 600; margin: 0 0 4px; }
 .plabel.good { color: var(--mint); } .plabel.bad { color: var(--coral); } .plabel.idea { color: var(--accent); }
@@ -1250,13 +1253,16 @@ footer { color: var(--muted); font-size: 12px; margin-top: 24px; text-align: cen
     if (x.status === "reading") body = head + '<div class="reading"><div class="bar"></div><div class="bar" style="width:70%"></div><div class="bar" style="width:85%"></div></div><p class="small">Claude is reading this ' + (tour ? "tournament" : "page") + '. This usually takes 20 to 60 seconds.</p>';
     else {
       var list = function (items, cls, label) { return items && items.length ? '<div><p class="plabel ' + cls + '">' + label + '</p><ul class="plist">' + items.map(function (t) { return "<li>" + esc(t) + "</li>"; }).join("") + "</ul></div>" : ""; };
-      body = head + (x.status === "error" ? '<div class="errbox">' + esc(x.error || "Couldn't review the page.") + "</div>" : "") +
-        (x.rating ? '<p class="small" style="margin:0">' + (tour ? "Player appeal " : "Conversion-friendliness ") + stars(x.rating) + (x.rating_reason ? " · " + esc(x.rating_reason) : "") + "</p>" : "") +
-        (x.summary ? '<p class="psum">' + esc(x.summary) + "</p>" : '<p class="small">No review yet.' + (aiReady() ? "" : " Turn on AI to have Claude review this page.") + "</p>") +
-        (x.key_facts && x.key_facts.length ? '<div class="facts">' + x.key_facts.slice(0, 8).map(function (f) { return '<div class="fact"><small>' + esc(f.label) + "</small><span>" + esc(f.value) + "</span></div>"; }).join("") + "</div>" : "") +
-        (x.steps && x.steps.length ? '<details class="psteps"><summary>' + (tour ? "How to take part (" + x.steps.length + ")" : plural(x.steps.length, "step", "steps") + " for the player") + "</summary><ol>" + x.steps.map(function (st) { return "<li><b>" + esc(st.name) + "</b>" + (st.detail ? " · " + esc(st.detail) : "") + "</li>"; }).join("") + "</ol></details>" : "") +
+      var facts = x.key_facts || [], fact = function (f) { return '<div class="fact"><small>' + esc(f.label) + "</small><span>" + esc(f.value) + "</span></div>"; };
+      var more = (facts.length > 4 ? '<div class="facts">' + facts.slice(4).map(fact).join("") + "</div>" : "") +
+        (x.steps && x.steps.length ? '<div><p class="plabel">' + (tour ? "How to take part" : "Steps for the player") + '</p><ol class="plist">' + x.steps.map(function (st) { return "<li><b>" + esc(st.name) + "</b>" + (st.detail ? " · " + esc(st.detail) : "") + "</li>"; }).join("") + "</ol></div>" : "") +
         '<div class="pcols">' + list(x.strengths, "good", "Works well") + list(x.friction, "bad", "Friction") + list(x.ideas, "idea", "Ideas to test") + "</div>" +
         (x.uncertain && x.uncertain.length ? '<p class="small" style="color:var(--warn)">Couldn\'t see clearly: ' + esc(x.uncertain.join(", ")) + "</p>" : "");
+      body = head + (x.status === "error" ? '<div class="errbox">' + esc(x.error || "Couldn't review the page.") + "</div>" : "") +
+        (x.rating ? '<p class="small" style="margin:0" title="' + esc(x.rating_reason || "") + '">' + (tour ? "Player appeal " : "Conversion-friendliness ") + stars(x.rating) + "</p>" : "") +
+        (x.summary ? '<p class="psum clamp">' + esc(x.summary) + "</p>" : '<p class="small">No review yet.' + (aiReady() ? "" : " Turn on AI to have Claude review this page.") + "</p>") +
+        (facts.length ? '<div class="facts">' + facts.slice(0, 4).map(fact).join("") + "</div>" : "") +
+        (more.replace(/<div class="pcols"><\/div>/, "") ? '<details class="psteps more"><summary>Show details</summary><div class="stack" style="gap:12px;margin-top:10px">' + (x.rating_reason ? '<p class="small" style="margin:0">' + esc(x.rating_reason) + "</p>" : "") + (x.summary ? '<p class="psum">' + esc(x.summary) + "</p>" : "") + more + "</div></details>" : "");
     }
     var del = '<button class="btn danger" type="button" data-pdelete="' + x.id + '" style="margin-left:auto">' + svg('<path d="M4 6h12M8 6V4h4v2M6 6l1 10h6l1-10"/>') + "Delete</button>";
     var canRetry = x.status === "error" && aiReady() && ((imageCache[x.id] || []).length || (x.images || []).length || x.text);

@@ -190,6 +190,7 @@ const PAGE_SYSTEM = [
   "If you also get an earlier review of the same page, keep what still holds and update it with the new material.",
   "rating: how conversion-friendly this part of the site is for a new player, from 1 (poor) to 5 (excellent). rating_reason: one short sentence explaining it.",
   "When the material is a tournament: title is the tournament's name, summary describes the format and prizes, steps are how a player joins and takes part, key_facts hold the main numbers, and rating is how appealing it is to an ordinary player rather than to high rollers.",
+  "Keep the review short: summary at most 2 sentences, at most 6 key_facts with the most important first, and at most 3 items each in strengths, friction and ideas, each one short sentence. rating_reason is one short sentence.",
   "comparison: answer every comparison field the user lists, in that order, using exactly the given field names. Keep each value short (a few words or a number). Write \"Not shown\" when the material doesn't show it.",
 ].join("\n");
 
