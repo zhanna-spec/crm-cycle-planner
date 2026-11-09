@@ -33,4 +33,4 @@ jobs:
         with:
           version: latest
       - name: Deploy planner-proxy
-        run: supabase functions deploy planner-proxy --project-ref "$PROJECT_REF"
+        run: supabase functions deploy planner-proxy --project-ref "$PROJECT_REF" --yes
