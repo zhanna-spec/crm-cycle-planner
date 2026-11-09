@@ -253,6 +253,9 @@ textarea.inp { resize: vertical; min-height: 70px; }
 .conds { margin: 0; padding-left: 18px; font-size: 12px; color: var(--muted); }
 .conds li + li { margin-top: 2px; }
 .cfoot { display: flex; gap: 8px; padding: 0 16px 14px; }
+.rowdel { width: 30px; height: 30px; background: transparent; }
+.rowdel:hover { background: var(--coral-soft); color: var(--bad); }
+.sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
 .reading { display: flex; flex-direction: column; gap: 8px; }
 .reading .bar { height: 10px; border-radius: 5px; background: linear-gradient(90deg, var(--sunk) 25%, var(--accent-soft) 50%, var(--sunk) 75%); background-size: 200% 100%; animation: shimmer 1.3s linear infinite; }
 @keyframes shimmer { from { background-position: 200% 0; } to { background-position: -200% 0; } }
@@ -1080,7 +1083,8 @@ footer { color: var(--muted); font-size: 12px; margin-top: 24px; text-align: cen
           (x.conditions && x.conditions.length ? '<ul class="conds">' + x.conditions.slice(0, 4).map(function (c) { return "<li>" + esc(c) + "</li>"; }).join("") + (x.conditions.length > 4 ? "<li>+" + (x.conditions.length - 4) + " more</li>" : "") + "</ul>" : "") +
           (uns.length ? '<p class="small" style="color:var(--warn)">Check: ' + esc(uns.map(function (u) { var f = FIELDS.filter(function (F) { return F[0] === u; })[0]; return f ? f[1] : u; }).join(", ")) + "</p>" : "");
       }
-      var foot = x.status === "reading" ? "" : '<div class="cfoot"><button class="btn" type="button" data-cedit="' + x.id + '">Edit</button>' + (x.status === "error" && imageCache[x.id] ? '<button class="btn" type="button" data-cretry="' + x.id + '">Try again</button>' : "") + "</div>";
+      var del = '<button class="btn danger" type="button" data-cdelete="' + x.id + '" style="margin-left:auto">' + svg('<path d="M4 6h12M8 6V4h4v2M6 6l1 10h6l1-10"/>') + "Delete</button>";
+      var foot = x.status === "reading" ? '<div class="cfoot">' + del + "</div>" : '<div class="cfoot"><button class="btn" type="button" data-cedit="' + x.id + '">Edit</button>' + (x.status === "error" && imageCache[x.id] ? '<button class="btn" type="button" data-cretry="' + x.id + '">Try again</button>' : "") + del + "</div>";
       return '<article class="ccard"><div class="thumbs">' + th + '</div><div class="cbody">' + body + "</div>" + foot + "</article>";
     }).join("");
     renderCompare(list.filter(function (x) { return x.status !== "reading"; }));
@@ -1115,11 +1119,11 @@ footer { color: var(--muted); font-size: 12px; margin-top: 24px; text-align: cen
       if (c[0] === "max_bonus") inner += '<div class="mbar" style="width:' + Math.round((+v / maxB) * 100) + '%"></div>';
       return "<td>" + inner + "</td>";
     };
-    el.innerHTML = '<table class="cmp"><thead><tr><th>Brand</th><th>Offer</th>' + cols.map(function (c) { return "<th>" + c[1] + "</th>"; }).join("") + "</tr></thead><tbody>" +
+    el.innerHTML = '<table class="cmp"><thead><tr><th>Brand</th><th>Offer</th>' + cols.map(function (c) { return "<th>" + c[1] + "</th>"; }).join("") + '<th><span class="sr">Delete</span></th></tr></thead><tbody>' +
       rows.map(function (x, i) {
         var idx = x.you ? -1 : list.indexOf(x);
         var av = x.you ? '<span class="avatar" style="background:var(--accent)">Y</span>' : '<span class="avatar" style="background:' + AV[(state.competitors.indexOf(x)) % AV.length] + '">' + esc((x.name || "?").charAt(0).toUpperCase()) + "</span>";
-        return '<tr class="' + (x.you ? "you" : "") + '"><td><div class="who">' + av + esc(x.name || "Unnamed") + "</div></td><td>" + esc(x.you ? compHeadline(x) : (x.title || compHeadline(x))) + "</td>" + cols.map(function (c) { return cell(x, c); }).join("") + "</tr>";
+        return '<tr class="' + (x.you ? "you" : "") + '"><td><div class="who">' + av + esc(x.name || "Unnamed") + "</div></td><td>" + esc(x.you ? compHeadline(x) : (x.title || compHeadline(x))) + "</td>" + cols.map(function (c) { return cell(x, c); }).join("") + "<td>" + (x.you ? "" : '<button class="iconbtn rowdel" type="button" data-cdelete="' + x.id + '" title="Delete offer" aria-label="Delete ' + esc(x.name || "offer") + '">' + svg('<path d="M4 6h12M8 6V4h4v2M6 6l1 10h6l1-10"/>') + "</button>") + "</td></tr>";
       }).join("") + "</tbody></table>";
   }
 
@@ -1253,6 +1257,13 @@ footer { color: var(--muted); font-size: 12px; margin-top: 24px; text-align: cen
     if ((t = e.target.closest("[data-cedit]"))) { ui.sel = null; ui.compSel = t.getAttribute("data-cedit"); ui.armed = null; lastKey = null; renderCompDrawer(); }
     if ((t = e.target.closest("[data-cretry]"))) readOffer(t.getAttribute("data-cretry"));
   });
+  function deleteComp(id) {
+    var x = findComp(id); if (!x) return;
+    commit(); state.competitors = state.competitors.filter(function (c) { return c.id !== id; }); delete imageCache[id];
+    if (ui.compSel === id) closeDrawer();
+    save(); renderCompetitors(); toast((x.name || "Offer") + " deleted. Click Undo to bring it back.");
+  }
+  document.getElementById("view-competitors").addEventListener("click", function (e) { var t = e.target.closest("[data-cdelete]"); if (t) deleteComp(t.getAttribute("data-cdelete")); });
   drawer.addEventListener("input", function (e) {
     var t = e.target, k = t.getAttribute("data-c"); if (!k || !ui.compSel) return;
     var x = findComp(ui.compSel); if (!x) return;
