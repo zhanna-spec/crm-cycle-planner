@@ -1191,8 +1191,8 @@ footer { color: var(--muted); font-size: 12px; margin-top: 24px; text-align: cen
   function findOp(id) { return (state.operators || []).filter(function (o) { return o.id === id; })[0]; }
   function offersOf(op) { return state.competitors.filter(function (x) { return x.opId === op.id; }); }
   var OFFER_KINDS = [["welcome", "Welcome offer"], ["second", "2nd deposit offer"], ["third", "3rd deposit offer"], ["reload", "Reload offer"], ["cashback", "Cashback"], ["freespins", "Free spins offer"], ["vip", "Loyalty / VIP reward"], ["sports", "Sportsbook offer"], ["other_offer", "Other offer"]];
-  var TOUR_KINDS = [["tournament", "Tournament"]];
-  var PAGE_KINDS = [["registration", "Registration process"], ["deposit", "Deposit / cashier"], ["homepage", "Homepage"], ["promotions", "Promotions page"], ["loyalty", "Loyalty programme"], ["gamification", "Missions / gamification"], ["app", "Mobile app"], ["rg", "Responsible gambling"], ["other_page", "Other page"]];
+  var TOUR_KINDS = [];
+  var PAGE_KINDS = [["registration", "Registration process"], ["deposit", "Deposit / cashier"], ["homepage", "Homepage"], ["promotions", "Promotions page"], ["tournament", "Tournament"], ["loyalty", "Loyalty programme"], ["gamification", "Missions / gamification"], ["app", "Mobile app"], ["rg", "Responsible gambling"], ["other_page", "Other page"]];
   var COMPARE_FIELDS = {
     registration: ["Number of steps", "Fields asked", "Verification before play", "Bonus shown during sign-up", "One-click or social sign-up", "Asks for a deposit right after"],
     deposit: ["Payment methods", "Minimum deposit", "How the bonus is opted into", "Steps to deposit", "Fees or limits shown"],
@@ -1226,7 +1226,7 @@ footer { color: var(--muted); font-size: 12px; margin-top: 24px; text-align: cen
   function renderOpHead(op) {
     var el = document.getElementById("opHead");
     if (!op) {
-      el.innerHTML = '<div class="ophead"><span class="avatar" style="background:var(--accent)">' + svg('<rect x="3" y="4" width="6" height="12" rx="1.5"/><rect x="11" y="4" width="6" height="12" rx="1.5"/>', "#FFFFFF") + '</span><div class="grow"><h2>All operators</h2><div class="sub2">Offers and website sections side by side. Select an operator on the left to add to it.</div></div></div>';
+      el.innerHTML = '<div class="ophead"><span class="avatar" style="background:var(--accent)">' + svg('<rect x="3" y="4" width="6" height="12" rx="1.5"/><rect x="11" y="4" width="6" height="12" rx="1.5"/>', "#FFFFFF") + '</span><div class="grow"><h2>All operators</h2><div class="sub2">Offers and website content side by side. Select an operator on the left to add to it.</div></div></div>';
       return;
     }
     if (ui.opEditing === op.id) {
@@ -1276,7 +1276,7 @@ footer { color: var(--muted); font-size: 12px; margin-top: 24px; text-align: cen
     document.getElementById("trayPanel").hidden = !op;
     document.getElementById("upH").textContent = op ? "Add to " + op.name : "Add";
     var optK = function (k) { return '<option value="' + k[0] + '"' + (ui.cmpKind === k[0] ? " selected" : "") + ">" + k[1] + "</option>"; };
-    document.getElementById("cmpKind").innerHTML = '<optgroup label="Offers"><option value="all"' + (ui.cmpKind === "all" ? " selected" : "") + '>All offer types</option>' + OFFER_KINDS.map(optK).join("") + '</optgroup><optgroup label="Tournaments">' + TOUR_KINDS.map(optK).join("") + '</optgroup><optgroup label="Website sections">' + PAGE_KINDS.map(optK).join("") + "</optgroup>";
+    document.getElementById("cmpKind").innerHTML = '<optgroup label="Offers"><option value="all"' + (ui.cmpKind === "all" ? " selected" : "") + '>All offer types</option>' + OFFER_KINDS.map(optK).join("") + '</optgroup><optgroup label="Website content">' + PAGE_KINDS.map(optK).join("") + "</optgroup>";
     // cards
     var cards = document.getElementById("ccards");
     var kindName = offerFilter === "all" ? "offers" : kindLabel(offerFilter).toLowerCase() + "s";
@@ -1306,19 +1306,15 @@ footer { color: var(--muted); font-size: 12px; margin-top: 24px; text-align: cen
       var foot = x.status === "reading" ? '<div class="cfoot">' + del + "</div>" : '<div class="cfoot" style="flex-wrap:wrap"><button class="btn" type="button" data-cedit="' + x.id + '">Edit</button><button class="btn" type="button" data-cmore="' + x.id + '">Add screenshots or terms</button>' + (canRetry ? '<button class="btn" type="button" data-cretry="' + x.id + '">Try again</button>' : "") + del + "</div>";
       return '<article class="ccard">' + th + '<div class="cbody">' + body + "</div>" + foot + "</article>";
     }).join("") + "</div>";
-    var tours = (op ? pagesOf(op) : state.research).filter(function (x) { return isTour(x.section); });
-    var tourHtml = tours.length ? '<div class="ccards">' + tours.map(function (x) { return pageCard(x, !op); }).join("") + "</div>"
-      : '<div class="panel empty-c">' + (op ? "No tournaments for " + esc(op.name) + " yet. Choose “Tournament” under “What are you adding?” above." : "No tournaments yet. Select an operator and choose “Tournament” to add one.") + "</div>";
-    var pages = (op ? pagesOf(op) : state.research).filter(function (x) { return !isTour(x.section); });
+    var pages = op ? pagesOf(op) : state.research;
     var secs = PAGE_KINDS.filter(function (k) { return state.research.some(function (x) { return x.section === k[0]; }); });
     if (ui.pageSec !== "all" && !secs.some(function (k) { return k[0] === ui.pageSec; })) ui.pageSec = "all";
     var shownPages = op ? pages : pages.filter(function (x) { return ui.pageSec === "all" || x.section === ui.pageSec; });
     var pageFilter = !op && secs.length ? '<label class="row" style="gap:6px"><span class="small">Section</span><select class="inp" id="pageSec"><option value="all">All sections</option>' + secs.map(function (k) { return '<option value="' + k[0] + '"' + (ui.pageSec === k[0] ? " selected" : "") + ">" + k[1] + "</option>"; }).join("") + "</select></label>" : "";
     var pageHtml = shownPages.length ? '<div class="ccards">' + shownPages.map(function (x) { return pageCard(x, !op); }).join("") + "</div>"
-      : '<div class="panel empty-c">' + (op ? "No pages reviewed for " + esc(op.name) + " yet. Choose a page, such as Registration process, under “What are you adding?” above." : "No pages reviewed yet. Select an operator and add screenshots of its registration, deposit or other pages.") + "</div>";
+      : '<div class="panel empty-c">' + (op ? "No website content for " + esc(op.name) + " yet. Choose a page or a tournament under “What are you adding?” above." : "No website content yet. Select an operator and add screenshots of its registration, deposit or tournament pages.") + "</div>";
     cards.innerHTML = '<div class="sechead"><h3>' + (op ? "Offers" : "All offers") + (offerFilter !== "all" ? ' <span class="kindpill">' + esc(kindLabel(offerFilter)) + "</span>" : "") + "</h3></div>" + offerHtml +
-      '<div class="sechead" style="margin-top:8px"><h3>Tournaments</h3></div>' + tourHtml +
-      '<div class="sechead" style="margin-top:8px"><h3>Pages and journeys</h3>' + pageFilter + "</div>" + pageHtml;
+      '<div class="sechead" style="margin-top:8px"><h3>Website content</h3>' + pageFilter + "</div>" + pageHtml;
     if (isPageKind(ui.cmpKind)) {
       document.getElementById("cmpH").textContent = (isTour(ui.cmpKind) ? "Tournaments" : kindLabel(ui.cmpKind)) + (op ? " at " + op.name : " side by side");
       renderSectionCompare(op);
@@ -1491,7 +1487,7 @@ footer { color: var(--muted); font-size: 12px; margin-top: 24px; text-align: cen
     var t = tray.targetId ? findItem(tray.targetId) : null; if (tray.targetId && !t) tray.targetId = null;
     var kind = t ? (t.section || offerKind(t)) : tray.kind, page = isPageKind(kind);
     var sel = document.getElementById("trayKind");
-    if (!sel.options.length) sel.innerHTML = '<optgroup label="Offers">' + OFFER_KINDS.map(function (k) { return '<option value="' + k[0] + '">' + k[1] + "</option>"; }).join("") + '</optgroup><optgroup label="Tournaments">' + TOUR_KINDS.map(function (k) { return '<option value="' + k[0] + '">' + k[1] + "</option>"; }).join("") + '</optgroup><optgroup label="Pages and journeys">' + PAGE_KINDS.map(function (k) { return '<option value="' + k[0] + '">' + k[1] + "</option>"; }).join("") + "</optgroup>";
+    if (!sel.options.length) sel.innerHTML = '<optgroup label="Offers">' + OFFER_KINDS.map(function (k) { return '<option value="' + k[0] + '">' + k[1] + "</option>"; }).join("") + '</optgroup><optgroup label="Website content">' + PAGE_KINDS.map(function (k) { return '<option value="' + k[0] + '">' + k[1] + "</option>"; }).join("") + "</optgroup>";
     sel.value = kind; sel.disabled = !!t;
     var head = document.getElementById("trayTarget");
     head.hidden = !t;
@@ -1711,7 +1707,7 @@ footer { color: var(--muted); font-size: 12px; margin-top: 24px; text-align: cen
   });
   document.getElementById("cmp").addEventListener("click", function (e) { var b = e.target.closest("[data-pretry]"); if (b) readPage(b.getAttribute("data-pretry")); });
   document.getElementById("view-competitors").addEventListener("change", function (e) {
-    if (e.target.id === "cmpKind") { ui.cmpKind = e.target.value; if (isPageKind(ui.cmpKind) && !isTour(ui.cmpKind)) ui.pageSec = ui.cmpKind; renderCompetitors(); }
+    if (e.target.id === "cmpKind") { ui.cmpKind = e.target.value; if (isPageKind(ui.cmpKind)) ui.pageSec = ui.cmpKind; renderCompetitors(); }
     if (e.target.id === "pageSec") { ui.pageSec = e.target.value; renderCompetitors(); }
     if (e.target.id === "trayKind") { tray.kind = e.target.value; renderTray(); }
   });
