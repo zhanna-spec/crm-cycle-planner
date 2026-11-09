@@ -75,3 +75,7 @@ The same function also connects the research Gmail inbox: add `SCRIPT_URL` and `
 
 Run [`storage.sql`](storage.sql) once in **SQL Editor → New query → Run**. It creates a private `offer-images` storage bucket that only members of a workspace can read. Offer screenshots are then stored at full size: cards show them sharp, clicking opens them full screen, and **Try again** can re-read them later. Without it, the planner keeps small copies instead.
 
+## 10. Update the function after planner updates
+
+Some planner updates change `functions/planner-proxy/index.ts`. When they do, open **Edge Functions → planner-proxy**, replace the code with the latest version and click **Deploy**. The planner keeps working in the meantime, but new AI features (for example page reviews) answer with "Unknown action" until the function is updated.
+

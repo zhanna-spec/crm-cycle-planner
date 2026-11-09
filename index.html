@@ -250,6 +250,22 @@ textarea.inp { resize: vertical; min-height: 70px; }
 .opnotes { margin: 10px 0 0; color: var(--muted); white-space: pre-wrap; }
 .trayhint { color: var(--muted); }
 
+/* Offer types and page reviews */
+.kindpill { display: inline-block; font-size: 11px; font-weight: 600; padding: 2px 8px; border-radius: 999px; background: var(--accent-soft); color: var(--accent); white-space: nowrap; vertical-align: middle; }
+.kindpill.page { background: var(--mint-soft); color: var(--mint); }
+.sechead { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 10px; }
+.sechead h3 { margin: 0; font-size: 16px; font-weight: 600; }
+.sechead select { width: auto; }
+@media (min-width: 1150px) { .ccard.page { grid-column: span 2; } }
+.psum { margin: 0; line-height: 1.55; }
+.plist { margin: 0; padding-left: 18px; font-size: 13px; display: grid; gap: 3px; }
+.plabel { font-size: 11px; text-transform: uppercase; letter-spacing: .06em; font-weight: 600; margin: 0 0 4px; }
+.plabel.good { color: var(--mint); } .plabel.bad { color: var(--coral); } .plabel.idea { color: var(--accent); }
+.pcols { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px; }
+.psteps summary { cursor: pointer; color: var(--accent); font-weight: 500; font-size: 13px; }
+.psteps ol { margin: 8px 0 0; padding-left: 20px; font-size: 13px; display: grid; gap: 4px; }
+.psteps b { font-weight: 600; }
+
 /* View switch */
 .viewnav { display: flex; gap: 4px; background: var(--surface); padding: 5px; border-radius: 16px; box-shadow: var(--shadow-sm); width: max-content; max-width: 100%; margin-bottom: 16px; overflow-x: auto; scrollbar-width: none; }
 .viewnav a { display: inline-flex; align-items: center; gap: 8px; padding: 9px 16px; border-radius: 12px; font-weight: 500; color: var(--muted); text-decoration: none; white-space: nowrap; }
@@ -495,23 +511,24 @@ footer { color: var(--muted); font-size: 12px; margin-top: 24px; text-align: cen
         <section class="panel stack" id="trayPanel" aria-labelledby="upH">
           <h2 class="ptitle" id="upH">Add an offer</h2>
           <div class="tray">
+            <label class="field" id="trayKindField"><span>What are you adding?</span><select class="inp" id="trayKind"></select></label>
             <div class="trayhead" id="trayTarget" hidden></div>
             <div class="drop" id="drop" role="button" tabindex="0" aria-label="Add screenshots">
               <i class="ci"><svg viewBox="0 0 20 20" fill="none" stroke="#FFFFFF" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="14" height="12" rx="2"/><circle cx="7.5" cy="8.5" r="1.5"/><path d="M17 13l-4-4-7 7"/></svg></i>
-              <span><b>Drop screenshots here</b><br><small>or click to choose, or paste with Ctrl+V. Add as many as the offer needs, up to 10.</small></span>
+              <span><b>Drop screenshots here</b><br><small>or click to choose, or paste with Ctrl+V. Add as many as you need, up to 10.</small></span>
             </div>
             <input type="file" id="shotFile" accept="image/png,image/jpeg,image/webp,image/gif" multiple hidden>
             <div class="shots" id="trayShots" hidden></div>
-            <label class="field"><span>Terms and conditions (optional)</span><textarea class="inp" id="trayTerms" rows="4" placeholder="Paste the bonus terms as text"></textarea></label>
+            <label class="field"><span id="trayTermsLabel">Terms and conditions (optional)</span><textarea class="inp" id="trayTerms" rows="4" placeholder="Paste the bonus terms as text"></textarea></label>
             <div class="row" style="justify-content:space-between"><span class="traycount" id="trayCount"></span><button class="btn" type="button" id="trayClear" hidden>Clear</button></div>
             <div class="row"><button class="btn primary" type="button" id="trayRead" disabled style="flex:1;justify-content:center">Read offer</button><button class="btn" type="button" id="addManual">Fill in by hand</button></div>
           </div>
         </section>
         <section class="panel" aria-labelledby="cmpH">
-          <div class="row" style="justify-content:space-between;margin-bottom:12px"><h2 class="ptitle" id="cmpH" style="margin:0">Offers side by side</h2><span class="small" id="cmpNote"></span></div>
+          <div class="row" style="justify-content:space-between;margin-bottom:12px"><h2 class="ptitle" id="cmpH" style="margin:0">Offers side by side</h2><label class="row" style="gap:6px"><span class="small">Offer type</span><select class="inp" id="cmpKind" style="width:auto"></select></label></div><p class="small" id="cmpNote" style="margin:-4px 0 10px"></p>
           <div class="cmpwrap" id="cmp"></div>
         </section>
-        <div class="ccards" id="ccards"></div>
+        <div class="stack" id="ccards" style="gap:14px"></div>
       </div>
     </div>
   </div>
@@ -689,7 +706,7 @@ footer { color: var(--muted); font-size: 12px; margin-top: 24px; text-align: cen
   }
 
   // ---------- state ----------
-  var state, history = [], ui = { sel: null, focusDay: null, editingDay: null, armed: null, pickDay: null, addingDay: false, compSel: null, opSel: null, opEditing: null };
+  var state, history = [], ui = { sel: null, focusDay: null, editingDay: null, armed: null, pickDay: null, addingDay: false, compSel: null, opSel: null, opEditing: null, cmpKind: "welcome", pageSec: "all" };
   try { state = JSON.parse(localStorage.getItem("ccp2_state")); } catch (e) { state = null; }
   if (!state || !Array.isArray(state.cycles) || !state.cycles.length) {
     var first = makeCycle("Welcome journey", "acquisition", true, 6, 10);
@@ -697,6 +714,7 @@ footer { color: var(--muted); font-size: 12px; margin-top: 24px; text-align: cen
   }
   if (!Array.isArray(state.competitors)) state.competitors = [];
   if (!Array.isArray(state.operators)) state.operators = [];
+  if (!Array.isArray(state.research)) state.research = [];
   if (!Array.isArray(state.trackers)) state.trackers = [];
   if (!Array.isArray(state.emails)) state.emails = [];
   state.trackers.forEach(function (t) { t.summarizing = false; });
@@ -1173,6 +1191,15 @@ footer { color: var(--muted); font-size: 12px; margin-top: 24px; text-align: cen
   }
   function findOp(id) { return (state.operators || []).filter(function (o) { return o.id === id; })[0]; }
   function offersOf(op) { return state.competitors.filter(function (x) { return x.opId === op.id; }); }
+  var OFFER_KINDS = [["welcome", "Welcome offer"], ["second", "2nd deposit offer"], ["third", "3rd deposit offer"], ["reload", "Reload offer"], ["cashback", "Cashback"], ["freespins", "Free spins offer"], ["vip", "Loyalty / VIP reward"], ["sports", "Sportsbook offer"], ["other_offer", "Other offer"]];
+  var PAGE_KINDS = [["registration", "Registration process"], ["deposit", "Deposit / cashier"], ["homepage", "Homepage"], ["promotions", "Promotions page"], ["loyalty", "Loyalty programme"], ["gamification", "Missions / gamification"], ["app", "Mobile app"], ["rg", "Responsible gambling"], ["other_page", "Other page"]];
+  function kindLabel(k) { var a = OFFER_KINDS.concat(PAGE_KINDS).filter(function (x) { return x[0] === k; })[0]; return a ? a[1] : "Welcome offer"; }
+  function isPageKind(k) { return PAGE_KINDS.some(function (x) { return x[0] === k; }); }
+  function offerKind(x) { return x.kind || "welcome"; }
+  function pagesOf(op) { return state.research.filter(function (x) { return x.opId === op.id; }); }
+  function findPage(id) { return state.research.filter(function (x) { return x.id === id; })[0]; }
+  function findItem(id) { return findComp(id) || findPage(id); }
+  function plural(n, one, many) { return n + " " + (n === 1 ? one : many); }
   function opColor(op) { return AV[Math.max(0, state.operators.indexOf(op)) % AV.length]; }
   function siteUrl(w) { w = (w || "").trim(); if (!w) return ""; return /^https?:\/\//i.test(w) ? w : "https://" + w; }
   function curOp() { var o = ui.opSel ? findOp(ui.opSel) : null; if (!o) ui.opSel = null; return o; }
@@ -1180,7 +1207,7 @@ footer { color: var(--muted); font-size: 12px; margin-top: 24px; text-align: cen
   function renderOpList() {
     var ops = state.operators, el = document.getElementById("opList"), total = state.competitors.length;
     el.innerHTML = '<button type="button" class="opitem' + (!ui.opSel ? " on" : "") + '" data-op=""><span class="avatar" style="background:var(--accent)">' + svg('<rect x="3" y="4" width="6" height="12" rx="1.5"/><rect x="11" y="4" width="6" height="12" rx="1.5"/>', "#FFFFFF") + '</span><span class="meta2"><b>Overview</b><small>' + ops.length + (ops.length === 1 ? " operator" : " operators") + " · " + total + (total === 1 ? " offer" : " offers") + "</small></span></button>" +
-      ops.map(function (o) { var n = offersOf(o).length; return '<button type="button" class="opitem' + (ui.opSel === o.id ? " on" : "") + '" data-op="' + o.id + '"><span class="avatar" style="background:' + opColor(o) + '">' + esc(o.name.charAt(0).toUpperCase()) + '</span><span class="meta2"><b>' + esc(o.name) + "</b><small>" + n + (n === 1 ? " offer" : " offers") + (o.market ? " · " + esc(o.market) : "") + "</small></span></button>"; }).join("");
+      ops.map(function (o) { var n = offersOf(o).length, np = pagesOf(o).length; return '<button type="button" class="opitem' + (ui.opSel === o.id ? " on" : "") + '" data-op="' + o.id + '"><span class="avatar" style="background:' + opColor(o) + '">' + esc(o.name.charAt(0).toUpperCase()) + '</span><span class="meta2"><b>' + esc(o.name) + "</b><small>" + plural(n, "offer", "offers") + (np ? " · " + plural(np, "page", "pages") : "") + (o.market ? " · " + esc(o.market) : "") + "</small></span></button>"; }).join("");
     if (!ops.length) el.innerHTML += '<p class="small">Add the operators you want to track. Then select one to add its offers.</p>';
   }
   function renderOpHead(op) {
@@ -1195,31 +1222,55 @@ footer { color: var(--muted); font-size: 12px; margin-top: 24px; text-align: cen
         '<div class="row"><button class="btn primary" type="submit">Save</button><button class="btn" type="button" data-opact="cancel">Cancel</button></div></form>';
       return;
     }
-    var n = offersOf(op).length, url = siteUrl(op.website);
-    el.innerHTML = '<div class="ophead"><span class="avatar" style="background:' + opColor(op) + '">' + esc(op.name.charAt(0).toUpperCase()) + '</span><div class="grow"><h2>' + esc(op.name) + '</h2><div class="sub2"><span>' + n + (n === 1 ? " offer" : " offers") + "</span>" + (url ? '<a href="' + esc(url) + '" target="_blank" rel="noopener">' + esc(op.website) + "</a>" : "") + (op.market ? "<span>" + esc(op.market) + "</span>" : "") + "</div></div>" +
-      '<div class="row"><button class="btn" type="button" data-opact="edit">Edit details</button><button class="btn danger' + (ui.armed === "op" ? " armed" : "") + '" type="button" data-opact="delete">' + (ui.armed === "op" ? "Click again to delete" + (n ? " with " + n + (n === 1 ? " offer" : " offers") : "") : "Delete") + "</button></div></div>" +
+    var n = offersOf(op).length + pagesOf(op).length, url = siteUrl(op.website);
+    el.innerHTML = '<div class="ophead"><span class="avatar" style="background:' + opColor(op) + '">' + esc(op.name.charAt(0).toUpperCase()) + '</span><div class="grow"><h2>' + esc(op.name) + '</h2><div class="sub2"><span>' + plural(offersOf(op).length, "offer", "offers") + " · " + plural(pagesOf(op).length, "page", "pages") + "</span>" + (url ? '<a href="' + esc(url) + '" target="_blank" rel="noopener">' + esc(op.website) + "</a>" : "") + (op.market ? "<span>" + esc(op.market) + "</span>" : "") + "</div></div>" +
+      '<div class="row"><button class="btn" type="button" data-opact="edit">Edit details</button><button class="btn danger' + (ui.armed === "op" ? " armed" : "") + '" type="button" data-opact="delete">' + (ui.armed === "op" ? "Click again to delete" + (n ? " with " + plural(n, "item", "items") : "") : "Delete") + "</button></div></div>" +
       (op.notes ? '<p class="opnotes">' + esc(op.notes) + "</p>" : "");
+  }
+
+  function pageCard(x, showOp) {
+    var o = findOp(x.opId) || { name: "?" }, pics = offerPics(x), first = pics[0];
+    var th = !pics.length ? "" : '<button type="button" class="thumbs" data-lb="' + x.id + '" aria-label="View ' + plural(pics.length, "screenshot", "screenshots") + '">' + (first ? '<img src="' + first + '" alt="">' : '<span class="loadimg"></span>') + (pics.length > 1 ? '<span class="more">' + pics.length + " screenshots</span>" : "") + "</button>";
+    var head = '<div class="cname"><span class="avatar" style="background:' + opColor(o) + '">' + esc(o.name.charAt(0).toUpperCase()) + "</span><b>" + (showOp ? esc(o.name) + " " : "") + '<span class="kindpill page">' + esc(kindLabel(x.section)) + "</span>" + (x.title && x.title !== kindLabel(x.section) ? '<br><small style="font-weight:400;color:var(--muted)">' + esc(x.title) + "</small>" : "") + "</b></div>";
+    var body;
+    if (x.status === "reading") body = head + '<div class="reading"><div class="bar"></div><div class="bar" style="width:70%"></div><div class="bar" style="width:85%"></div></div><p class="small">Claude is reviewing this page. This usually takes 20 to 60 seconds.</p>';
+    else {
+      var list = function (items, cls, label) { return items && items.length ? '<div><p class="plabel ' + cls + '">' + label + '</p><ul class="plist">' + items.map(function (t) { return "<li>" + esc(t) + "</li>"; }).join("") + "</ul></div>" : ""; };
+      body = head + (x.status === "error" ? '<div class="errbox">' + esc(x.error || "Couldn't review the page.") + "</div>" : "") +
+        (x.summary ? '<p class="psum">' + esc(x.summary) + "</p>" : '<p class="small">No review yet.' + (aiReady() ? "" : " Turn on AI to have Claude review this page.") + "</p>") +
+        (x.key_facts && x.key_facts.length ? '<div class="facts">' + x.key_facts.slice(0, 8).map(function (f) { return '<div class="fact"><small>' + esc(f.label) + "</small><span>" + esc(f.value) + "</span></div>"; }).join("") + "</div>" : "") +
+        (x.steps && x.steps.length ? '<details class="psteps"><summary>' + plural(x.steps.length, "step", "steps") + " for the player</summary><ol>" + x.steps.map(function (st) { return "<li><b>" + esc(st.name) + "</b>" + (st.detail ? " · " + esc(st.detail) : "") + "</li>"; }).join("") + "</ol></details>" : "") +
+        '<div class="pcols">' + list(x.strengths, "good", "Works well") + list(x.friction, "bad", "Friction") + list(x.ideas, "idea", "Ideas to test") + "</div>" +
+        (x.uncertain && x.uncertain.length ? '<p class="small" style="color:var(--warn)">Couldn\'t see clearly: ' + esc(x.uncertain.join(", ")) + "</p>" : "");
+    }
+    var del = '<button class="btn danger" type="button" data-pdelete="' + x.id + '" style="margin-left:auto">' + svg('<path d="M4 6h12M8 6V4h4v2M6 6l1 10h6l1-10"/>') + "Delete</button>";
+    var canRetry = x.status === "error" && aiReady() && ((imageCache[x.id] || []).length || (x.images || []).length || x.text);
+    var foot = x.status === "reading" ? '<div class="cfoot">' + del + "</div>" : '<div class="cfoot" style="flex-wrap:wrap"><button class="btn" type="button" data-cmore="' + x.id + '">Add screenshots or text</button>' + (canRetry ? '<button class="btn" type="button" data-pretry="' + x.id + '">Try again</button>' : "") + del + "</div>";
+    return '<article class="ccard page">' + th + '<div class="cbody">' + body + "</div>" + foot + "</article>";
   }
 
   function renderCompetitors() {
     ensureOperators();
     var op = curOp();
-    var list = op ? offersOf(op) : state.competitors;
+    var allOffers = op ? offersOf(op) : state.competitors;
+    var list = allOffers.filter(function (x) { return ui.cmpKind === "all" || offerKind(x) === ui.cmpKind; });
     document.getElementById("compCount").textContent = state.operators.length;
     document.getElementById("undoBtn").disabled = !history.length;
     renderKeyPanel(); renderOpList(); renderOpHead(op);
     document.getElementById("trayPanel").hidden = !op;
-    document.getElementById("upH").textContent = op ? "Add an offer for " + op.name : "Add an offer";
+    document.getElementById("upH").textContent = op ? "Add to " + op.name : "Add";
+    document.getElementById("cmpKind").innerHTML = '<option value="all"' + (ui.cmpKind === "all" ? " selected" : "") + '>All offer types</option>' + OFFER_KINDS.map(function (k) { return '<option value="' + k[0] + '"' + (ui.cmpKind === k[0] ? " selected" : "") + ">" + k[1] + "</option>"; }).join("");
     // cards
     var cards = document.getElementById("ccards");
-    if (!list.length) cards.innerHTML = '<div class="panel empty-c">' + (op ? "No offers for " + esc(op.name) + " yet. Add screenshots or terms above, or fill one in by hand." : state.operators.length ? "No offers yet. Select an operator on the left to add its offers." : "Start by adding an operator on the left.") + "</div>";
-    else cards.innerHTML = list.map(function (x) {
+    var kindName = ui.cmpKind === "all" ? "offers" : kindLabel(ui.cmpKind).toLowerCase() + "s";
+    var offerHtml = !list.length ? '<div class="panel empty-c">' + (!state.operators.length ? "Start by adding an operator on the left." : allOffers.length ? "No " + esc(kindName) + (op ? " for " + esc(op.name) : "") + " yet. Change the offer type above to see the others." : op ? "No offers for " + esc(op.name) + " yet. Choose what you're adding above, then add screenshots or text." : "No offers yet. Select an operator on the left to add them.") + "</div>"
+    : '<div class="ccards">' + list.map(function (x) {
       var o = findOp(x.opId) || { name: x.name || "?" };
       var pics = offerPics(x), first = pics[0];
       var th = !pics.length ? '<div class="thumbs none">No screenshots</div>'
         : '<button type="button" class="thumbs" data-lb="' + x.id + '" aria-label="View ' + pics.length + (pics.length === 1 ? " screenshot" : " screenshots") + '">' + (first ? '<img src="' + first + '" alt="">' : '<span class="loadimg"></span>') + (pics.length > 1 ? '<span class="more">' + pics.length + " screenshots</span>" : "") + "</button>";
       var body, title = x.title || (x.status === "reading" ? "" : "Offer");
-      var nameRow = '<div class="cname"><span class="avatar" style="background:' + opColor(o) + '">' + esc((o.name || "?").charAt(0).toUpperCase()) + "</span><b>" + (op ? esc(title) : esc(o.name) + (title ? ' <small style="font-weight:400;color:var(--muted)">· ' + esc(title) + "</small>" : "")) + "</b></div>";
+      var nameRow = '<div class="cname"><span class="avatar" style="background:' + opColor(o) + '">' + esc((o.name || "?").charAt(0).toUpperCase()) + "</span><b>" + (op ? "" : esc(o.name) + " ") + '<span class="kindpill">' + esc(kindLabel(offerKind(x))) + "</span>" + (title ? '<br><small style="font-weight:400;color:var(--muted)">' + esc(title) + "</small>" : "") + "</b></div>";
       if (x.status === "reading") body = '<div class="cname"><span class="avatar" style="background:' + opColor(o) + '">' + esc((o.name || "?").charAt(0).toUpperCase()) + '</span><b>Reading…</b></div><div class="reading"><div class="bar"></div><div class="bar" style="width:70%"></div><div class="bar" style="width:85%"></div></div><p class="small">This usually takes 10 to 40 seconds.</p>';
       else {
         var uns = x.uncertain || [];
@@ -1237,7 +1288,16 @@ footer { color: var(--muted); font-size: 12px; margin-top: 24px; text-align: cen
       var canRetry = x.status === "error" && aiReady() && ((imageCache[x.id] || []).length || (x.images || []).length || x.terms);
       var foot = x.status === "reading" ? '<div class="cfoot">' + del + "</div>" : '<div class="cfoot" style="flex-wrap:wrap"><button class="btn" type="button" data-cedit="' + x.id + '">Edit</button><button class="btn" type="button" data-cmore="' + x.id + '">Add screenshots or terms</button>' + (canRetry ? '<button class="btn" type="button" data-cretry="' + x.id + '">Try again</button>' : "") + del + "</div>";
       return '<article class="ccard">' + th + '<div class="cbody">' + body + "</div>" + foot + "</article>";
-    }).join("");
+    }).join("") + "</div>";
+    var pages = op ? pagesOf(op) : state.research;
+    var secs = PAGE_KINDS.filter(function (k) { return state.research.some(function (x) { return x.section === k[0]; }); });
+    if (ui.pageSec !== "all" && !secs.some(function (k) { return k[0] === ui.pageSec; })) ui.pageSec = "all";
+    var shownPages = op ? pages : pages.filter(function (x) { return ui.pageSec === "all" || x.section === ui.pageSec; });
+    var pageFilter = !op && secs.length ? '<label class="row" style="gap:6px"><span class="small">Section</span><select class="inp" id="pageSec"><option value="all">All sections</option>' + secs.map(function (k) { return '<option value="' + k[0] + '"' + (ui.pageSec === k[0] ? " selected" : "") + ">" + k[1] + "</option>"; }).join("") + "</select></label>" : "";
+    var pageHtml = shownPages.length ? '<div class="ccards">' + shownPages.map(function (x) { return pageCard(x, !op); }).join("") + "</div>"
+      : '<div class="panel empty-c">' + (op ? "No pages reviewed for " + esc(op.name) + " yet. Choose a page, such as Registration process, under “What are you adding?” above." : "No pages reviewed yet. Select an operator and add screenshots of its registration, deposit or other pages.") + "</div>";
+    cards.innerHTML = '<div class="sechead"><h3>' + (op ? "Offers" : "All offers") + (ui.cmpKind !== "all" ? ' <span class="kindpill">' + esc(kindLabel(ui.cmpKind)) + "</span>" : "") + "</h3></div>" + offerHtml +
+      '<div class="sechead" style="margin-top:8px"><h3>Pages and journeys</h3>' + pageFilter + "</div>" + pageHtml;
     document.getElementById("cmpH").textContent = op ? op.name + " compared with you" : "Offers side by side";
     renderCompare(list.filter(function (x) { return x.status !== "reading"; }));
     renderTray();
@@ -1254,9 +1314,9 @@ footer { color: var(--muted); font-size: 12px; margin-top: 24px; text-align: cen
     return r;
   }
   function renderCompare(list) {
-    var el = document.getElementById("cmp"), you = yourOffer();
+    var el = document.getElementById("cmp"), you = ui.cmpKind === "welcome" || ui.cmpKind === "all" ? yourOffer() : null;
     document.getElementById("cmpNote").textContent = you ? "Your row uses the first offer in " + cyc().name : "Add an offer to a cycle to compare yourself";
-    if (!list.length) { el.innerHTML = '<p class="small">Offers you add appear here, with the best value in each column highlighted.</p>'; return; }
+    if (!list.length) { el.innerHTML = '<p class="small">' + (ui.cmpKind === "all" ? "Offers you add appear here, with the best value in each column highlighted." : "No " + esc(kindLabel(ui.cmpKind).toLowerCase()) + "s to compare yet.") + "</p>"; return; }
     var rows = (you ? [Object.assign({ you: true }, you)] : []).concat(list);
     var cols = [["max_bonus", "Max bonus", "high"], ["free_spins", "Free spins", "high"], ["wagering", "Wagering", "low"], ["min_deposit", "Min deposit", "low"], ["max_bet", "Max bet", "high"], ["expiry_days", "Days to wager", "high"]];
     var best = {};
@@ -1276,7 +1336,7 @@ footer { color: var(--muted); font-size: 12px; margin-top: 24px; text-align: cen
       rows.map(function (x, i) {
         var idx = x.you ? -1 : list.indexOf(x);
         var av = x.you ? '<span class="avatar" style="background:var(--accent)">Y</span>' : '<span class="avatar" style="background:' + opColor(findOp(x.opId)) + '">' + esc((x.name || "?").charAt(0).toUpperCase()) + "</span>";
-        return '<tr class="' + (x.you ? "you" : "") + '"><td><div class="who">' + av + esc(x.name || "Unnamed") + "</div></td><td>" + esc(x.you ? compHeadline(x) : (x.title || compHeadline(x))) + "</td>" + cols.map(function (c) { return cell(x, c); }).join("") + "<td>" + (x.you ? "" : '<button class="iconbtn rowdel" type="button" data-cdelete="' + x.id + '" title="Delete offer" aria-label="Delete ' + esc(x.name || "offer") + '">' + svg('<path d="M4 6h12M8 6V4h4v2M6 6l1 10h6l1-10"/>') + "</button>") + "</td></tr>";
+        return '<tr class="' + (x.you ? "you" : "") + '"><td><div class="who">' + av + esc(x.name || "Unnamed") + "</div></td><td>" + (ui.cmpKind === "all" && !x.you ? '<span class="kindpill">' + esc(kindLabel(offerKind(x))) + "</span> " : "") + esc(x.you ? compHeadline(x) : (x.title || compHeadline(x))) + "</td>" + cols.map(function (c) { return cell(x, c); }).join("") + "<td>" + (x.you ? "" : '<button class="iconbtn rowdel" type="button" data-cdelete="' + x.id + '" title="Delete offer" aria-label="Delete ' + esc(x.name || "offer") + '">' + svg('<path d="M4 6h12M8 6V4h4v2M6 6l1 10h6l1-10"/>') + "</button>") + "</td></tr>";
       }).join("") + "</tbody></table>";
   }
 
@@ -1291,7 +1351,7 @@ footer { color: var(--muted); font-size: 12px; margin-top: 24px; text-align: cen
       var r = await sb.storage.from(BUCKET).upload(path, b64ToBlob(images[i].data, images[i].media_type), { contentType: images[i].media_type, upsert: false });
       if (r.error) failed++; else paths.push(path);
     }
-    var x = findComp(offerId);
+    var x = findItem(offerId);
     delete preview[offerId];
     if (!x || !curWs || curWs.id !== wsId) return;
     x.images = (x.images || []).concat(paths).slice(-MAX_SHOTS);
@@ -1337,7 +1397,7 @@ footer { color: var(--muted); font-size: 12px; margin-top: 24px; text-align: cen
     document.getElementById("lbNext").disabled = lb.i >= lb.pics.length - 1;
     el.hidden = false; document.getElementById("lbClose").focus();
   }
-  function openLightbox(id) { var x = findComp(id); if (!x) return; lb = { pics: offerPics(x).filter(Boolean), i: 0 }; if (lb.pics.length) showLightbox(); }
+  function openLightbox(id) { var x = findItem(id); if (!x) return; lb = { pics: offerPics(x).filter(Boolean), i: 0 }; if (lb.pics.length) showLightbox(); }
   function closeLightbox() { document.getElementById("lightbox").hidden = true; }
   document.getElementById("lbPrev").addEventListener("click", function () { if (lb.i > 0) { lb.i--; showLightbox(); } });
   document.getElementById("lbNext").addEventListener("click", function () { if (lb.i < lb.pics.length - 1) { lb.i++; showLightbox(); } });
@@ -1366,7 +1426,7 @@ footer { color: var(--muted); font-size: 12px; margin-top: 24px; text-align: cen
     return c.toDataURL("image/jpeg", quality);
   }
   // The tray collects screenshots and terms text, then reads them together.
-  var tray = { images: [], targetId: null };
+  var tray = { images: [], targetId: null, kind: "welcome" };
   var MAX_SHOTS = 10;
   async function handleFiles(files) {
     files = Array.prototype.filter.call(files, function (f) { return /^image\//.test(f.type); });
@@ -1384,23 +1444,30 @@ footer { color: var(--muted); font-size: 12px; margin-top: 24px; text-align: cen
     renderTray();
   }
   function renderTray() {
-    var t = tray.targetId ? findComp(tray.targetId) : null; if (tray.targetId && !t) tray.targetId = null;
+    var t = tray.targetId ? findItem(tray.targetId) : null; if (tray.targetId && !t) tray.targetId = null;
+    var kind = t ? (t.section || offerKind(t)) : tray.kind, page = isPageKind(kind);
+    var sel = document.getElementById("trayKind");
+    if (!sel.options.length) sel.innerHTML = '<optgroup label="Offers">' + OFFER_KINDS.map(function (k) { return '<option value="' + k[0] + '">' + k[1] + "</option>"; }).join("") + '</optgroup><optgroup label="Pages and journeys">' + PAGE_KINDS.map(function (k) { return '<option value="' + k[0] + '">' + k[1] + "</option>"; }).join("") + "</optgroup>";
+    sel.value = kind; sel.disabled = !!t;
     var head = document.getElementById("trayTarget");
     head.hidden = !t;
-    if (t) head.innerHTML = "<span>Adding to <b>" + esc(t.name || "this offer") + "</b></span><button type=\"button\" id=\"trayUntarget\">Make a new offer instead</button>";
+    if (t) head.innerHTML = "<span>Adding to <b>" + esc(t.title || kindLabel(kind)) + "</b></span><button type=\"button\" id=\"trayUntarget\">Add something new instead</button>";
+    document.getElementById("trayTermsLabel").textContent = page ? "Page text or your notes (optional)" : "Terms and conditions (optional)";
+    document.getElementById("trayTerms").placeholder = page ? "Paste text from the page, or describe what you saw (for example each registration step)" : "Paste the bonus terms as text";
+    document.getElementById("addManual").hidden = page;
     var shots = document.getElementById("trayShots");
     shots.hidden = !tray.images.length;
     shots.innerHTML = tray.images.map(function (im, i) { return '<div class="shot"><img src="' + im.thumb + '" alt="Screenshot ' + (i + 1) + '"><button type="button" data-unshot="' + i + '" aria-label="Remove screenshot ' + (i + 1) + '">×</button></div>'; }).join("");
     document.getElementById("drop").classList.toggle("compact", tray.images.length > 0);
     var terms = document.getElementById("trayTerms").value.trim();
     var n = tray.images.length;
-    document.getElementById("trayCount").textContent = (n ? n + (n === 1 ? " screenshot" : " screenshots") : "") + (n && terms ? " + terms" : terms ? "Terms text" : "");
+    document.getElementById("trayCount").textContent = (n ? n + (n === 1 ? " screenshot" : " screenshots") : "") + (n && terms ? " + text" : terms ? "Text only" : "");
     document.getElementById("trayClear").hidden = !(n || terms || t);
     var btn = document.getElementById("trayRead");
     btn.disabled = !(n || terms);
-    btn.textContent = !aiReady() ? (t ? "Add to offer" : "Add offer") : t ? "Update offer" : "Read offer";
+    btn.textContent = page ? (!aiReady() ? (t ? "Add to page" : "Save page") : t ? "Update review" : "Review page") : (!aiReady() ? (t ? "Add to offer" : "Add offer") : t ? "Update offer" : "Read offer");
   }
-  function clearTray() { tray = { images: [], targetId: null }; document.getElementById("trayTerms").value = ""; renderTray(); }
+  function clearTray() { tray = { images: [], targetId: null, kind: tray.kind }; document.getElementById("trayTerms").value = ""; renderTray(); }
   function knownFields(x) {
     return { competitor: x.name || null, offer_title: x.title || null, offer_type: x.type || null, match_pct: x.match_pct, max_bonus: x.max_bonus, currency: x.currency || null,
       free_spins: x.free_spins, free_bet_value: x.free_bet, wagering_x: x.wagering, wagering_on: x.wager_on || null, min_deposit: x.min_deposit, max_bet: x.max_bet,
@@ -1413,8 +1480,11 @@ footer { color: var(--muted); font-size: 12px; margin-top: 24px; text-align: cen
     var images = tray.images.map(function (im) { return { media_type: im.media_type, data: im.data }; });
     commit();
     var op = curOp(); if (!op) { toast("Select an operator first."); return; }
-    var x = tray.targetId ? findComp(tray.targetId) : null, isNew = !x;
-    if (isNew) { x = { id: uid(), opId: op.id, name: op.name, title: "", conditions: [], uncertain: [], thumbs: [], terms: "", status: "done", addedAt: new Date().toISOString() }; state.competitors.unshift(x); }
+    var target = tray.targetId ? findItem(tray.targetId) : null;
+    var kind = target ? (target.section || offerKind(target)) : tray.kind;
+    if (isPageKind(kind)) { submitPage(op, target, kind, terms, images, thumbs); return; }
+    var x = target, isNew = !x;
+    if (isNew) { x = { id: uid(), opId: op.id, name: op.name, kind: kind, title: "", conditions: [], uncertain: [], thumbs: [], terms: "", status: "done", addedAt: new Date().toISOString() }; state.competitors.unshift(x); }
     if (cloud && curWs && images.length) { preview[x.id] = (preview[x.id] || []).concat(thumbs); uploadShots(x.id, images, thumbs); }
     else x.thumbs = (x.thumbs || []).concat(thumbs).slice(-MAX_SHOTS);
     if (terms) x.terms = ((x.terms ? x.terms + "\n\n" : "") + terms).slice(0, 40000);
@@ -1424,6 +1494,40 @@ footer { color: var(--muted); font-size: 12px; margin-top: 24px; text-align: cen
     clearTray(); save(); renderCompetitors();
     if (!aiReady()) { ui.compSel = x.id; renderCompDrawer(); toast("AI isn't set up yet, so fill in this offer by hand."); return; }
     readOffer(x.id, { images: images, terms: x.terms || "", known: known });
+  }
+  function submitPage(op, p, kind, text, images, thumbs) {
+    var isNew = !p;
+    if (isNew) { p = { id: uid(), opId: op.id, section: kind, title: kindLabel(kind), summary: "", steps: [], key_facts: [], strengths: [], friction: [], ideas: [], uncertain: [], thumbs: [], images: [], text: "", status: "done", addedAt: new Date().toISOString() }; state.research.unshift(p); }
+    if (cloud && curWs && images.length) { preview[p.id] = (preview[p.id] || []).concat(thumbs); uploadShots(p.id, images, thumbs); }
+    else p.thumbs = (p.thumbs || []).concat(thumbs).slice(-MAX_SHOTS);
+    if (text) p.text = ((p.text ? p.text + "\n\n" : "") + text).slice(0, 40000);
+    imageCache[p.id] = (imageCache[p.id] || []).concat(images).slice(-MAX_SHOTS);
+    clearTray();
+    if (!aiReady()) { if (!p.summary && text) p.summary = text.slice(0, 800); save(); renderCompetitors(); toast("Saved. Turn on AI to have Claude review it."); return; }
+    save(); renderCompetitors();
+    readPage(p.id, { images: images, text: p.text || "", known: isNew ? null : pageKnown(p) });
+  }
+  function pageKnown(p) { return { title: p.title, summary: p.summary, steps: p.steps, key_facts: p.key_facts, strengths: p.strengths, friction: p.friction, ideas: p.ideas }; }
+  async function readPage(id, input) {
+    var p = findPage(id); if (!p) return;
+    if (!input) {
+      var imgs = imageCache[id] || [];
+      if (!imgs.length && (p.images || []).length) { p.status = "reading"; p.error = ""; renderCompetitors(); imgs = await downloadShots(p.images); p = findPage(id); if (!p) return; }
+      input = { images: imgs, text: p.text || "", known: p.summary ? pageKnown(p) : null };
+    }
+    if (!input.images.length && !input.text) { toast("Add screenshots or text to review this page again."); return; }
+    p.status = "reading"; p.error = ""; renderCompetitors();
+    try {
+      var op = findOp(p.opId) || {};
+      var d = await backend("analyse_page", { images: input.images, page_text: input.text || "", known: input.known || null, section: kindLabel(p.section).toLowerCase(), operator: op.name || "" });
+      p = findPage(id); if (!p) return;
+      commit();
+      Object.assign(p, { status: "done", error: "", title: d.title || kindLabel(p.section), summary: d.summary || "", steps: d.steps || [], key_facts: d.key_facts || [], strengths: d.strengths || [], friction: d.friction || [], ideas: d.ideas || [], uncertain: d.uncertain || [] });
+      save(); renderCompetitors(); toast("Reviewed the " + kindLabel(p.section).toLowerCase() + (op.name ? " for " + op.name : ""));
+    } catch (err) {
+      p = findPage(id); if (!p) return;
+      p.status = "error"; p.error = err.message; save(); renderCompetitors();
+    }
   }
 
   async function readOffer(id, input) {
@@ -1436,7 +1540,7 @@ footer { color: var(--muted); font-size: 12px; margin-top: 24px; text-align: cen
     if (!input.images.length && !input.terms) { toast("Add screenshots or terms text to read this offer again."); return; }
     x.status = "reading"; x.error = ""; renderCompetitors();
     try {
-      var d = await backend("read_offer", { images: input.images, terms_text: input.terms || "", known: input.known || null });
+      var d = await backend("read_offer", { images: input.images, terms_text: input.terms || "", known: input.known || null, offer_kind: kindLabel(offerKind(x)).toLowerCase() });
       x = findComp(id); if (!x) return; // deleted while reading
       commit();
       Object.assign(x, {
@@ -1464,7 +1568,8 @@ footer { color: var(--muted); font-size: 12px; margin-top: 24px; text-align: cen
       return '<label class="field"><span>' + F[1] + (uns.indexOf(F[0]) >= 0 ? ' <b style="color:var(--warn)">· check</b>' : "") + '</span><input class="inp" data-c="' + F[0] + '" id="c-' + F[0] + '" type="' + (F[2] === "num" ? "number" : "text") + '"' + (F[2] === "num" ? ' min="0" step="any"' : "") + ' value="' + esc(has(v) ? v : "") + '"></label>';
     };
     dr.innerHTML = '<div class="dhead"><span class="avatar" style="background:var(--coral-bg)">' + esc((x.name || "?").charAt(0).toUpperCase()) + '</span><h3 id="dTitle">Competitor offer</h3><button type="button" class="iconbtn" id="dClose" aria-label="Close">' + svg('<path d="M5 5l10 10M15 5L5 15"/>') + "</button></div>" +
-      '<div class="dbody"><label class="field"><span>Operator</span><select class="inp" id="c-opId" data-c="opId">' + state.operators.map(function (o) { return '<option value="' + o.id + '"' + (o.id === x.opId ? " selected" : "") + ">" + esc(o.name) + "</option>"; }).join("") + "</select></label>" + f(FIELDS[1]) +
+      '<div class="dbody"><label class="field"><span>Operator</span><select class="inp" id="c-opId" data-c="opId">' + state.operators.map(function (o) { return '<option value="' + o.id + '"' + (o.id === x.opId ? " selected" : "") + ">" + esc(o.name) + "</option>"; }).join("") + "</select></label>" +
+      '<label class="field"><span>Offer type</span><select class="inp" id="c-kind" data-c="kind">' + OFFER_KINDS.map(function (k) { return '<option value="' + k[0] + '"' + (offerKind(x) === k[0] ? " selected" : "") + ">" + k[1] + "</option>"; }).join("") + "</select></label>" + f(FIELDS[1]) +
       '<div class="grid2">' + FIELDS.slice(2, 12).map(f).join("") + "</div>" + '<div class="grid2">' + f(FIELDS[12]) + f(FIELDS[13]) + "</div>" +
       '<label class="field"><span>Other conditions (one per line)</span><textarea class="inp" id="c-conds" data-c="conditions" rows="5">' + esc((x.conditions || []).join("\n")) + "</textarea></label>" +
       '<label class="field"><span>Terms and conditions text</span><textarea class="inp" id="c-terms" data-c="terms" rows="6" placeholder="Paste the bonus terms here to keep them with the offer">' + esc(x.terms || "") + "</textarea></label></div>" +
@@ -1522,6 +1627,7 @@ footer { color: var(--muted); font-size: 12px; margin-top: 24px; text-align: cen
       if (ui.armed !== "op") { ui.armed = "op"; renderCompetitors(); setTimeout(function () { if (ui.armed === "op") { ui.armed = null; renderCompetitors(); } }, 3000); return; }
       commit(); ui.armed = null;
       state.competitors = state.competitors.filter(function (x) { return x.opId !== op.id; });
+      state.research = state.research.filter(function (x) { return x.opId !== op.id; });
       state.operators = state.operators.filter(function (o) { return o.id !== op.id; });
       ui.opSel = null; save(); renderCompetitors(); toast(op.name + " deleted. Click Undo to bring it back.");
     }
@@ -1542,8 +1648,9 @@ footer { color: var(--muted); font-size: 12px; margin-top: 24px; text-align: cen
     if ((t = e.target.closest("[data-cmore]"))) {
       tray.targetId = t.getAttribute("data-cmore"); renderTray();
       var panel = document.getElementById("upH"); panel.scrollIntoView({ behavior: "smooth", block: "start" });
-      toast("Add screenshots or paste terms on the left, then click Update offer.");
+      toast("Add screenshots or text above, then click " + document.getElementById("trayRead").textContent + ".");
     }
+    if ((t = e.target.closest("[data-pretry]"))) readPage(t.getAttribute("data-pretry"));
   });
   function deleteComp(id) {
     var x = findComp(id); if (!x) return;
@@ -1551,7 +1658,16 @@ footer { color: var(--muted); font-size: 12px; margin-top: 24px; text-align: cen
     if (ui.compSel === id) closeDrawer();
     save(); renderCompetitors(); toast((x.name || "Offer") + " deleted. Click Undo to bring it back.");
   }
-  document.getElementById("view-competitors").addEventListener("click", function (e) { var t = e.target.closest("[data-cdelete]"); if (t) deleteComp(t.getAttribute("data-cdelete")); });
+  document.getElementById("view-competitors").addEventListener("click", function (e) {
+    var t = e.target.closest("[data-cdelete]"); if (t) deleteComp(t.getAttribute("data-cdelete"));
+    var u = e.target.closest("[data-pdelete]");
+    if (u) { var id = u.getAttribute("data-pdelete"), pg = findPage(id); if (!pg) return; commit(); state.research = state.research.filter(function (x) { return x.id !== id; }); save(); renderCompetitors(); toast(kindLabel(pg.section) + " deleted. Click Undo to bring it back."); }
+  });
+  document.getElementById("view-competitors").addEventListener("change", function (e) {
+    if (e.target.id === "cmpKind") { ui.cmpKind = e.target.value; renderCompetitors(); }
+    if (e.target.id === "pageSec") { ui.pageSec = e.target.value; renderCompetitors(); }
+    if (e.target.id === "trayKind") { tray.kind = e.target.value; renderTray(); }
+  });
   drawer.addEventListener("input", function (e) {
     var t = e.target, k = t.getAttribute("data-c"); if (!k || !ui.compSel) return;
     var x = findComp(ui.compSel); if (!x) return;
@@ -1851,7 +1967,7 @@ footer { color: var(--muted); font-size: 12px; margin-top: 24px; text-align: cen
     copy(rows.join("\n"), "Copied. Paste into a spreadsheet.");
   });
   document.getElementById("exportBtn").addEventListener("click", function () {
-    var text = JSON.stringify({ app: "conversion-cycle-planner", version: 4, cycles: state.cycles, competitors: state.competitors || [], operators: state.operators || [], trackers: state.trackers || [], emails: state.emails || [] }, null, 2);
+    var text = JSON.stringify({ app: "conversion-cycle-planner", version: 4, cycles: state.cycles, competitors: state.competitors || [], operators: state.operators || [], research: state.research || [], trackers: state.trackers || [], emails: state.emails || [] }, null, 2);
     try {
       var a = document.createElement("a"); a.href = URL.createObjectURL(new Blob([text], { type: "application/json" })); a.download = "cycles.json";
       document.body.appendChild(a); a.click(); a.remove();
@@ -1877,6 +1993,7 @@ footer { color: var(--muted); font-size: 12px; margin-top: 24px; text-align: cen
           state.cycles.push(c);
         });
         (Array.isArray(data.operators) ? data.operators : []).forEach(function (o) { if (o && o.id && o.name && !state.operators.some(function (q) { return q.id === o.id; })) state.operators.push(o); });
+        (Array.isArray(data.research) ? data.research : []).forEach(function (x) { if (x && x.opId) { x = JSON.parse(JSON.stringify(x)); x.id = uid(); if (x.status === "reading") x.status = "done"; state.research.push(x); } });
         comps.forEach(function (x) { x.id = uid(); x.status = "done"; x.conditions = Array.isArray(x.conditions) ? x.conditions : []; x.uncertain = Array.isArray(x.uncertain) ? x.uncertain : []; x.thumbs = Array.isArray(x.thumbs) ? x.thumbs : []; state.competitors.push(x); });
         if (list.length) state.activeId = list[list.length - 1].id;
         trks.forEach(function (t) { t.id = uid(); state.trackers.push(t); });
@@ -1918,6 +2035,8 @@ footer { color: var(--muted); font-size: 12px; margin-top: 24px; text-align: cen
     if (!d.cycles.some(function (c) { return c.id === d.activeId; })) d.activeId = d.cycles[0].id;
     d.competitors = Array.isArray(d.competitors) ? d.competitors : [];
     d.operators = Array.isArray(d.operators) ? d.operators : [];
+    d.research = Array.isArray(d.research) ? d.research : [];
+    d.research.forEach(function (x) { if (x.status === "reading") { x.status = "error"; x.error = "The review was interrupted. Try again."; } });
     d.trackers = Array.isArray(d.trackers) ? d.trackers : [];
     d.emails = [];
     d.trackers.forEach(function (t) { t.summarizing = false; });
@@ -2043,7 +2162,7 @@ footer { color: var(--muted); font-size: 12px; margin-top: 24px; text-align: cen
     if (saving) { saveTimer = setTimeout(cloudSave, 400); return; }
     saving = true; dirty = false;
     var wsId = curWs.id;
-    var payload = { cycles: state.cycles, activeId: state.activeId, competitors: state.competitors, operators: state.operators,
+    var payload = { cycles: state.cycles, activeId: state.activeId, competitors: state.competitors, operators: state.operators, research: state.research,
       trackers: state.trackers.map(function (t) { var c = Object.assign({}, t); delete c.summarizing; delete c.sumError; return c; }) };
     var r = await sb.rpc("save_state", { ws: wsId, new_data: payload, expected_version: wsVersion });
     saving = false;
@@ -2074,6 +2193,7 @@ footer { color: var(--muted); font-size: 12px; margin-top: 24px; text-align: cen
       var d = localData(); if (!d) return; commit();
       d.cycles.forEach(function (c) { c = JSON.parse(JSON.stringify(c)); c.id = uid(); c.steps.forEach(function (s) { s.id = uid(); }); state.cycles.push(c); });
       (d.operators || []).forEach(function (o) { if (o && o.id && !state.operators.some(function (q) { return q.id === o.id; })) state.operators.push(JSON.parse(JSON.stringify(o))); });
+      (d.research || []).forEach(function (x) { x = JSON.parse(JSON.stringify(x)); x.id = uid(); if (x.status === "reading") x.status = "done"; state.research.push(x); });
       (d.competitors || []).forEach(function (x) { x = JSON.parse(JSON.stringify(x)); x.id = uid(); if (x.status === "reading") x.status = "done"; state.competitors.push(x); });
       (d.trackers || []).forEach(function (t) { t = JSON.parse(JSON.stringify(t)); t.id = uid(); t.summarizing = false; state.trackers.push(t); });
       if (Array.isArray(d.emails) && d.emails.length) mergeEmails(d.emails);

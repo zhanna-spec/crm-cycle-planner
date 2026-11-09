@@ -65,7 +65,7 @@ const OFFER_SCHEMA = {
   required: ["competitor", "offer_title", "offer_type", "match_pct", "max_bonus", "currency", "free_spins", "free_bet_value", "wagering_x", "wagering_on", "min_deposit", "max_bet", "expiry_days", "max_cashout", "eligible_games", "other_conditions", "uncertain_fields"],
 };
 const OFFER_SYSTEM = [
-  "You read screenshots of online casino and sportsbook promotion pages and their bonus terms, and extract the main welcome offer into the given JSON schema.",
+  "You read screenshots of online casino and sportsbook promotion pages and their bonus terms, and extract the offer the user asks for (for example the welcome offer, a 2nd deposit offer, a reload or a cashback) into the given JSON schema. If the material shows several offers, extract only the requested one and mention the others briefly in other_conditions.",
   "You may also receive the terms and conditions as pasted text, and the values found earlier for the same offer. Combine all sources. The terms text is usually the most precise source for conditions. Keep earlier values unless the new material corrects or completes them.",
   "Use only what is shown in the screenshots and text. When a value is not shown, return null for it and add the field name to uncertain_fields. Also add a field to uncertain_fields when the text is blurry, cut off or ambiguous.",
   "Write amounts as plain numbers without currency symbols and put the ISO currency code in currency. If the welcome offer is split across several deposits, use the first deposit for match_pct and max_bonus, and describe the rest in other_conditions.",
@@ -144,7 +144,8 @@ function readOffer(apiKey: string, body: Record<string, unknown>) {
   const parts: string[] = [];
   if (known) parts.push("Values found earlier for this offer (JSON):\n" + known);
   if (terms) parts.push("Terms and conditions, pasted as text:\n<terms>\n" + terms + "\n</terms>");
-  parts.push(`Extract the main welcome offer from ${images.length ? images.length + " screenshot(s)" : "the material above"}${images.length && terms ? " and the terms text" : ""}.`);
+  const kind = typeof body.offer_kind === "string" && body.offer_kind.trim() ? body.offer_kind.trim().slice(0, 60) : "welcome offer";
+  parts.push(`Extract the ${kind} from ${images.length ? images.length + " screenshot(s)" : "the material above"}${images.length && terms ? " and the terms text" : ""}.`);
   content.push({ type: "text", text: parts.join("\n\n") });
   return askClaude(apiKey, OFFER_SYSTEM, content, OFFER_SCHEMA);
 }
@@ -158,6 +159,50 @@ function summariseEmails(apiKey: string, body: Record<string, unknown>) {
       `From: ${String(em.from ?? "").slice(0, 200)}\nSubject: ${String(em.subject ?? "").slice(0, 300)}\n\n${String(em.text ?? "").slice(0, 3000)}`
     ).join("\n\n");
   return askClaude(apiKey, EMAIL_SYSTEM, [{ type: "text", text: input }], EMAIL_SCHEMA);
+}
+
+// ---------- pages and journeys (registration, deposit, homepage...) ----------
+
+const PAGE_SCHEMA = {
+  type: "object", additionalProperties: false,
+  required: ["title", "summary", "steps", "key_facts", "strengths", "friction", "ideas", "uncertain"],
+  properties: {
+    title: { type: "string" },
+    summary: { type: "string" },
+    steps: { type: "array", items: { type: "object", additionalProperties: false, required: ["name", "detail"], properties: { name: { type: "string" }, detail: { type: "string" } } } },
+    key_facts: { type: "array", items: { type: "object", additionalProperties: false, required: ["label", "value"], properties: { label: { type: "string" }, value: { type: "string" } } } },
+    strengths: { type: "array", items: { type: "string" } },
+    friction: { type: "array", items: { type: "string" } },
+    ideas: { type: "array", items: { type: "string" } },
+    uncertain: { type: "array", items: { type: "string" } },
+  },
+};
+const PAGE_SYSTEM = [
+  "You review screenshots and text from an online casino or sportsbook website for a CRM and conversion team. The user says which part of the site it is, for example the registration process, the deposit page, the homepage, the promotions page or the loyalty programme.",
+  "Describe what a new player experiences there and what matters for conversion. Use only what is shown; never guess.",
+  "title: a short name for what is shown. summary: 2 to 4 plain sentences.",
+  "steps: the steps a player goes through, in order, when it is a flow; otherwise an empty list.",
+  "key_facts: short label and value pairs with concrete details. For registration, for example: number of steps, fields asked, verification, whether a bonus is shown, how soon a deposit is asked for. For a deposit page: payment methods, minimum deposit, how the bonus is opted into.",
+  "strengths: what works well for conversion. friction: what could make players drop off. ideas: concrete things a competitor could learn from or test. uncertain: anything you couldn't see clearly.",
+  "If you also get an earlier review of the same page, keep what still holds and update it with the new material.",
+].join("\n");
+
+function analysePage(apiKey: string, body: Record<string, unknown>) {
+  const images = (Array.isArray(body.images) ? body.images : [])
+    .filter((im: { media_type?: string; data?: string }) => im && IMAGE_TYPES.includes(im.media_type ?? "") && typeof im.data === "string" && im.data.length > 0)
+    .slice(0, 10) as { media_type: "image/jpeg" | "image/png" | "image/webp" | "image/gif"; data: string }[];
+  const text = typeof body.page_text === "string" ? body.page_text.trim().slice(0, 40000) : "";
+  const known = body.known && typeof body.known === "object" ? JSON.stringify(body.known).slice(0, 8000) : "";
+  if (!images.length && !text) throw new UserFacingError("bad_request", "Add at least one screenshot or some text.");
+  const section = String(body.section ?? "page").slice(0, 60);
+  const operator = String(body.operator ?? "").slice(0, 80);
+  const content: Anthropic.Beta.BetaContentBlockParam[] = images.map((im) => ({ type: "image", source: { type: "base64", media_type: im.media_type, data: im.data } }));
+  const parts: string[] = [];
+  if (known) parts.push("Earlier review of this page (JSON):\n" + known);
+  if (text) parts.push("Text and notes about the page:\n<page>\n" + text + "\n</page>");
+  parts.push(`Review the ${section}${operator ? " of " + operator : ""}.`);
+  content.push({ type: "text", text: parts.join("\n\n") });
+  return askClaude(apiKey, PAGE_SYSTEM, content, PAGE_SCHEMA);
 }
 
 // ---------- request handling ----------
@@ -205,9 +250,11 @@ Deno.serve(async (req) => {
       return reply(await callScript(`${scriptUrl}${sep}${tokenParam}&days=${days}`));
     }
 
-    if (action === "read_offer" || action === "summarise_emails") {
+    if (action === "read_offer" || action === "summarise_emails" || action === "analyse_page") {
       if (!anthropicKey) return reply({ error: "no_ai_key", message: "AI isn't set up yet. Add the ANTHROPIC_API_KEY secret in Supabase." });
-      const result = action === "read_offer" ? await readOffer(anthropicKey, body) : await summariseEmails(anthropicKey, body);
+      const result = action === "read_offer" ? await readOffer(anthropicKey, body)
+        : action === "analyse_page" ? await analysePage(anthropicKey, body)
+        : await summariseEmails(anthropicKey, body);
       return reply({ result });
     }
 
