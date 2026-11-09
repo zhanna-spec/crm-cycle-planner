@@ -380,10 +380,15 @@ footer { color: var(--muted); font-size: 12px; margin-top: 24px; text-align: cen
     <div class="field"><span>Lifecycle stage</span><div class="stages" id="nStages"></div></div>
     <div class="field"><span>Start with</span>
       <div class="seg">
-        <label><input type="radio" name="nStart" id="nStartT" value="template" checked><span>Suggested steps</span></label>
+        <label><input type="radio" name="nStart" id="nStartT" value="template" checked><span>Recommended plan</span></label>
         <label><input type="radio" name="nStart" id="nStartB" value="blank"><span>Blank cycle</span></label>
       </div>
     </div>
+    <div class="grid2" id="nPlan">
+      <label class="field"><span>Number of steps</span><input class="inp" id="nSteps" type="number" min="1" max="40" value="6"></label>
+      <label class="field"><span>Cycle length (days)</span><input class="inp" id="nDays" type="number" min="1" max="365" value="14"></label>
+    </div>
+    <p class="small" id="nPreview"></p>
     <div class="row" style="justify-content:flex-end">
       <button class="btn" type="button" id="nCancel">Cancel</button>
       <button class="btn primary" type="submit">Create cycle</button>
@@ -458,19 +463,62 @@ footer { color: var(--muted); font-size: 12px; margin-top: 24px; text-align: cen
     custom: function () { return []; }
   };
   function uniqDays(arr) { return arr.filter(function (d, i) { return arr.indexOf(d) === i; }).sort(function (a, b) { return a - b; }); }
-  function makeCycle(name, stage, withTemplate) {
-    var steps = withTemplate ? TEMPLATES[stage]() : [];
-    var days = steps.length ? uniqDays(steps.map(function (s) { return s.day; })) : [0, 1, 3];
-    var len = Math.max(7, days[days.length - 1] || 0);
-    if (days.indexOf(len) < 0) days.push(len);
-    return { id: uid(), name: name, stage: stage, entry: STAGES[stage].entry, goal: STAGES[stage].goal, days: days, steps: steps, length: len, everyDay: false };
+  // Recommended spacing: close together early, wider gaps later, and the last
+  // message at about 80% of the cycle so there is time left to convert.
+  function lastSendDay(L) { return L <= 1 ? 0 : Math.max(1, Math.min(L - 1, Math.floor(L * 0.8))); }
+  function recommendedDays(n, L) {
+    var last = lastSendDay(L), out = [];
+    if (n <= 0) return out;
+    if (n === 1) return [0];
+    for (var i = 0; i < n; i++) out.push(Math.round(last * Math.pow(i / (n - 1), 1.6)));
+    if (n <= last + 1) {
+      for (var j = 1; j < n; j++) if (out[j] <= out[j - 1]) out[j] = out[j - 1] + 1;
+      for (var k = n - 1; k >= 0; k--) out[k] = Math.min(out[k], last - (n - 1 - k));
+    }
+    return out;
+  }
+  var FILL = ["email", "push", "email", "sms", "popup", "email", "push", "sms"];
+  function genericStep(i) {
+    var ch = FILL[i % FILL.length];
+    return S(0, ch === "email" ? "12:00" : "18:00", ch, "Follow-up " + CH[ch].label.toLowerCase(), "", "pending");
+  }
+  // Pick n steps: the stage's recommended content first, extra follow-ups before the final step.
+  function planSteps(stage, n) {
+    var pool = TEMPLATES[stage](), out;
+    if (!pool.length) {
+      out = []; for (var i = 0; i < n; i++) out.push(genericStep(i));
+      if (n) { out[0].title = "Kick-off"; out[0].audience = "all"; out[0].channel = "email"; }
+      if (n > 1) { out[n - 1].title = "Final reminder"; }
+      return out;
+    }
+    if (n <= pool.length) {
+      if (n === 1) return [pool[0]];
+      out = []; for (var k = 0; k < n; k++) out.push(pool[Math.round(k * (pool.length - 1) / (n - 1))]);
+      return out;
+    }
+    out = pool.slice(0, -1);
+    for (var m = 0; m < n - pool.length; m++) out.push(genericStep(m + 1));
+    out.push(pool[pool.length - 1]);
+    return out;
+  }
+  function respace(c, keepOrder) {
+    var ordered = keepOrder ? c.steps.slice() : c.steps.map(function (s, i) { return { s: s, i: i }; }).sort(function (a, b) { return a.s.day - b.s.day || a.i - b.i; }).map(function (x) { return x.s; });
+    var days = recommendedDays(ordered.length, c.length);
+    ordered.forEach(function (s, i) { s.day = days[i]; });
+    c.steps = ordered; c.days = uniqDays(days.length ? days : [0]);
+  }
+  function makeCycle(name, stage, withPlan, nSteps, nDays) {
+    var c = { id: uid(), name: name, stage: stage, entry: STAGES[stage].entry, goal: STAGES[stage].goal, days: [0], steps: [], length: nDays || 14, everyDay: false };
+    if (withPlan) { c.steps = planSteps(stage, nSteps || 6); respace(c, true); }
+    else c.days = [0, 1, 3];
+    return c;
   }
 
   // ---------- state ----------
   var state, history = [], ui = { sel: null, focusDay: null, editingDay: null, armed: null, pickDay: null, addingDay: false, compSel: null };
   try { state = JSON.parse(localStorage.getItem("ccp2_state")); } catch (e) { state = null; }
   if (!state || !Array.isArray(state.cycles) || !state.cycles.length) {
-    var first = makeCycle("Welcome journey", "acquisition", true);
+    var first = makeCycle("Welcome journey", "acquisition", true, 6, 10);
     state = { cycles: [first], activeId: first.id };
   }
   if (!Array.isArray(state.competitors)) state.competitors = [];
@@ -547,7 +595,7 @@ footer { color: var(--muted); font-size: 12px; margin-top: 24px; text-align: cen
     var mix = used.map(function (k) { return '<i style="flex:' + counts[k] + ";background:" + CH[k].color + '" title="' + CH[k].label + ": " + counts[k] + '"></i>'; }).join("");
     var legend = used.map(function (k) { return '<span><b style="background:' + CH[k].color + '"></b>' + CH[k].label + " " + counts[k] + "</span>"; }).join("");
     document.getElementById("summary").innerHTML =
-      '<div class="stat"><div class="k">Steps</div><div class="v">' + n + '</div><div class="n">across ' + uniqDays(c.steps.map(function (s) { return s.day; })).length + " days</div></div>" +
+      '<div class="stat"><div class="k">Steps</div><div class="lenrow"><button type="button" data-steps="-1" aria-label="One step fewer">−</button><input id="stepsInput" type="number" min="1" max="40" value="' + n + '" aria-label="Number of steps"><span>' + (n === 1 ? "step" : "steps") + '</span><button type="button" data-steps="1" aria-label="One more step">+</button></div><div class="n">' + (n ? "Last message on day " + Math.max.apply(null, c.steps.map(function (s) { return s.day; })) : "No steps yet") + "</div></div>" +
       '<div class="stat"><div class="k">Cycle length</div><div class="lenrow"><button type="button" data-len="-1" aria-label="Shorten by one day">−</button><input id="lenInput" type="number" min="1" max="365" value="' + c.length + '" aria-label="Cycle length in days"><span>' + (c.length === 1 ? "day" : "days") + '</span><button type="button" data-len="1" aria-label="Lengthen by one day">+</button></div><div class="n">' + esc(c.entry) + " → " + esc(c.goal) + "</div></div>" +
       '<div class="stat feature"><div class="k">Offers</div><div class="v">' + offers.length + '</div><div class="n">Max bonus if all claimed: €' + Math.round(exp) + "</div></div>" +
       '<div class="stat"><div class="k">Channel mix</div>' + (n ? '<div class="mix">' + mix + '</div><div class="legend">' + legend + "</div>" : '<div class="n" style="margin-top:8px">Add steps to see the mix</div>') + "</div>";
@@ -576,15 +624,31 @@ footer { color: var(--muted); font-size: 12px; margin-top: 24px; text-align: cen
   }
   function setLength(n) {
     var c = cyc(); n = Math.max(1, Math.min(365, Math.round(+n) || 1));
-    var maxStep = c.steps.reduce(function (m, s) { return Math.max(m, s.day); }, 0);
-    if (n < maxStep) { toast("Day " + maxStep + " still has steps. Move or delete them first."); render(); return; }
     if (n === c.length) { render(); return; }
-    commit();
-    var old = c.length, oldEmpty = old > 0 && !c.steps.some(function (x) { return x.day === old; });
-    c.days = c.days.filter(function (d) { return d <= n && !(oldEmpty && d === old); });
-    if (c.days.indexOf(n) < 0) c.days.push(n);
-    c.days = uniqDays(c.days); c.length = n;
-    render(); save();
+    commit(); c.length = n;
+    if (c.steps.length) { respace(c); toast("Steps re-spaced over " + n + " days. Last message on day " + lastSendDay(n) + ". Undo to go back."); }
+    render(); if (ui.sel) renderDrawer(); save();
+  }
+  function setStepCount(n) {
+    var c = cyc(); n = Math.max(1, Math.min(40, Math.round(+n) || 1));
+    var cur = c.steps.length;
+    if (n === cur) { render(); return; }
+    commit(); lastKey = null;
+    var ordered = c.steps.slice().sort(function (a, b) { return a.day - b.day; });
+    if (n > cur) {
+      var adds = [];
+      if (!cur) adds = planSteps(c.stage, n);
+      else for (var i = 0; i < n - cur; i++) adds.push(genericStep(cur + i));
+      if (cur) ordered.splice(ordered.length - 1, 0, ...adds); else ordered = adds;
+    } else {
+      // keep the first n-1 and the final step
+      var last = ordered[ordered.length - 1];
+      ordered = n === 1 ? [ordered[0]] : ordered.slice(0, n - 1).concat([last]);
+      if (ui.sel && ordered.indexOf(findStep(ui.sel)) < 0) closeDrawer();
+    }
+    c.steps = ordered; respace(c, true);
+    render(); if (ui.sel) renderDrawer(); save();
+    toast(n + (n === 1 ? " step" : " steps") + " spaced over " + c.length + " days. Undo to go back.");
   }
   function renderBoard(c) {
     var days = boardDays(c);
@@ -777,9 +841,12 @@ footer { color: var(--muted); font-size: 12px; margin-top: 24px; text-align: cen
   });
 
   var summaryEl = document.getElementById("summary");
-  summaryEl.addEventListener("click", function (e) { var t = e.target.closest("[data-len]"); if (t) setLength(cyc().length + (+t.getAttribute("data-len"))); });
-  summaryEl.addEventListener("change", function (e) { if (e.target.id === "lenInput") setLength(e.target.value); });
-  summaryEl.addEventListener("keydown", function (e) { if (e.target.id === "lenInput" && e.key === "Enter") e.target.blur(); });
+  summaryEl.addEventListener("click", function (e) {
+    var t = e.target.closest("[data-len]"); if (t) setLength(cyc().length + (+t.getAttribute("data-len")));
+    var u = e.target.closest("[data-steps]"); if (u) setStepCount(cyc().steps.length + (+u.getAttribute("data-steps")));
+  });
+  summaryEl.addEventListener("change", function (e) { if (e.target.id === "lenInput") setLength(e.target.value); if (e.target.id === "stepsInput") setStepCount(e.target.value); });
+  summaryEl.addEventListener("keydown", function (e) { if ((e.target.id === "lenInput" || e.target.id === "stepsInput") && e.key === "Enter") e.target.blur(); });
   document.getElementById("cLength").addEventListener("change", function (e) { setLength(e.target.value); });
   document.querySelectorAll('input[name="cCols"]').forEach(function (r) { r.addEventListener("change", function (e) { commit(); cyc().everyDay = e.target.value === "all"; ui.addingDay = false; render(); save(); }); });
   ["cName", "cEntry", "cGoal"].forEach(function (id) {
@@ -829,18 +896,28 @@ footer { color: var(--muted); font-size: 12px; margin-top: 24px; text-align: cen
     var st = STAGES[k];
     return '<label><input type="radio" name="nStage" id="nStage-' + k + '" value="' + k + '"' + (i === 0 ? " checked" : "") + '><span style="background:' + st.color + '"><i class="ci">' + svg(st.icon, "#FFFFFF") + "</i>" + st.label + "<small>" + st.sub + "</small></span></label>";
   }).join("");
-  function openNew() { modal.hidden = false; var n = document.getElementById("nName"); n.value = "New cycle"; n.focus(); n.select(); }
+  function openNew() { modal.hidden = false; nPreview(); var n = document.getElementById("nName"); n.value = "New cycle"; n.focus(); n.select(); }
   document.getElementById("nCancel").addEventListener("click", function () { modal.hidden = true; });
   modal.addEventListener("click", function (e) { if (e.target === modal) modal.hidden = true; });
-  document.getElementById("nStages").addEventListener("change", function (e) { var custom = e.target.value === "custom"; document.getElementById("nStartT").disabled = custom; if (custom) document.getElementById("nStartB").checked = true; });
+  function nPreview() {
+    var plan = document.getElementById("nStartT").checked;
+    document.getElementById("nPlan").hidden = !plan;
+    var n = Math.max(1, Math.min(40, parseInt(document.getElementById("nSteps").value, 10) || 1));
+    var L = Math.max(1, Math.min(365, parseInt(document.getElementById("nDays").value, 10) || 1));
+    document.getElementById("nPreview").textContent = plan ? "Messages on days " + uniqDays(recommendedDays(n, L)).join(", ") + (n > lastSendDay(L) + 1 ? " (some days get more than one)" : "") + ". The last day is left free to convert." : "You'll start with empty days 0, 1 and 3.";
+  }
+  ["nSteps", "nDays"].forEach(function (id) { document.getElementById(id).addEventListener("input", nPreview); });
+  document.querySelectorAll('input[name="nStart"]').forEach(function (r) { r.addEventListener("change", nPreview); });
   document.getElementById("newForm").addEventListener("submit", function (e) {
     e.preventDefault();
     var stage = document.querySelector('input[name="nStage"]:checked').value;
-    var tpl = document.querySelector('input[name="nStart"]:checked').value === "template" && stage !== "custom";
+    var tpl = document.querySelector('input[name="nStart"]:checked').value === "template";
+    var nS = Math.max(1, Math.min(40, parseInt(document.getElementById("nSteps").value, 10) || 6));
+    var nD = Math.max(1, Math.min(365, parseInt(document.getElementById("nDays").value, 10) || 14));
     commit();
-    var c = makeCycle(document.getElementById("nName").value.trim() || "New cycle", stage, tpl);
+    var c = makeCycle(document.getElementById("nName").value.trim() || "New cycle", stage, tpl, nS, nD);
     state.cycles.push(c); state.activeId = c.id; modal.hidden = true; closeDrawer(); ui.focusDay = null; render(); save();
-    toast(tpl ? "Cycle created with suggested steps" : "Blank cycle created. Drag a channel onto Day 0.");
+    toast(tpl ? nS + " steps planned over " + nD + " days. Click any step to change it." : "Blank cycle created. Drag a channel onto Day 0.");
   });
 
 
