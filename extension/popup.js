@@ -114,8 +114,14 @@ function build(info) {
   // A homepage can be "/", a language version ("/en", "/de-de/") or wherever the logo links to.
   const here = clean(info.url), langHome = /^\/([a-z]{2}([-_][a-z]{2})?)\/?$/i;
   let home = clean(info.origin + "/");
-  try { const lu = new URL(info.logoHref); if (lu.origin === info.origin && (lu.pathname === "/" || langHome.test(lu.pathname))) home = clean(lu.origin + lu.pathname); } catch (e) { /* no logo link */ }
-  const onHome = info.path === "/" || info.path === "" || langHome.test(info.path) || here === home;
+  let logoHere = false;
+  try {
+    const lu = new URL(info.logoHref);
+    if (lu.origin === info.origin && (lu.pathname === "/" || langHome.test(lu.pathname))) home = clean(lu.origin + lu.pathname);
+    // the logo links to the page you're on: this is the homepage, whatever its address
+    if (lu.origin === info.origin && clean(lu.origin + lu.pathname) === clean(info.origin + info.path)) { logoHere = true; home = clean(lu.origin + lu.pathname); }
+  } catch (e) { /* no logo link */ }
+  const onHome = info.path === "/" || info.path === "" || langHome.test(info.path) || logoHere || here === home;
   if (onHome) home = here.replace(/[?#].*$/, "") || here;
   const keep = (cat) => prefs.off.indexOf("base:" + cat) < 0;
   base = [{ type: "page", url: home, cat: "homepage", label: "Homepage", sub: "", checked: keep("homepage") }];

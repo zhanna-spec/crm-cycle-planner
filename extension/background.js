@@ -409,8 +409,8 @@ function textPrint() {
 // a title and something to open. Marks each with data-ccp-card and says how to open it:
 // its own link, a "More info" button, or the card itself.
 function findOfferCards() {
-  const ACT = /claim|deposit|register|sign ?up|join|log ?in|play|bet\b|opt[- ]?in|activate|redeem|get (the |your )?bonus|spin|unlock|grab|collect|start now|get started/i;
-  const MORE = /more info|more|details|read more|learn more|terms|t&cs?|rules|conditions|info|view|see offer|find out/i;
+  const ACT = /claim|deposit|register|sign ?up|join|log ?in|play|bet\b|opt[- ]?in|activate|redeem|get (the |your )?bonus|spin|unlock|grab|collect|start now|get started|jetzt|spielen|einzahl|anmelden|reclam|jugar|depositar|regístr|réclam|jouer|dépos|inscri|richied|gioca|deposita|registr|speel|claimen/i;
+  const MORE = /more|details?|read|learn|terms|t&cs?|t ?& ?c|rules|conditions|info|view|see offer|find out|mehr|details|bedingungen|más|mas info|detalles|términos|plus d|savoir|détails|conditions|dettagli|scopri|termini|lees|meer|voorwaarden|^\+$|›|»|→/i;
   const vw = window.innerWidth;
   const textOf = (el) => (el.innerText || el.getAttribute("aria-label") || "").trim().replace(/\s+/g, " ");
   const shown = (el) => { const r = el.getBoundingClientRect(); return r.width > 4 && r.height > 4; };
@@ -421,8 +421,17 @@ function findOfferCards() {
     let c = seed;
     while (c && c !== document.body) { const r = c.getBoundingClientRect(); if (r.width >= 160 && r.height >= 130) break; c = c.parentElement; }
     if (!c || c === document.body) return;
+    // a block without a picture is usually the text half of a banner: take the banner around it
+    const pic = (el) => !!el.querySelector("img, picture, [style*=background-image], video") || /url\(/.test(getComputedStyle(el).backgroundImage);
+    for (let k = 0; k < 2 && !pic(c) && c.parentElement && c.parentElement !== document.body; k++) {
+      const pr = c.parentElement.getBoundingClientRect();
+      if (pr.height > window.innerHeight * 1.1 || !pic(c.parentElement)) break;
+      c = c.parentElement;
+    }
     const r = c.getBoundingClientRect();
-    if (r.width > vw * 0.75 || r.height > window.innerHeight * 1.3) return; // a whole section, not a card
+    if (r.height > window.innerHeight * 1.1) return; // a whole section, not a card
+    // a wide block only counts as a promo banner or row when it has a picture
+    if (r.width > vw * 0.75 && !c.querySelector("img, picture, [style*=background-image], video")) return;
     const t = textOf(c); if (t.length < 6 || t.length > 900) return;
     if (cards.some((x) => x === c || x.contains(c) || c.contains(x))) return;
     cards.push(c);
@@ -446,7 +455,7 @@ function findOfferCards() {
     const info = Array.from(c.querySelectorAll("button, [role=button], a, span, div, i, svg, img")).find((b) => {
       const r = b.getBoundingClientRect(); if (r.width < 10 || r.width > 64 || r.height < 10 || r.height > 64) return false;
       const t = (b.textContent || "").trim(), l = (b.getAttribute("aria-label") || "") + " " + (b.getAttribute("title") || "") + " " + String(b.getAttribute("class") || "") + " " + (b.getAttribute("alt") || "") + " " + (b.getAttribute("data-testid") || "");
-      return /^(i|ⓘ|ℹ️?|\?)$/i.test(t) || (!t || t.length <= 2) && /info|detail|more|terms|tooltip|question|help/i.test(l);
+      return /^(i|ⓘ|ℹ️?|\?|\+|›|»|→)$/i.test(t) || (!t || t.length <= 2) && /info|detail|more|terms|tooltip|question|help|chevron|arrow|expand|plus|open|toggle|caret/i.test(l);
     });
     if (info) info.setAttribute("data-ccp-info", String(i));
     return { i, title, href: link ? link.href : "", more: more ? textOf(more) : "", info: !!info };
@@ -456,7 +465,7 @@ function findOfferCards() {
 // Runs inside the scanned page: opens card i one way: its "More info" button, its info icon, or its title / picture.
 function openCard(i, way, moreText) {
   const c = document.querySelector('[data-ccp-card="' + i + '"]'); if (!c) return false;
-  const ACT = /claim|deposit|register|sign ?up|join|log ?in|play|bet\b|opt[- ]?in|activate|redeem|bonus$|spin|unlock|grab|collect/i;
+  const ACT = /claim|deposit|register|sign ?up|join|log ?in|play|bet\b|opt[- ]?in|activate|redeem|bonus$|spin|unlock|grab|collect|jetzt|spielen|reclam|jugar|réclam|jouer|gioca/i;
   const press = (el) => { ["pointerdown", "mousedown", "pointerup", "mouseup", "click"].forEach((t) => el.dispatchEvent(new MouseEvent(t, { bubbles: true, cancelable: true, view: window }))); };
   c.scrollIntoView({ block: "center" });
   if (way === "more") {
@@ -464,11 +473,18 @@ function openCard(i, way, moreText) {
     if (!b) return false; press(b); return true;
   }
   if (way === "info") { const b = c.querySelector('[data-ccp-info="' + i + '"]'); if (!b) return false; press(b); return true; }
-  const target = c.querySelector("h1, h2, h3, h4, h5, [class*=title], [class*=Title], img, [style*=background-image]");
+  if (way === "self") { press(c); return true; }
+  const target = c.querySelector("h1, h2, h3, h4, h5, [class*=title], [class*=Title], img, picture, [style*=background-image]");
   if (!target) return false;
   const btn = target.closest("button, [role=button]");
   if (btn && ACT.test(btn.innerText || "")) return false;
   press(target); return true;
+}
+
+// Runs inside the scanned page: is a log-in or sign-up form showing (a password or e-mail field)?
+function authForm() {
+  return Array.from(document.querySelectorAll("input[type=password], input[type=email], input[autocomplete=username], input[name*=email i], input[name*=password i]"))
+    .some((el) => { const r = el.getBoundingClientRect(); return r.width > 20 && r.height > 8 && getComputedStyle(el).visibility !== "hidden"; });
 }
 
 // Runs inside the scanned page: opens the terms inside an open pop-up ("Terms", "T&Cs", "Show more").
@@ -637,13 +653,16 @@ async function scanCards(tabId, windowId, url, pg) {
         await freshPage(tabId, url); cards = await run(tabId, findOfferCards).catch(() => cards) || cards;
         continue;
       }
-      const ways = (c.more ? ["more"] : []).concat(c.info ? ["info"] : [], ["card"]);
+      const ways = (c.more ? ["more"] : []).concat(c.info ? ["info"] : [], ["card", "self"]);
       let opened = null;
       for (const way of ways) {
-        const before = bare(await currentUrl(tabId)), tp = await run(tabId, textPrint).catch(() => "");
+        const before = bare(await currentUrl(tabId)), tp = await run(tabId, textPrint).catch(() => ""), authBefore = await run(tabId, authForm).catch(() => false);
         if (!(await run(tabId, openCard, [c.i, way, c.more]).catch(() => false))) continue;
         await sleep(1800);
         const now = await currentUrl(tabId);
+        // a log-in / sign-up form or the cashier isn't the offer: back out and try the next way
+        const wrong = /regist|sign-?up|signup|login|log-in|deposit|cashier|wallet|auth/i.test(new URL(now).pathname + new URL(now).search + new URL(now).hash) || (!authBefore && await run(tabId, authForm).catch(() => false));
+        if (wrong) { await freshPage(tabId, url); cards = await run(tabId, findOfferCards).catch(() => cards) || cards; continue; }
         if (bare(now) !== before) { opened = { kind: "page", now }; break; }
         if (await run(tabId, hasDialog).catch(() => false)) { opened = { kind: "dialog", now, how: way === "more" ? c.more : way === "info" ? "the info icon" : c.title }; break; }
         if (tp && tp !== await run(tabId, textPrint).catch(() => "")) { opened = { kind: "inline", now }; break; }
@@ -657,7 +676,7 @@ async function scanCards(tabId, windowId, url, pg) {
         if (await run(tabId, openDialogTerms).catch(() => false)) await sleep(1200);
         out.push(Object.assign({ url: now, label, hint: pg.cat, type: "popup" }, await scanDialog(tabId, windowId, opened.how)));
       } else {
-        out.push(Object.assign({ url: now, label, hint: pg.cat, type: "page" }, await dedupe({ title: "", text: (await run(tabId, pageInfo).catch(() => ({ text: "" }))).text, shots: [await capture(windowId)], shotLabels: ["opened " + label] })));
+        out.push(Object.assign({ url: now, label, hint: pg.cat, type: "inline" }, await dedupe({ title: "", text: (await run(tabId, pageInfo).catch(() => ({ text: "" }))).text, shots: [await capture(windowId)], shotLabels: ["opened " + label] })));
       }
       await freshPage(tabId, url); cards = await run(tabId, findOfferCards).catch(() => cards) || cards;
     } catch (e) {
@@ -808,7 +827,8 @@ async function runScan({ tabId, pages, run: runLabel, site }) {
         const extra = out.extra || []; delete out.extra;
         if (r.error) out.shots = [];
         results.push(out);
-        extra.forEach((x) => { if (!scanned.has(bare(x.url)) || x.type === "popup") { results.push(x); if (x.type !== "popup") scanned.set(bare(x.url), x); } });
+        // offers opened in a pop-up or in place share the page's address but are their own entries
+        extra.forEach((x) => { const own = x.type === "page"; if (!own || !scanned.has(bare(x.url))) { results.push(Object.assign(x, { type: own ? "page" : "popup" })); if (own) scanned.set(bare(x.url), x); } });
         continue;
       }
       const r = await scanPage(tabId, tab.windowId, pg.url, { details: pg.details, banners: pg.cat === "homepage" });
