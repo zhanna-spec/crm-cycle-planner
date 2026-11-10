@@ -1626,6 +1626,11 @@ footer { color: var(--muted); font-size: 12px; margin-top: 24px; text-align: cen
     } catch (e) { return null; }
   }
   function samePrint(a, b) { var n = 0; for (var i = 0; i < a.length; i++) if (i % 160 < 155 && Math.abs(a[i] - b[i]) > 16 && ++n > 12) return false; return true; }
+  var OWN_HINT = { loyalty: "vip", tournament: "tournaments", registration: "register", deposit: "deposit", promotions: "promotions", missions: "missions", shop: "shop", wheel: "wheel", referral: "referral", inbox: "inbox", account: "account", withdrawal: "withdrawal", homepage: "homepage", navigation: "menu", app: "app", rg: "rg", welcome: "welcome", sports: "sports" };
+  function ownScore(kind, pg) {
+    if (/^(Offer|Tournament): /.test(pg.label || "")) return 3;
+    return OWN_HINT[kind] && String(pg.hint || "").split(",").indexOf(OWN_HINT[kind]) >= 0 ? 2 : 0;
+  }
   async function processScan(id, op, pages, run) {
     scanJob = { id: id, opId: op.id, run: run, total: pages.length, done: 0, made: 0, skipped: 0, failed: 0, current: "", errors: [], finished: false, phase: "sort" };
     ui.sec = "overview"; selectOp(op.id); renderScanPanel();
@@ -1674,7 +1679,9 @@ footer { color: var(--muted); font-size: 12px; margin-top: 24px; text-align: cen
       try {
         var imgs = [], thumbs = [], paths = [], texts = [], prints = [];
         var mains = g2.entries.filter(function (e) { return e.main; });
-        var use = mains.length ? mains : g2.entries;
+        var use = (mains.length ? mains : g2.entries).slice();
+        // the item's own page first: an opened offer or tournament, then the section's own page, then pages that only mention it
+        use.sort(function (a, b) { return ownScore(g2.kind, b.page) - ownScore(g2.kind, a.page); });
         for (var q = 0; q < use.length; q++) {
           var en = use[q], p2 = en.page;
           var pick = en.idx.length ? en.idx : (en.main ? p2.images.map(function (_, z) { return z; }) : [0]);

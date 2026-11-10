@@ -5,11 +5,11 @@
 const DEFAULT_SECTIONS = [
   // Getting players in
   { key: "register", label: "Sign-up", words: "^(register|registrieren|sign[\\s_-]*up|signup|join( now)?|open account|create[\\s_-]*(an[\\s_-]*)?account|konto[\\s_-]*erstellen|registrati|inscri.*|regístrate|registrarse)$", popup: true, loggedOut: true },
-  { key: "promotions", label: "Promotions", words: "promo|promotion|bonus(es)?\\b|offers?\\b|campaigns?\\b|angebot|aktion|promociones|ofertas|promozioni|offres|aanbieding|kampanj|kampanya", not: "^my\\b|terms|conditions|rules|requirement|shop|welcome", details: true },
+  { key: "promotions", label: "Promotions", words: "promo|promotion|bonus(es)?\\b|offers?\\b|campaigns?\\b|angebot|aktion|promociones|ofertas|promozioni|offres|aanbieding|kampanj|kampanya", not: "^my\\b|terms|conditions|rules|requirement|shop|welcome", details: true, cards: "Offer" },
   { key: "welcome", label: "Welcome offer", words: "welcome|new[\\s_-]*player|first[\\s_-]*deposit|1st[\\s_-]*deposit|willkommen|bienvenid|benvenut|bienvenue", not: "terms|conditions|rules|requirement", details: true, content: true },
   { key: "terms", label: "Bonus terms", words: "bonus[\\s_-]*(t&cs?|terms|rules|conditions|policy|requirement)|promotion[\\s_-]*(terms|rules|requirement)|wagering[\\s_-]*requirement|bonusbedingungen|bonus[\\s_-]*regeln|bonusvoorwaarden|terms[\\s_-]*(and|&)[\\s_-]*conditions", details: true, help: true },
   // Keeping players
-  { key: "tournaments", label: "Tournaments / races", words: "tourn|turnier|torneo|tournoi|leaderboard|rangliste|\\brace\\b|races\\b|drops?[\\s_&-]*(and|&)?[\\s_-]*wins|prize[\\s_-]*drop|wettbewerb", details: true },
+  { key: "tournaments", label: "Tournaments / races", words: "tourn|turnier|torneo|tournoi|leaderboard|rangliste|\\brace\\b|races\\b|drops?[\\s_&-]*(and|&)?[\\s_-]*wins|prize[\\s_-]*drop|wettbewerb", details: true, cards: "Tournament" },
   { key: "vip", label: "VIP / loyalty", words: "\\bvip\\b|loyal|club\\b|rewards?\\b|levels?\\b|rakeback|cashback|treue|fidelidad|fedelt|fidélité", not: "shop|store", details: true },
   { key: "missions", label: "Missions / achievements", words: "mission|quest|achievement|badges?\\b|challenges?\\b", details: true },
   { key: "shop", label: "Bonus shop", words: "\\bshop\\b|\\bstore\\b|bonus[\\s_-]*shop|rewards?[\\s_-]*shop|exchange|marketplace|prämien|tienda", not: "app[\\s_-]*store|play[\\s_-]*store|google[\\s_-]*play", details: true },
@@ -207,7 +207,7 @@ main.addEventListener("click", async (e) => {
   if (t.id === "go") {
     const home = base[0].url;
     const list = chosen().map((p) => p.type ? { type: p.type, url: p.url, label: p.label + (p.sub && p.type === "page" ? " (" + p.sub + ")" : ""), cat: p.cat, menu: p.menu || null, details: p.cat === "current" || p.cat === "custom" }
-      : { type: "find", url: home, label: p.label, cat: p.key, words: p.words, not: p.not || "", content: !!p.content, promo: p.content ? { words: PROMO.words, not: PROMO.not } : null, popup: !!p.popup, details: !!p.details, help: !!p.help });
+      : { type: "find", url: home, label: p.label, cat: p.key, words: p.words, not: p.not || "", content: !!p.content, cards: !!p.cards, cardLabel: p.cards || "", promo: p.content ? { words: PROMO.words, not: PROMO.not } : null, popup: !!p.popup, details: !!p.details, help: !!p.help });
     const run = document.querySelector('input[name="run"]:checked').value;
     await chrome.runtime.sendMessage({ type: "scan", tabId: target.id, pages: list, run, site: { host: target.info.host, title: target.info.title, url: target.info.url } });
     showProgress();

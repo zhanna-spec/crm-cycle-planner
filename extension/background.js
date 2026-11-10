@@ -111,7 +111,7 @@ async function scrollToY(y) {
 // Claim history, Rules, Learn more, a level card, collapsed sections). Never anything that acts.
 function findDetails() {
   const ALLOW = /see how|how (it|this|rewards?|points?|levels?|vip) works?|how to (earn|level)|learn more|more info|details|read more|\brules\b|terms|view all|show more|see all|levels?\b|ranks?\b|tiers?\b|benefits|perks|history|explained|faq|info\b|rookie|bronze|silver|gold|platinum|diamond|\bxp\b|\bvip\b/i;
-  const DENY = /claim(?!\s*history)|deposit(?!\s*history)|withdraw(?!al\s*history|\s*history)|wallet|\bbet\b|place bet|play|buy|purchase|spin now|log ?out|sign ?out|delete|remove|cancel|send|submit|chat|support|contact|accept|decline|join|register|sign ?up|log ?in|redeem|activate|opt[- ]?in|subscribe|switch to|enable|disable|copy|share/i;
+  const DENY = /claim(?!\s*history)|deposit(?!\s*history)|withdraw(?!al\s*history|\s*history)|wallet|\bbet\b|place bet|play|buy|purchase|spin now|log ?out|sign ?out|delete|remove|cancel|send|submit|chat|support|contact|accept|decline|join|register|sign ?up|log ?in|redeem|activate|opt[- ]?in|subscribe|switch to|enable|disable|copy|share|unlock|get started|start now|grab|get (the |your )?bonus|collect|upgrade/i;
   const vis = (el) => { const r = el.getBoundingClientRect(); return r.width > 4 && r.height > 4; };
   const textOf = (el) => (el.innerText || el.getAttribute("aria-label") || el.title || "").trim().replace(/\s+/g, " ");
   const out = [], seen = new Set();
@@ -364,15 +364,96 @@ function findOfferBlock(src, not) {
   best.el.setAttribute("data-ccp-block", "1");
   const r = best.el.getBoundingClientRect();
   window.scrollTo(0, Math.max(0, r.top + window.scrollY - Math.max(60, (window.innerHeight - r.height) / 2)));
-  const btn = Array.from(best.el.querySelectorAll("a, button, [role=button]")).concat(best.el.matches("a") ? [] : [])
+  const ownLink = [best.el.closest("a[href]")].concat(Array.from(best.el.querySelectorAll("a[href]"))).filter(Boolean).find((a) => {
+    const raw = a.getAttribute("href") || "", t = (a.innerText || "").trim();
+    if (/^(#|javascript:)/i.test(raw) || DENY.test(t)) return false;
+    try { const u = new URL(a.href); return u.origin === location.origin && u.href.split("#")[0] !== location.href.split("#")[0] && !/regist|sign-?up|login|deposit|cashier|wallet/i.test(u.pathname + u.search); } catch (e) { return false; }
+  });
+  const btn = Array.from(best.el.querySelectorAll("a, button, [role=button]"))
     .find((b) => { const t = (b.innerText || b.getAttribute("aria-label") || "").trim(); return t && t.length <= 30 && MORE.test(t) && !DENY.test(t); });
-  return { text: (best.el.innerText || "").trim().slice(0, 3000), more: btn ? (btn.innerText || btn.getAttribute("aria-label")).trim() : "" };
+  return { text: (best.el.innerText || "").trim().slice(0, 3000), href: ownLink ? ownLink.href : "", more: btn ? (btn.innerText || btn.getAttribute("aria-label")).trim() : "" };
 }
 
 // Runs inside the scanned page: clicks the "more info" button inside the marked offer block.
 function clickInBlock(text) {
   const box = document.querySelector("[data-ccp-block]"); if (!box) return false;
   const b = Array.from(box.querySelectorAll("a, button, [role=button]")).find((x) => (x.innerText || x.getAttribute("aria-label") || "").trim() === text);
+  if (!b) return false;
+  b.click(); return true;
+}
+
+// Runs inside the scanned page: a short fingerprint of the text on the page (and in an open pop-up),
+// to tell whether a click changed anything.
+function textPrint() {
+  const t = (document.body ? document.body.innerText : "").replace(/\s+/g, " ");
+  let h = 0; for (let i = 0; i < t.length; i++) h = (h * 31 + t.charCodeAt(i)) | 0;
+  return t.length + ":" + h;
+}
+
+// Runs inside the scanned page: finds the offer (or tournament) cards on a page: repeated blocks with
+// a title and something to open. Marks each with data-ccp-card and says how to open it:
+// its own link, a "More info" button, or the card itself.
+function findOfferCards() {
+  const ACT = /claim|deposit|register|sign ?up|join|log ?in|play|bet\b|opt[- ]?in|activate|redeem|get (the |your )?bonus|spin|unlock|grab|collect|start now|get started/i;
+  const MORE = /more info|more|details|read more|learn more|terms|t&cs?|rules|conditions|info|view|see offer|find out/i;
+  const vw = window.innerWidth;
+  const textOf = (el) => (el.innerText || el.getAttribute("aria-label") || "").trim().replace(/\s+/g, " ");
+  const shown = (el) => { const r = el.getBoundingClientRect(); return r.width > 4 && r.height > 4; };
+  const host = location.hostname.replace(/^www\./, "");
+  let cards = [];
+  document.querySelectorAll("a, button, [role=button], h2, h3, h4, h5").forEach((seed) => {
+    if (!shown(seed) || seed.closest("header, nav, footer, aside, [role=dialog], [data-ccp-skip]")) return;
+    let c = seed;
+    while (c && c !== document.body) { const r = c.getBoundingClientRect(); if (r.width >= 160 && r.height >= 130) break; c = c.parentElement; }
+    if (!c || c === document.body) return;
+    const r = c.getBoundingClientRect();
+    if (r.width > vw * 0.75 || r.height > window.innerHeight * 1.3) return; // a whole section, not a card
+    const t = textOf(c); if (t.length < 6 || t.length > 900) return;
+    if (cards.some((x) => x === c || x.contains(c) || c.contains(x))) return;
+    cards.push(c);
+  });
+  // cards come in sets of similar size
+  cards = cards.filter((c) => { const w = c.getBoundingClientRect().width; return cards.some((o) => o !== c && Math.abs(o.getBoundingClientRect().width - w) < w * 0.15); });
+  cards.sort((a, b) => { const ra = a.getBoundingClientRect(), rb = b.getBoundingClientRect(); return (ra.top - rb.top) || (ra.left - rb.left); });
+  document.querySelectorAll("[data-ccp-card]").forEach((e) => e.removeAttribute("data-ccp-card"));
+  return cards.slice(0, 10).map((c, i) => {
+    c.setAttribute("data-ccp-card", String(i));
+    const head = c.querySelector("h1, h2, h3, h4, h5, [class*=title], [class*=Title], strong, b");
+    const title = ((head && textOf(head)) || textOf(c)).split(/\n| {2}/)[0].slice(0, 60);
+    const links = [c.closest("a[href]")].concat(Array.from(c.querySelectorAll("a[href]"))).filter(Boolean).filter((a) => {
+      const raw = a.getAttribute("href") || "";
+      if (/^(#|javascript:)/i.test(raw)) return false;
+      try { const u = new URL(a.href); return u.hostname.replace(/^www\./, "") === host && u.href.split("#")[0] !== location.href.split("#")[0] && !/regist|sign-?up|login|deposit|cashier|wallet/i.test(u.pathname + u.search); } catch (e) { return false; }
+    });
+    const link = links.find((a) => !ACT.test(textOf(a)));
+    const more = Array.from(c.querySelectorAll("a, button, [role=button]")).find((b) => { const t = textOf(b); return t && t.length <= 30 && MORE.test(t) && !ACT.test(t); });
+    return { i, title, href: link ? link.href : "", more: more ? textOf(more) : "" };
+  });
+}
+
+// Runs inside the scanned page: opens card i with its "More info" button, or by clicking its title or picture.
+function openCard(i, moreText) {
+  const c = document.querySelector('[data-ccp-card="' + i + '"]'); if (!c) return false;
+  const ACT = /claim|deposit|register|sign ?up|join|log ?in|play|bet\b|opt[- ]?in|activate|redeem|bonus$|spin|unlock|grab|collect/i;
+  c.scrollIntoView({ block: "center" });
+  if (moreText) {
+    const b = Array.from(c.querySelectorAll("a, button, [role=button]")).find((x) => (x.innerText || x.getAttribute("aria-label") || "").trim().replace(/\s+/g, " ") === moreText);
+    if (b) { b.click(); return true; }
+  }
+  const target = c.querySelector("h1, h2, h3, h4, h5, [class*=title], [class*=Title], img, [style*=background-image]");
+  if (!target || target.closest("button, [role=button]") && ACT.test(target.closest("button, [role=button]").innerText || "")) return false;
+  target.click(); return true;
+}
+
+// Runs inside the scanned page: opens the terms inside an open pop-up ("Terms", "T&Cs", "Show more").
+function openDialogTerms() {
+  const d = Array.from(document.querySelectorAll("[role=dialog], [aria-modal=true], dialog[open], [class*=modal], [class*=Modal], [class*=drawer], [class*=Drawer]"))
+    .filter((el) => { const r = el.getBoundingClientRect(); return r.width > 200 && r.height > 150; }).pop();
+  if (!d) return false;
+  const b = Array.from(d.querySelectorAll("button, [role=button], summary, a, [aria-expanded=false]")).find((x) => {
+    const t = (x.innerText || "").trim();
+    return t && t.length <= 40 && /terms|t&cs?|conditions|rules|show more|read more|full details/i.test(t) && !/claim|deposit|accept|agree|join|play/i.test(t) && !(x.tagName === "A" && x.getAttribute("href") && !/^#/.test(x.getAttribute("href")));
+  });
   if (!b) return false;
   b.click(); return true;
 }
@@ -469,11 +550,12 @@ async function scanPage(tabId, windowId, url, opts) {
   await run(tabId, scrollToY, [0]).catch(() => 0); await sleep(300);
   const tabs = await run(tabId, findTabs).catch(() => []) || [];
   for (const t of tabs) {
-    const before = bare(await currentUrl(tabId));
+    const before = bare(await currentUrl(tabId)), tp = await run(tabId, textPrint).catch(() => "");
     const after = await run(tabId, clickTab, [t.i]).catch(() => null);
     if (!after) continue;
     await sleep(1500);
     if (bare(after) !== before || bare(await currentUrl(tabId)) !== before) { await back(); break; } // it was really a link
+    if (tp && tp === await run(tabId, textPrint).catch(() => "")) continue; // the tab changed nothing
     shots.push(await capture(windowId)); labels.push("tab: " + t.text);
     const tinfo = await run(tabId, pageInfo).catch(() => null);
     if (tinfo) text += "\n\n--- Tab: " + t.text + " ---\n" + tinfo.text.slice(0, 6000);
@@ -482,10 +564,11 @@ async function scanPage(tabId, windowId, url, opts) {
     await run(tabId, scrollToY, [0]).catch(() => 0); await sleep(300);
     const details = await run(tabId, findDetails).catch(() => []) || [];
     for (const d of details) {
-      const before = bare(await currentUrl(tabId));
+      const before = bare(await currentUrl(tabId)), tp = await run(tabId, textPrint).catch(() => "");
       const clicked = await run(tabId, clickDetail, [d]).catch(() => null);
       if (!clicked) continue;
       await sleep(1800);
+      if (bare(await currentUrl(tabId)) === before && tp && tp === await run(tabId, textPrint).catch(() => "")) continue; // nothing opened
       if (bare(await currentUrl(tabId)) !== before) {
         await waitForLoad(tabId, 8000); await sleep(1200);
         shots.push(await capture(windowId)); labels.push("opened: " + d);
@@ -498,11 +581,52 @@ async function scanPage(tabId, windowId, url, opts) {
         if (!(await back())) break;
       } else {
         shots.push(await capture(windowId)); labels.push("expanded: " + d);
+        const ei = await run(tabId, pageInfo).catch(() => null); // what opened (terms, rules) is in the text now
+        if (ei) text += "\n\n--- Opened: " + d + " ---\n" + ei.text.slice(0, 6000);
       }
     }
   }
   await run(tabId, scrollToY, [0]).catch(() => 0);
   return dedupe({ title: info.title, text: text.slice(0, 40000), shots, shotLabels: labels });
+}
+
+// Opens every offer (or tournament) card on a page one by one and photographs what each shows,
+// with its terms. Each becomes its own entry, so it's read with its own conditions.
+async function scanCards(tabId, windowId, url, pg) {
+  const out = [], seen = new Set();
+  let cards = await run(tabId, findOfferCards).catch(() => []) || [];
+  const kindWord = pg.cardLabel || "Offer";
+  for (let n = 0; n < Math.min(cards.length, 8); n++) {
+    const c = cards[n], label = kindWord + ": " + (c.title || "card " + (n + 1));
+    await chrome.storage.local.set({ scanStatus: Object.assign((await chrome.storage.local.get("scanStatus")).scanStatus || {}, { current: "opening " + label }) });
+    try {
+      if (c.href) {
+        if (seen.has(bare(c.href)) || bare(c.href) === bare(url)) continue;
+        seen.add(bare(c.href));
+        const r = await scanPage(tabId, windowId, c.href, { details: true });
+        out.push(Object.assign({ url: c.href, label, hint: pg.cat, type: "page" }, r));
+        await freshPage(tabId, url); cards = await run(tabId, findOfferCards).catch(() => cards) || cards;
+        continue;
+      }
+      const before = bare(await currentUrl(tabId)), tp = await run(tabId, textPrint).catch(() => "");
+      if (!(await run(tabId, openCard, [c.i, c.more]).catch(() => false))) continue;
+      await sleep(1800);
+      const now = await currentUrl(tabId);
+      if (bare(now) !== before) {
+        await waitForLoad(tabId, 8000); await sleep(1200);
+        if (!seen.has(bare(now))) { seen.add(bare(now)); out.push(Object.assign({ url: now, label, hint: pg.cat, type: "page" }, await scanPage(tabId, windowId, now, { details: true, stay: true }))); }
+      } else if (await run(tabId, hasDialog).catch(() => false)) {
+        if (await run(tabId, openDialogTerms).catch(() => false)) await sleep(1200);
+        out.push(Object.assign({ url: now, label, hint: pg.cat, type: "popup" }, await scanDialog(tabId, windowId, c.more || c.title)));
+      } else if (tp && tp !== await run(tabId, textPrint).catch(() => "")) {
+        out.push(Object.assign({ url: now, label, hint: pg.cat, type: "page" }, await dedupe({ title: "", text: (await run(tabId, pageInfo).catch(() => ({ text: "" }))).text, shots: [await capture(windowId)], shotLabels: ["opened " + label] })));
+      } else continue; // nothing opened
+      await freshPage(tabId, url); cards = await run(tabId, findOfferCards).catch(() => cards) || cards;
+    } catch (e) {
+      try { await freshPage(tabId, url); cards = await run(tabId, findOfferCards).catch(() => cards) || cards; } catch (e2) { break; }
+    }
+  }
+  return out;
 }
 
 // The pop-up that's open now, scrolled through.
@@ -564,7 +688,11 @@ async function scanOffer(tabId, windowId, pg, results) {
       await sleep(500);
       shots.push(await capture(windowId)); labels.push(pg.label + " card on the promotions page");
       text += "--- On the promotions page ---\n" + b.text + "\n\n"; where.push("promotions page");
-      if (b.more) {
+      if (b.href) {
+        const r = await scanPage(tabId, windowId, b.href, { details: true });
+        r.shots.forEach((sh, i) => { shots.push(sh); labels.push("opened the offer: " + r.shotLabels[i]); });
+        text += "--- The offer's own page ---\n" + r.text.slice(0, 15000);
+      } else if (b.more) {
         const before = bare(await currentUrl(tabId));
         if (await run(tabId, clickInBlock, [b.more]).catch(() => false)) {
           await sleep(1800);
@@ -574,6 +702,7 @@ async function scanOffer(tabId, windowId, pg, results) {
             r.shots.forEach((sh, i) => { shots.push(sh); labels.push("opened “" + b.more + "”: " + r.shotLabels[i]); });
             text += "--- Opened “" + b.more + "” ---\n" + r.text.slice(0, 12000);
           } else {
+            if (await run(tabId, hasDialog).catch(() => false) && await run(tabId, openDialogTerms).catch(() => false)) await sleep(1200);
             shots.push(await capture(windowId)); labels.push("opened “" + b.more + "”");
             const more = (await run(tabId, hasDialog).catch(() => false)) ? await run(tabId, dialogText).catch(() => "") : (await run(tabId, pageInfo).catch(() => ({ text: "" }))).text;
             text += "--- Opened “" + b.more + "” ---\n" + String(more).slice(0, 8000);
@@ -597,7 +726,9 @@ async function scanFind(tabId, windowId, pg, results, scanned) {
   const sameAs = (u) => { const r = scanned.get(bare(u)); if (r) { r.label += " + " + pg.label; r.hint += "," + pg.cat; } return r; };
   if (hit.href) {
     if (sameAs(hit.href)) return { merged: true };
-    return Object.assign({ url: hit.href, found }, await scanPage(tabId, windowId, hit.href, { details: pg.details }));
+    const r = Object.assign({ url: hit.href, found }, await scanPage(tabId, windowId, hit.href, { details: pg.details && !pg.cards }));
+    if (pg.cards) { await freshPage(tabId, hit.href); r.extra = await scanCards(tabId, windowId, hit.href, pg); }
+    return r;
   }
   // a button or menu entry without an address: click it and see what happens
   const before = bare(await currentUrl(tabId));
@@ -633,8 +764,11 @@ async function runScan({ tabId, pages, run: runLabel, site }) {
         if (r.found) out.label = pg.label + " (" + r.found + ")";
         if (!r.error && !r.noIndex) scanned.set(bare(out.url), out);
         delete out.noIndex;
+        const extra = out.extra || []; delete out.extra;
         if (r.error) out.shots = [];
-        results.push(out); continue;
+        results.push(out);
+        extra.forEach((x) => { if (!scanned.has(bare(x.url)) || x.type === "popup") { results.push(x); if (x.type !== "popup") scanned.set(bare(x.url), x); } });
+        continue;
       }
       const r = await scanPage(tabId, tab.windowId, pg.url, { details: pg.details, banners: pg.cat === "homepage" });
       const out = Object.assign(base, r);
