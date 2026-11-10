@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "Cycle Planner Site Scanner",
-  "version": "1.5.0",
+  "version": "1.6.0",
   "description": "Scans a competitor's website in your own browser and sends the screenshots to the Conversion Cycle Planner.",
   "action": {
     "default_popup": "popup.html",

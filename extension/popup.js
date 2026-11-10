@@ -4,7 +4,7 @@
 // popup: the section usually opens as a pop-up from a button. details: open rules, levels, cards on that page.
 const DEFAULT_SECTIONS = [
   // Getting players in
-  { key: "register", label: "Sign-up", words: "^(register|registrieren|sign[\\s_-]*up|signup|join( now)?|open account|create[\\s_-]*(an[\\s_-]*)?account|konto[\\s_-]*erstellen|registrati|inscri.*|regístrate|registrarse)$", popup: true },
+  { key: "register", label: "Sign-up", words: "^(register|registrieren|sign[\\s_-]*up|signup|join( now)?|open account|create[\\s_-]*(an[\\s_-]*)?account|konto[\\s_-]*erstellen|registrati|inscri.*|regístrate|registrarse)$", popup: true, loggedOut: true },
   { key: "welcome", label: "Welcome offer", words: "welcome|new[\\s_-]*player|first[\\s_-]*deposit|1st[\\s_-]*deposit|willkommen|bienvenid|benvenut|bienvenue", not: "terms|conditions|rules|requirement", details: true },
   { key: "promotions", label: "Promotions", words: "promo|promotion|bonus(es)?\\b|offers?\\b|campaigns?\\b|angebot|aktion|promociones|ofertas|promozioni|offres|aanbieding|kampanj|kampanya", not: "^my\\b|terms|conditions|rules|requirement|shop|welcome", details: true },
   { key: "terms", label: "Bonus terms", words: "bonus[\\s_-]*(t&cs?|terms|rules|conditions|policy|requirement)|promotion[\\s_-]*(terms|rules|requirement)|wagering[\\s_-]*requirement|bonusbedingungen|bonus[\\s_-]*regeln|bonusvoorwaarden|terms[\\s_-]*(and|&)[\\s_-]*conditions", details: true, help: true },
@@ -28,13 +28,16 @@ const DEFAULT_SECTIONS = [
   { key: "app", label: "App", words: "\\bapp\\b|download[\\s_-]*(the[\\s_-]*)?app|mobile[\\s_-]*app" },
   { key: "help", label: "Help / FAQ", words: "^(help|help cent(er|re)|support|faq|faqs)$", help: true, off: true }
 ];
-const GROUPS = { register: "Getting players in", tournaments: "Keeping players", deposit: "Logged in only", rg: "Compliance and extras" };
+const GROUPS = { register: "Getting players in", tournaments: "Keeping players", deposit: "Your account", rg: "Compliance and extras" };
+// Which sections belong to which run: logged-in only ones are hidden on a logged-out run and the other way round.
+const fits = (s) => !(runMode === "logged-out" && s.loggedIn) && !(runMode === "logged-in" && s.loggedOut);
 // Menu entries that are game categories or account basics; not worth suggesting.
 const NOT_SUGGESTED = /^(home|casino|live( casino| dealer)?|sports?( ?book| ?betting)?|withdraw(al)?|help( cent(er|re))?|support|faqs?|slots?|table games|new( games)?|popular|top( games)?|all games|games|jackpots? games|roulette|blackjack|baccarat|poker|crash( games)?|instant( games)?|megaways|providers?|search|favou?rites|recent(ly played)?|log ?in|sign ?in|log ?out|register|sign ?up|join( now)?|deposit|wallet|cashier|menu|close|back|english|deutsch|español|language|light|dark|en|de|es|fr|it)$/i;
 
 const main = document.getElementById("main");
 const esc = (s) => String(s == null ? "" : s).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
 const reEsc = (s) => s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+let runMode = "logged-out", guessed = false;
 let target = null, prefs = { off: [], on: [], custom: [] }, sections = [], suggestions = [], pages = [], base = [];
 
 // Search words typed by the person ("daily wheel, lucky spin") become a pattern.
@@ -86,7 +89,8 @@ function build(info) {
   base = [{ type: "page", url: home, cat: "homepage", label: "Homepage", sub: "", checked: true }];
   if (!onHome) base.push({ type: "page", url: here, cat: "current", label: "This page", sub: shortText(info.title), checked: true });
   if (info.menu.length >= 3) base.push({ type: "menu", url: home, cat: "menu", label: "Site menu", sub: info.menu.length + " entries", menu: info.menu, checked: true });
-  sections = DEFAULT_SECTIONS.concat(prefs.custom.map((c) => Object.assign({ details: true, custom: true }, c))).map((s) => Object.assign({}, s, { checked: s.off ? prefs.on.indexOf(s.key) >= 0 : prefs.off.indexOf(s.key) < 0, seen: seenOnPage(s, info) }));
+  let grp = "";
+  sections = DEFAULT_SECTIONS.concat(prefs.custom.map((c) => Object.assign({ details: true, custom: true }, c))).map((s) => Object.assign({}, s, { group: s.custom ? "Your own" : (grp = GROUPS[s.key] || grp), checked: s.off ? prefs.on.indexOf(s.key) >= 0 : prefs.off.indexOf(s.key) < 0, seen: seenOnPage(s, info) }));
   // menu entries no section covers become suggestions
   const res = sections.map((s) => new RegExp(s.words, "i"));
   const taken = new Set();
@@ -105,32 +109,35 @@ function row(item, list, i, extra) {
   const small = list === "b" ? (item.type === "menu" ? "Opens the menu on the homepage" : item.url)
     : list === "x" ? "Seen in the menu"
     : list === "p" ? item.url
-    : item.seen ? "Seen on this page: “" + shortText(item.seen) + "”" : item.loggedIn ? "Only when logged in" : item.popup ? "Will look for the button" : "Will search the page and menus";
+    : item.seen ? "Seen on this page: “" + shortText(item.seen) + "”" : item.popup ? "Will look for the button" : "Will search the page and menus";
   return '<div class="item"><label><input type="checkbox" data-list="' + list + '" data-i="' + i + '"' + (item.checked ? " checked" : "") + "><span><b>" + esc(item.label) + "</b> " + sub + "<small>" + esc(small) + "</small></span></label>" + (extra || "") + "</div>";
 }
 
 function render() {
+  let lastGroup = "";
   main.innerHTML =
+    "<h2>This run is</h2>" +
+    '<div class="seg"><label><input type="radio" name="run" value="logged-out"' + (runMode === "logged-out" ? " checked" : "") + '><span>Logged out</span></label><label><input type="radio" name="run" value="logged-in"' + (runMode === "logged-in" ? " checked" : "") + "><span>Logged in</span></label></div>" +
+    (guessed ? '<p class="note">' + (runMode === "logged-in" ? "You seem to be logged in on this site." : "You seem to be logged out on this site.") + " The list shows the sections for this kind of run.</p>" : "") +
     "<h2>Always</h2>" +
     '<div class="list">' + base.map((p, i) => row(p, "b", i)).join("") + "</div>" +
     "<h2>Sections to find</h2>" +
-    '<div class="list">' + sections.map((s, i) => (GROUPS[s.key] || (s.custom && !(sections[i - 1] || {}).custom ? "Your own" : "") ? '<div class="grp">' + esc(GROUPS[s.key] || "Your own") + "</div>" : "") + row(s, "s", i, s.custom ? '<button class="x" data-rm="' + i + '" title="Remove from my list" aria-label="Remove ' + esc(s.label) + '">✕</button>' : "")).join("") + pages.map((p, i) => row(p, "p", i)).join("") + "</div>" +
+    '<div class="list">' + sections.map((s, i) => { if (!fits(s)) return ""; const g = s.group !== lastGroup ? '<div class="grp">' + esc(s.group) + "</div>" : ""; lastGroup = s.group; return g + row(s, "s", i, s.custom ? '<button class="x" data-rm="' + i + '" title="Remove from my list" aria-label="Remove ' + esc(s.label) + '">✕</button>' : ""); }).join("") + pages.map((p, i) => row(p, "p", i)).join("") + "</div>" +
     '<details id="addbox"><summary>+ Add a section to my list</summary>' +
     '<div class="col"><input type="text" id="newName" placeholder="Name, e.g. Daily wheel" maxlength="40"><input type="text" id="newWords" placeholder="Other words it may be called (optional, comma separated)" maxlength="200"><button id="addSec">Add to my list</button></div>' +
     '<div class="row"><input type="url" id="extra" placeholder="Or paste a page link for this scan"><button id="add">Add</button></div></details>' +
     (suggestions.length ? "<h2>Also on this site</h2><p class=\"note\">Menu entries none of your sections cover. Tick any you want scanned too.</p>" +
       '<div class="list">' + suggestions.map((s, i) => row(s, "x", i, '<button class="x keep" data-keep="' + i + '" title="Add to my list for every site">Keep</button>')).join("") + "</div>" : "") +
-    "<h2>This run is</h2>" +
-    '<div class="seg"><label><input type="radio" name="run" value="logged-out" checked><span>Logged out</span></label><label><input type="radio" name="run" value="logged-in"><span>Logged in</span></label></div>' +
     '<button class="primary" id="go"></button>' +
     '<p class="note">For each section it clicks around the site: the page, the side menu, sub-menus and (logged in) the account menu. Then it photographs what opens and, on VIP, promotions and similar pages, opens the details. Sections it can\'t find are listed in the planner. About 15 to 40 seconds per section; don\'t switch tabs until the planner opens.</p>';
   count();
 }
-function chosen() { return base.concat(sections, pages, suggestions).filter((p) => p.checked); }
+function chosen() { return base.concat(sections.filter(fits), pages, suggestions).filter((p) => p.checked); }
 function count() { const n = chosen().length; const b = document.getElementById("go"); if (b) { b.textContent = "Scan " + n + (n === 1 ? " section" : " sections"); b.disabled = !n; } }
 function listOf(l) { return l === "b" ? base : l === "s" ? sections : l === "p" ? pages : suggestions; }
 
 main.addEventListener("change", async (e) => {
+  if (e.target.name === "run") { runMode = e.target.value; guessed = false; render(); return; }
   const i = e.target.getAttribute("data-i"); if (i === null) return;
   const l = e.target.getAttribute("data-list"), item = listOf(l)[+i];
   item.checked = e.target.checked;
@@ -149,7 +156,7 @@ main.addEventListener("click", async (e) => {
     if (!name) { document.getElementById("newName").focus(); return; }
     const c = { key: "c_" + Date.now().toString(36), label: name, words: wordsFrom(name, document.getElementById("newWords").value) };
     prefs.custom.push(c); await savePrefs();
-    sections.push(Object.assign({ details: true, custom: true, checked: true, seen: seenOnPage(c, target.info) }, c));
+    sections.push(Object.assign({ details: true, custom: true, group: "Your own", checked: true, seen: seenOnPage(c, target.info) }, c));
     render();
   }
   if (t.hasAttribute("data-rm")) {
@@ -161,7 +168,7 @@ main.addEventListener("click", async (e) => {
     const s = suggestions.splice(+t.getAttribute("data-keep"), 1)[0];
     const c = { key: "c_" + Date.now().toString(36), label: s.label, words: wordsFrom(s.label, "") };
     prefs.custom.push(c); await savePrefs();
-    sections.push(Object.assign({ details: true, custom: true, checked: true, seen: s.seen }, c)); render();
+    sections.push(Object.assign({ details: true, custom: true, group: "Your own", checked: true, seen: s.seen }, c)); render();
   }
   if (t.id === "add") {
     const v = document.getElementById("extra").value.trim();
@@ -211,6 +218,11 @@ function showProgress() {
     target = { id: tab.id, info: res.result };
     document.getElementById("site").textContent = res.result.host;
     build(res.result);
+    // A Deposit / Wallet button and no Log in / Register button usually means logged in.
+    const btns = res.result.buttons.concat(res.result.links.map((l) => l.text));
+    const hasIn = btns.some((t) => /^(deposit|deposit now|wallet|cashier|my account|log ?out|sign ?out)$/i.test(t.trim()));
+    const hasOut = btns.some((t) => /^(log ?in|sign ?in|register|sign ?up|join( now)?|create account)$/i.test(t.trim()));
+    if (hasIn !== hasOut) { runMode = hasIn ? "logged-in" : "logged-out"; guessed = true; }
     render();
   } catch (err) {
     main.innerHTML = '<p class="warn">Couldn\'t read this page: ' + esc(err.message) + "</p>";
