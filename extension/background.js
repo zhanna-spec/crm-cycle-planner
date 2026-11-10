@@ -89,6 +89,45 @@ function findTabs() {
   return out;
 }
 
+// Runs inside the scanned page: clicks the button with this text (Wallet, Deposit, Register…).
+function clickByText(text) {
+  const want = String(text || "").trim().toLowerCase();
+  const els = Array.from(document.querySelectorAll("button, [role=button], a, [class*=btn], [class*=Btn]"));
+  const el = els.find((b) => { const r = b.getBoundingClientRect(); return r.width > 2 && r.height > 2 && (b.innerText || b.getAttribute("aria-label") || "").trim().replace(/\s+/g, " ").toLowerCase() === want; });
+  if (!el) return false;
+  el.click(); return true;
+}
+
+// Runs inside the scanned page: the text of the open pop-up (or the page if there isn't one).
+// Each function sent into a page must be self-contained, so the pop-up finder is repeated.
+function dialogText() {
+  const d = Array.from(document.querySelectorAll("[role=dialog], [aria-modal=true], dialog[open], [class*=modal], [class*=Modal], [class*=drawer], [class*=Drawer]"))
+    .filter((el) => { const r = el.getBoundingClientRect(), cs = getComputedStyle(el); return r.width > 200 && r.height > 150 && cs.visibility !== "hidden" && cs.display !== "none"; }).pop();
+  return ((d || document.body).innerText || "").replace(/\n{3,}/g, "\n\n").slice(0, 15000);
+}
+// Runs inside the scanned page: scrolls the open pop-up down; false when it can't scroll further.
+function scrollDialog() {
+  const d = Array.from(document.querySelectorAll("[role=dialog], [aria-modal=true], dialog[open], [class*=modal], [class*=Modal], [class*=drawer], [class*=Drawer]"))
+    .filter((el) => { const r = el.getBoundingClientRect(), cs = getComputedStyle(el); return r.width > 200 && r.height > 150 && cs.visibility !== "hidden" && cs.display !== "none"; }).pop();
+  if (!d) return false;
+  const box = [d].concat(Array.from(d.querySelectorAll("*"))).find((el) => el.scrollHeight > el.clientHeight + 40 && /(auto|scroll)/.test(getComputedStyle(el).overflowY));
+  if (!box) return false;
+  const before = box.scrollTop; box.scrollTop += box.clientHeight * 0.85; return box.scrollTop !== before;
+}
+
+// Runs inside the scanned page: opens a collapsed side menu or hamburger menu.
+function openMenu() {
+  const vis = (el) => { const r = el.getBoundingClientRect(); return r.width > 2 && r.height > 2; };
+  const t = Array.from(document.querySelectorAll("button, [role=button], a")).find((b) => {
+    if (!vis(b)) return false;
+    const label = (b.getAttribute("aria-label") || b.title || b.innerText || "").toLowerCase().trim();
+    const cls = String(b.className || "").toLowerCase();
+    return /^(menu|open menu|toggle menu|toggle sidebar|open sidebar|sidebar|navigation|main menu|☰)$/.test(label) || /hamburger|burger|menu-toggle|sidebar-toggle|nav-toggle/.test(cls) || (b.getAttribute("aria-expanded") === "false" && /menu|nav|sidebar/.test(label + " " + cls + " " + (b.getAttribute("aria-controls") || "")));
+  });
+  if (!t) return false;
+  t.click(); return true;
+}
+
 // Runs inside the scanned page: clicks one marked tab and brings it into view.
 function clickTab(i) {
   const b = document.querySelector('[data-ccp-tab="' + i + '"]');
@@ -104,6 +143,41 @@ async function capture(windowId) {
   return chrome.tabs.captureVisibleTab(windowId, { format: "jpeg", quality: 72 });
 }
 
+// A button that opens a pop-up (Wallet, Deposit, Register…) or the site's menu.
+async function scanSpecial(tabId, windowId, pg, perPage) {
+  const base = { url: pg.url, label: pg.label, hint: pg.cat || "", type: pg.type };
+  try {
+    await navigate(tabId, pg.url);
+    await sleep(2500);
+    await run(tabId, dismissOverlays).catch(() => 0);
+    await sleep(900);
+    await run(tabId, scrollToY, [0]).catch(() => 0);
+    const shots = [], labels = [];
+    let text = "";
+    if (pg.type === "action") {
+      const ok = await run(tabId, clickByText, [pg.button]);
+      if (!ok) return Object.assign(base, { error: "Couldn't find the “" + pg.button + "” button", shots: [] });
+      await sleep(2200);
+      shots.push(await capture(windowId)); labels.push("pop-up after clicking " + pg.button);
+      for (let k = 1; k < perPage; k++) {
+        const moved = await run(tabId, scrollDialog).catch(() => false);
+        if (!moved) break;
+        await sleep(600);
+        shots.push(await capture(windowId)); labels.push("pop-up scrolled " + k);
+      }
+      text = await run(tabId, dialogText).catch(() => "");
+    } else {
+      await run(tabId, openMenu).catch(() => false);
+      await sleep(900);
+      shots.push(await capture(windowId)); labels.push("menu open");
+      text = "Site menu entries:\n" + (pg.menu || []).map((m) => "- " + m.text + (m.href ? " (" + m.href + ")" : "")).join("\n");
+    }
+    return Object.assign(base, { title: "", text, shots, shotLabels: labels });
+  } catch (err) {
+    return Object.assign(base, { error: String(err && err.message || err), shots: [] });
+  }
+}
+
 async function runScan({ tabId, pages, run: runLabel, perPage, site }) {
   const tab = await chrome.tabs.get(tabId);
   const startUrl = tab.url;
@@ -114,6 +188,7 @@ async function runScan({ tabId, pages, run: runLabel, perPage, site }) {
     const pg = pages[i];
     await chrome.storage.local.set({ scanStatus: { state: "running", done: i, total, current: pg.label } });
     try {
+      if (pg.type === "action" || pg.type === "menu") { results.push(await scanSpecial(tabId, tab.windowId, pg, perPage)); continue; }
       await navigate(tabId, pg.url);
       await sleep(2500);
       await run(tabId, dismissOverlays).catch(() => 0);

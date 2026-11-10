@@ -1234,11 +1234,12 @@ footer { color: var(--muted); font-size: 12px; margin-top: 24px; text-align: cen
   function offersOf(op) { return state.competitors.filter(function (x) { return x.opId === op.id; }); }
   var OFFER_KINDS = [["welcome", "Welcome offer"], ["second", "2nd deposit offer"], ["third", "3rd deposit offer"], ["reload", "Reload offer"], ["cashback", "Cashback"], ["freespins", "Free spins offer"], ["vip", "Loyalty / VIP reward"], ["sports", "Sportsbook offer"], ["other_offer", "Other offer"]];
   var TOUR_KINDS = [];
-  var PAGE_KINDS = [["registration", "Registration process"], ["deposit", "Deposit / cashier"], ["homepage", "Homepage"], ["promotions", "Promotions page"], ["tournament", "Tournament"], ["loyalty", "Loyalty programme"], ["gamification", "Missions / gamification"], ["app", "Mobile app"], ["rg", "Responsible gambling"], ["other_page", "Other page"]];
+  var PAGE_KINDS = [["registration", "Registration process"], ["deposit", "Deposit / cashier"], ["homepage", "Homepage"], ["navigation", "Site menu"], ["promotions", "Promotions page"], ["tournament", "Tournament"], ["loyalty", "Loyalty programme"], ["gamification", "Missions / gamification"], ["app", "Mobile app"], ["rg", "Responsible gambling"], ["other_page", "Other page"]];
   var COMPARE_FIELDS = {
     registration: ["Number of steps", "Fields asked", "Verification before play", "Bonus shown during sign-up", "One-click or social sign-up", "Asks for a deposit right after"],
     deposit: ["Payment methods", "Minimum deposit", "How the bonus is opted into", "Steps to deposit", "Fees or limits shown"],
     homepage: ["Main message", "Welcome offer visible", "Main call to action", "Shown first (games, sports…)", "Trust signals"],
+    navigation: ["Main menu items", "Products (casino, sports…)", "Promotions in the menu", "VIP or rewards in the menu", "Help and support", "Language or region switch"],
     promotions: ["Number of promotions", "Types of offers", "Terms easy to find", "Personalised offers"],
     loyalty: ["Programme type", "Number of levels", "How points are earned", "Main rewards", "Where it's shown"],
     gamification: ["Mechanics", "Rewards", "Time limits", "Progress shown"],
@@ -1567,6 +1568,11 @@ footer { color: var(--muted); font-size: 12px; margin-top: 24px; text-align: cen
           var img = await loadSrc(pg.shots[k]);
           pg.images.push({ media_type: "image/jpeg", data: scaled(img, 1568, 0, 0.85).split(",")[1] });
           pg.thumbs.push(scaled(img, 1200, 900, 0.8));
+        }
+        // the site's menu becomes its own "Site menu" item without sorting
+        if (pg.type === "menu" || pg.hint === "menu") {
+          groups.push({ kind: "navigation", title: "Site menu", entries: [{ page: pg, idx: pg.images.map(function (_, z) { return z; }), main: true }] });
+          scanJob.done++; renderScanPanel(); continue;
         }
         var sorted = await backend("sort_page", { images: pg.images, image_labels: (pg.shotLabels || []).slice(0, pg.images.length), page_text: pg.text || "", url: pg.url, link_text: pg.label || "" });
         var items = (sorted.items || []).filter(function (it) { return it && it.kind && it.kind !== "irrelevant"; }).slice(0, 6);
