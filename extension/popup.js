@@ -39,6 +39,7 @@ const main = document.getElementById("main");
 const esc = (s) => String(s == null ? "" : s).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
 const reEsc = (s) => s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 let runMode = "logged-out", guessed = false;
+let site = { sugg: [], pages: [] }; // this site's own ticks, kept per site
 let target = null, prefs = { off: [], on: [], custom: [] }, sections = [], suggestions = [], pages = [], base = [];
 
 // Search words typed by the person ("daily wheel, lucky spin") become a pattern.
@@ -116,9 +117,10 @@ function build(info) {
   try { const lu = new URL(info.logoHref); if (lu.origin === info.origin && (lu.pathname === "/" || langHome.test(lu.pathname))) home = clean(lu.origin + lu.pathname); } catch (e) { /* no logo link */ }
   const onHome = info.path === "/" || info.path === "" || langHome.test(info.path) || here === home;
   if (onHome) home = here.replace(/[?#].*$/, "") || here;
-  base = [{ type: "page", url: home, cat: "homepage", label: "Homepage", sub: "", checked: true }];
-  if (!onHome) base.push({ type: "page", url: here, cat: "current", label: "This page", sub: shortText(info.title), checked: true });
-  if (info.menu.length >= 3) base.push({ type: "menu", url: home, cat: "menu", label: "Site menu", sub: info.menu.length + " entries", menu: info.menu, checked: true });
+  const keep = (cat) => prefs.off.indexOf("base:" + cat) < 0;
+  base = [{ type: "page", url: home, cat: "homepage", label: "Homepage", sub: "", checked: keep("homepage") }];
+  if (!onHome) base.push({ type: "page", url: here, cat: "current", label: "This page", sub: shortText(info.title), checked: keep("current") });
+  if (info.menu.length >= 3) base.push({ type: "menu", url: home, cat: "menu", label: "Site menu", sub: info.menu.length + " entries", menu: info.menu, checked: keep("menu") });
   let grp = "";
   sections = DEFAULT_SECTIONS.concat(prefs.custom.map((c) => Object.assign({ details: true, custom: true }, c))).map((s) => Object.assign({}, s, { group: s.custom ? "Your own" : (grp = GROUPS[s.key] || grp), checked: s.off ? prefs.on.indexOf(s.key) >= 0 : prefs.off.indexOf(s.key) < 0, seen: seenOnPage(s, info) }));
   // menu entries no section covers become suggestions
@@ -129,10 +131,18 @@ function build(info) {
     if (t.length < 3 || t.length > 30 || /\d{3,}/.test(t) || NOT_SUGGESTED.test(t) || taken.has(k) || res.some((r) => r.test(t))) return false;
     taken.add(k); return true;
   }).slice(0, 12).map((m) => ({ key: "s_" + m.text.toLowerCase().replace(/[^a-z0-9]+/g, "_"), label: m.text, words: "^" + reEsc(m.text) + "$", details: true, checked: false, seen: m.text }));
-  pages = [];
+  suggestions.forEach((x) => { x.checked = site.sugg.indexOf(x.key) >= 0; });
+  pages = site.pages.map((u) => ({ type: "page", url: u.url, cat: "custom", label: "Added by you", sub: u.sub, checked: u.checked !== false }));
 }
 
 async function savePrefs() { await chrome.storage.sync.set({ sectionPrefs: prefs }); }
+// ticks that only make sense on one site (its menu suggestions, links you pasted) are kept per site
+async function saveSite() {
+  site = { sugg: suggestions.filter((x) => x.checked).map((x) => x.key), pages: pages.map((p) => ({ url: p.url, sub: p.sub, checked: p.checked })) };
+  const all = (await chrome.storage.local.get("siteTicks")).siteTicks || {};
+  all[target.info.host] = site;
+  await chrome.storage.local.set({ siteTicks: all });
+}
 
 function row(item, list, i, extra) {
   const sub = item.type === "page" || item.type === "menu" ? (item.sub ? '<span class="cat">' + esc(item.sub) + "</span>" : "") : "";
@@ -177,6 +187,8 @@ main.addEventListener("change", async (e) => {
     if (!item.off && !item.checked) prefs.off.push(item.key);
     await savePrefs();
   }
+  if (l === "b") { prefs.off = prefs.off.filter((k) => k !== "base:" + item.cat); if (!item.checked) prefs.off.push("base:" + item.cat); await savePrefs(); }
+  if (l === "x" || l === "p") await saveSite();
   count();
 });
 main.addEventListener("click", async (e) => {
@@ -195,14 +207,14 @@ main.addEventListener("click", async (e) => {
     sections.splice(+t.getAttribute("data-rm"), 1); render();
   }
   if (t.hasAttribute("data-keep")) {
-    const s = suggestions.splice(+t.getAttribute("data-keep"), 1)[0];
+    const s = suggestions.splice(+t.getAttribute("data-keep"), 1)[0]; await saveSite();
     const c = { key: "c_" + Date.now().toString(36), label: s.label, words: wordsFrom(s.label, "") };
     prefs.custom.push(c); await savePrefs();
     sections.push(Object.assign({ details: true, custom: true, group: "Your own", checked: true, seen: s.seen }, c)); render();
   }
   if (t.id === "add") {
     const v = document.getElementById("extra").value.trim();
-    try { const u = new URL(v); pages.push({ type: "page", url: u.toString(), cat: "custom", label: "Added by you", sub: u.pathname, checked: true }); render(); } catch (err) { document.getElementById("extra").focus(); }
+    try { const u = new URL(v); pages.push({ type: "page", url: u.toString(), cat: "custom", label: "Added by you", sub: u.pathname, checked: true }); await saveSite(); render(); } catch (err) { document.getElementById("extra").focus(); }
   }
   if (t.id === "go") {
     const home = base[0].url;
@@ -246,6 +258,8 @@ function showProgress() {
     main.innerHTML = '<p class="note">Looking at the page…</p>';
     const [res] = await chrome.scripting.executeScript({ target: { tabId: tab.id }, func: collectSite });
     target = { id: tab.id, info: res.result };
+    const ticks = (await chrome.storage.local.get("siteTicks")).siteTicks || {};
+    if (ticks[res.result.host]) site = { sugg: ticks[res.result.host].sugg || [], pages: ticks[res.result.host].pages || [] };
     document.getElementById("site").textContent = res.result.host;
     build(res.result);
     const lg = res.result.login;
