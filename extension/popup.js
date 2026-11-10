@@ -103,9 +103,9 @@ function render() {
     '<div class="row"><input type="url" id="extra" placeholder="Add another page (paste a link)"><button id="add">Add</button></div>' +
     "<h2>This run is</h2>" +
     '<div class="seg"><label><input type="radio" name="run" value="logged-out" checked><span>Logged out</span></label><label><input type="radio" name="run" value="logged-in"><span>Logged in</span></label></div>' +
-    '<div class="row"><h2 style="flex:1">Screenshots per page</h2><select id="per"><option>1</option><option>2</option><option selected>3</option><option>4</option></select></div>' +
+
     '<button class="primary" id="go"></button>' +
-    '<p class="note">The scan uses this tab, about 10 seconds per section. Don\'t switch tabs until it finishes; the planner opens by itself when it\'s done.</p>';
+    '<p class="note">Each page is photographed top to bottom, and on VIP, promotions and tournament pages it also opens details like rules and levels. The scan uses this tab, about 10 to 30 seconds per section. Don\'t switch tabs until it finishes; the planner opens by itself when it\'s done.</p>';
   count();
 }
 function all() { return picked.concat(extra); }
@@ -120,7 +120,7 @@ main.addEventListener("click", async (e) => {
   if (e.target.id === "go") {
     const pages = all().filter((p) => p.checked).map((p) => ({ type: p.type, url: p.url, label: p.label + (p.sub && p.type === "page" ? " (" + p.sub + ")" : ""), cat: p.cat, button: p.button || "", menu: p.menu || null }));
     const run = document.querySelector('input[name="run"]:checked').value;
-    const perPage = +document.getElementById("per").value;
+    const perPage = 6;
     await chrome.runtime.sendMessage({ type: "scan", tabId: target.id, pages, run, perPage, site: { host: target.info.host, title: target.info.title, url: target.info.url } });
     showProgress();
   }

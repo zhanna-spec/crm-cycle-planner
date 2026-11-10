@@ -1564,7 +1564,7 @@ footer { color: var(--muted); font-size: 12px; margin-top: 24px; text-align: cen
       scanJob.current = "sorting " + (pg.label || pg.title || pg.url); renderScanPanel();
       try {
         pg.images = []; pg.thumbs = [];
-        for (var k = 0; k < pg.shots.length && k < 8; k++) {
+        for (var k = 0; k < pg.shots.length && k < 14; k++) {
           var img = await loadSrc(pg.shots[k]);
           pg.images.push({ media_type: "image/jpeg", data: scaled(img, 1568, 0, 0.85).split(",")[1] });
           pg.thumbs.push(scaled(img, 1200, 900, 0.8));

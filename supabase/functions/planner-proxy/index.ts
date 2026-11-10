@@ -254,7 +254,7 @@ const SORT_SYSTEM = [
 function sortPage(apiKey: string, body: Record<string, unknown>) {
   const images = (Array.isArray(body.images) ? body.images : [])
     .filter((im: { media_type?: string; data?: string }) => im && IMAGE_TYPES.includes(im.media_type ?? "") && typeof im.data === "string" && im.data.length > 0)
-    .slice(0, 8) as { media_type: "image/jpeg" | "image/png" | "image/webp" | "image/gif"; data: string }[];
+    .slice(0, 14) as { media_type: "image/jpeg" | "image/png" | "image/webp" | "image/gif"; data: string }[];
   const labels = Array.isArray(body.image_labels) ? body.image_labels.map((l) => String(l).slice(0, 60)) : [];
   const text = typeof body.page_text === "string" ? body.page_text.trim().slice(0, 16000) : "";
   if (!images.length && !text) throw new UserFacingError("bad_request", "The scanned page was empty.");
