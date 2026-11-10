@@ -89,7 +89,10 @@ async function collectSite() {
   const avatar = Array.from(document.querySelectorAll("header button, header a, header [role=button], [class*=header] button, [class*=Header] button")).some((b) => vis(b) &&
     /avatar|profile|account|user[-_ ]?menu|\buser\b/i.test((b.getAttribute("aria-label") || "") + " " + (b.title || "") + " " + String(b.className || "")) && !/log ?in|sign ?in|register/i.test(b.innerText || ""));
   if (avatar) sign("in", 1, "an account button");
-  return { login, url: location.href, title: document.title, host: location.hostname, origin: location.origin, path: location.pathname, links, buttons: Array.from(new Set(buttons)), menu: menu.slice(0, 80), menuOpened: opened };
+  // where the site's logo links to: almost always the homepage (often a language version like /en)
+  const logo = Array.from(document.querySelectorAll("header a[href], [class*=header] a[href], [class*=Header] a[href], nav a[href], a[class*=logo], a[class*=Logo], a[aria-label*=home i]")).find((a) =>
+    vis(a) && (/logo|brand|home/i.test(String(a.className || "") + " " + (a.getAttribute("aria-label") || "") + " " + (a.id || "")) || (a.querySelector("img, svg") && !(a.innerText || "").trim())));
+  return { login, logoHref: logo ? logo.href : "", url: location.href, title: document.title, host: location.hostname, origin: location.origin, path: location.pathname, links, buttons: Array.from(new Set(buttons)), menu: menu.slice(0, 80), menuOpened: opened };
 }
 
 function clean(u) { try { const x = new URL(u); x.hash = ""; return x.toString(); } catch (e) { return ""; } }
@@ -106,8 +109,12 @@ function seenOnPage(sec, info) {
 }
 
 function build(info) {
-  const home = clean(info.origin + "/"), here = clean(info.url);
-  const onHome = info.path === "/" || info.path === "" || here === home;
+  // A homepage can be "/", a language version ("/en", "/de-de/") or wherever the logo links to.
+  const here = clean(info.url), langHome = /^\/([a-z]{2}([-_][a-z]{2})?)\/?$/i;
+  let home = clean(info.origin + "/");
+  try { const lu = new URL(info.logoHref); if (lu.origin === info.origin && (lu.pathname === "/" || langHome.test(lu.pathname))) home = clean(lu.origin + lu.pathname); } catch (e) { /* no logo link */ }
+  const onHome = info.path === "/" || info.path === "" || langHome.test(info.path) || here === home;
+  if (onHome) home = here.replace(/[?#].*$/, "") || here;
   base = [{ type: "page", url: home, cat: "homepage", label: "Homepage", sub: "", checked: true }];
   if (!onHome) base.push({ type: "page", url: here, cat: "current", label: "This page", sub: shortText(info.title), checked: true });
   if (info.menu.length >= 3) base.push({ type: "menu", url: home, cat: "menu", label: "Site menu", sub: info.menu.length + " entries", menu: info.menu, checked: true });
