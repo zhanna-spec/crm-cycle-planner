@@ -2,7 +2,7 @@
 
 const PLANNER_URL = "https://zhanna-spec.github.io/crm-cycle-planner/#scan";
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
-const MAX_SCROLL_SHOTS = 6;
+const MAX_SCROLL_SHOTS = 8;
 
 chrome.runtime.onMessage.addListener((msg, _sender, reply) => {
   if (msg && msg.type === "scan") {
@@ -66,15 +66,31 @@ function pageInfo() {
   };
 }
 
-function scrollToY(y) {
-  const win = Math.max(document.documentElement.scrollHeight, document.body ? document.body.scrollHeight : 0);
-  let best = null, bestH = win - window.innerHeight;
-  document.querySelectorAll("main, div, section").forEach((el) => {
-    const extra = el.scrollHeight - el.clientHeight;
-    if (extra > bestH + 50 && el.clientHeight > window.innerHeight * 0.5 && /(auto|scroll)/.test(getComputedStyle(el).overflowY)) { best = el; bestH = extra; }
-  });
-  if (best) { best.scrollTop = y; return best.scrollTop; }
-  window.scrollTo(0, y); return window.scrollY;
+// Runs inside the scanned page: scrolls to y and says where it ended up.
+// Scrolls whatever holds the content in the middle of the screen (many sites scroll an inner panel),
+// jumps instead of gliding, and waits a moment so content that loads on scroll can appear.
+async function scrollToY(y) {
+  const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+  const root = document.scrollingElement || document.documentElement;
+  const scrolls = (el) => el.scrollHeight > el.clientHeight + 50 && el.clientHeight > window.innerHeight * 0.4 && /(auto|scroll|overlay)/.test(getComputedStyle(el).overflowY);
+  let box = null;
+  for (let e = document.elementFromPoint(window.innerWidth / 2, window.innerHeight * 0.6); e && e !== document.body && e !== document.documentElement; e = e.parentElement) if (scrolls(e)) { box = e; break; }
+  const winExtra = root.scrollHeight - window.innerHeight;
+  // a smaller scrolling box (a table, a game list) doesn't count when the page itself scrolls
+  if (box && winExtra > 200 && box.clientHeight < window.innerHeight * 0.8) box = null;
+  if (!box && winExtra < 50) {
+    // nothing under the middle scrolls and the window doesn't either: take the biggest scrolling area
+    let bestH = 50;
+    document.querySelectorAll("main, div, section").forEach((el) => { const extra = el.scrollHeight - el.clientHeight; if (extra > bestH && scrolls(el)) { box = el; bestH = extra; } });
+  }
+  if (box) {
+    box.scrollTo({ top: y, behavior: "instant" });
+    await sleep(400);
+    return { pos: Math.round(box.scrollTop), max: box.scrollHeight - box.clientHeight, view: box.clientHeight };
+  }
+  window.scrollTo({ top: y, behavior: "instant" });
+  await sleep(400);
+  return { pos: Math.round(window.scrollY), max: root.scrollHeight - window.innerHeight, view: window.innerHeight };
 }
 
 // Runs inside the scanned page: finds things worth opening for details (See how rewards work,
@@ -401,18 +417,22 @@ async function freshPage(tabId, url) {
 async function scanPage(tabId, windowId, url, opts) {
   if (!opts.stay) await freshPage(tabId, url);
   const info = await run(tabId, pageInfo);
-  const step = Math.max(200, Math.floor(info.innerHeight * 0.9));
   const shots = [], labels = [];
+  // top to bottom; the end is checked again at each step because pages often grow while scrolling
+  const first = await run(tabId, scrollToY, [0]).catch(() => null) || { pos: 0, max: 0, view: info.innerHeight };
+  const step = Math.max(200, Math.floor(first.view * 0.85));
   let lastPos = -1;
   for (let k = 0; k < MAX_SCROLL_SHOTS; k++) {
-    const pos = await run(tabId, scrollToY, [k * step]);
-    if (k > 0 && pos === lastPos) break; // didn't move: we're at the bottom
-    lastPos = pos;
-    await sleep(600);
+    const at = k ? await run(tabId, scrollToY, [k * step]).catch(() => null) : first;
+    if (!at || (k > 0 && at.pos <= lastPos + 5)) break; // didn't move: we're at the bottom
+    lastPos = at.pos;
+    await sleep(300);
     shots.push(await capture(windowId)); labels.push(k ? "scrolled down " + k : "top of page");
-    if ((k + 1) * step >= info.scrollHeight - 50) break;
+    if (at.pos >= at.max - 5) break;
   }
-  let text = info.text;
+  // text again after scrolling: content that loads on scroll is there now
+  const later = await run(tabId, pageInfo).catch(() => null);
+  let text = later && later.text.length > info.text.length ? later.text : info.text;
   // banner carousels: photograph each slide (up to 5)
   if (opts.banners) {
     const seen = new Set();

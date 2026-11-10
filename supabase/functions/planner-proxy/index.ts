@@ -220,7 +220,8 @@ const SORT_KINDS: Record<string, string> = {
   welcome: "welcome offer (first deposit bonus)", second: "2nd deposit offer", third: "3rd deposit offer", reload: "reload offer",
   cashback: "cashback", freespins: "free spins offer", vip: "loyalty or VIP reward", sports: "sportsbook offer", other_offer: "other bonus offer",
   registration: "registration process or sign-up form", deposit: "deposit or cashier page", homepage: "homepage", promotions: "promotions overview page",
-  tournament: "one tournament, race or prize drop", loyalty: "loyalty or VIP programme page", gamification: "missions, bonus shop, wheel, mini-games or other gamification",
+  tournament: "one tournament, race or prize drop", loyalty: "loyalty or VIP programme page", missions: "missions, quests, challenges or achievements", shop: "bonus shop or rewards store where points or coins are spent",
+  wheel: "wheel of fortune, daily spin, mystery box or other mini-game", gamification: "other gamification (badges, streaks…) that isn't missions, a shop or a mini-game",
   referral: "refer-a-friend programme", inbox: "player inbox or on-site messages", account: "player account area (my bonuses, profile, communication preferences)",
   withdrawal: "withdrawal page or form", app: "mobile app page", rg: "responsible gambling page", other_page: "other page worth reviewing", irrelevant: "nothing relevant (game lobby, unrelated legal text, error page)",
 };
@@ -245,6 +246,7 @@ const SORT_SYSTEM = [
   "List what the page contains, using these kinds:",
   ...Object.entries(SORT_KINDS).map(([k, v]) => `- ${k}: ${v}`),
   "A page can contain several things: a promotions page usually counts as promotions plus one item for each concrete offer or tournament on it. List each separately, at most 6 items, most important first.",
+  "A rewards or loyalty page often holds several parts (levels, missions, a bonus shop, a wheel): list each part as its own item with its own kind and the screenshots that show it, instead of putting them together.",
   "A bonus terms page counts as the offer it describes. The homepage counts as homepage, plus the welcome offer if it is shown with its numbers.",
   "title is a short name, such as the offer headline or the tournament name.",
   "main is true when this page is mainly about the item (its own page, or a full section or card describing it). main is false when the item is only mentioned in passing, for example in the site header, a sidebar, a small teaser or a banner that links elsewhere.",
