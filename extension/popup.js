@@ -235,6 +235,15 @@ main.addEventListener("click", async (e) => {
     const used = new Set(), skip = new Set();
     chosen().forEach((p) => (KINDS[p.key || p.cat] || []).forEach((k) => used.add(k)));
     base.concat(sections.filter(fits)).filter((p) => !p.checked).forEach((p) => (KINDS[p.key || p.cat] || []).forEach((k) => { if (!used.has(k)) skip.add(k); }));
+    const picked = chosen(), has = (key) => picked.some((p) => p.key === key);
+    // "Open every promotion" off: no offer cards from the promotions page, only offers you ticked yourself
+    if (prefs.cards === false) {
+      ["second", "third", "reload", "cashback", "freespins", "vip", "other_offer"].forEach((k) => skip.add(k));
+      if (!has("welcome")) skip.add("welcome");
+      if (!has("sports")) skip.add("sports");
+    }
+    // "Other page" only when you asked for something it would hold (bonus terms, your own sections, pasted links, this page, suggestions)
+    if (!picked.some((p) => p.key === "terms" || p.custom || /^s_/.test(p.key || "") || p.cat === "custom" || p.cat === "current")) skip.add("other_page");
     await chrome.runtime.sendMessage({ type: "scan", tabId: target.id, pages: list, run, skip: Array.from(skip), site: { host: target.info.host, title: target.info.title, url: target.info.url } });
     showProgress();
   }
