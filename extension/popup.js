@@ -9,7 +9,7 @@ const DEFAULT_SECTIONS = [
   { key: "welcome", label: "Welcome offer", words: "welcome|new[\\s_-]*player|first[\\s_-]*deposit|1st[\\s_-]*deposit|willkommen|bienvenid|benvenut|bienvenue", not: "terms|conditions|rules|requirement", details: true, content: true },
   { key: "terms", label: "Bonus terms", words: "bonus[\\s_-]*(t&cs?|terms|rules|conditions|policy|requirement)|promotion[\\s_-]*(terms|rules|requirement)|wagering[\\s_-]*requirement|bonusbedingungen|bonus[\\s_-]*regeln|bonusvoorwaarden|terms[\\s_-]*(and|&)[\\s_-]*conditions", details: true, help: true },
   // Keeping players
-  { key: "tournaments", label: "Tournaments / races", words: "tourn|turnier|torneo|tournoi|leaderboard|rangliste|\\brace\\b|races\\b|drops?[\\s_&-]*(and|&)?[\\s_-]*wins|prize[\\s_-]*drop|wettbewerb", details: true, cards: "Tournament" },
+  { key: "tournaments", label: "Tournaments / races", words: "tourn|turnier|torneo|tournoi|leaderboard|rangliste|\\brace\\b|races\\b|drops?[\\s_&-]*(and|&)?[\\s_-]*wins|prize[\\s_-]*drop|wettbewerb", details: true },
   { key: "vip", label: "VIP / loyalty", words: "\\bvip\\b|loyal|club\\b|rewards?\\b|levels?\\b|rakeback|cashback|treue|fidelidad|fedelt|fidélité", not: "shop|store", details: true },
   { key: "missions", label: "Missions / achievements", words: "mission|quest|achievement|badges?\\b|challenges?\\b", details: true },
   { key: "shop", label: "Bonus shop", words: "\\bshop\\b|\\bstore\\b|bonus[\\s_-]*shop|rewards?[\\s_-]*shop|exchange|marketplace|prämien|tienda", not: "app[\\s_-]*store|play[\\s_-]*store|google[\\s_-]*play", details: true },
@@ -167,7 +167,7 @@ function render() {
     "<h2>This run is</h2>" +
     '<div class="seg"><label><input type="radio" name="run" value="logged-out"' + (runMode === "logged-out" ? " checked" : "") + '><span>Logged out</span></label><label><input type="radio" name="run" value="logged-in"' + (runMode === "logged-in" ? " checked" : "") + "><span>Logged in</span></label></div>" +
     (guessed ? '<p class="note">' + esc(guessed) + "</p>" : "") +
-    '<label class="opt"><input type="checkbox" id="openCards"' + (prefs.cards !== false ? " checked" : "") + '><span><b>Open every promotion and tournament</b><small>Opens each one and reads its terms. About 10 seconds more per promotion. Untick to photograph the promotions and tournament pages as they are.</small></span></label>' +
+    '<label class="opt"><input type="checkbox" id="openCards"' + (prefs.cards !== false ? " checked" : "") + '><span><b>Open every promotion</b><small>Opens each offer on the promotions page and reads its terms. About 10 seconds more per offer. Untick to photograph the promotions page as it is.</small></span></label>' +
     "<h2>Always</h2>" +
     '<div class="list">' + base.map((p, i) => row(p, "b", i)).join("") + "</div>" +
     "<h2>Sections to find</h2>" +
