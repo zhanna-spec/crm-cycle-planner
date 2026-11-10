@@ -247,6 +247,7 @@ const SORT_SYSTEM = [
   ...Object.entries(SORT_KINDS).map(([k, v]) => `- ${k}: ${v}`),
   "A page can contain several things: a promotions page usually counts as promotions plus one item for each concrete offer or tournament on it. List each separately, at most 6 items, most important first.",
   "A rewards or loyalty page often holds several parts (levels, missions, a bonus shop, a wheel): list each part as its own item with its own kind and the screenshots that show it, instead of putting them together.",
+  "When the link text starts with \"Offer:\" or \"Tournament:\", the material is one offer or tournament opened from a list (its pop-up or its own page): list only that item, never promotions or homepage.",
   "A bonus terms page counts as the offer it describes. The homepage counts as homepage, plus the welcome offer if it is shown with its numbers.",
   "title is a short name, such as the offer headline or the tournament name.",
   "main is true when this page is mainly about the item (its own page, or a full section or card describing it). main is false when the item is only mentioned in passing, for example in the site header, a sidebar, a small teaser or a banner that links elsewhere.",
