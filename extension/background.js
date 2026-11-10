@@ -179,7 +179,7 @@ async function findSection(src, opts) {
   const re = new RegExp(src, "i"), no = opts.not ? new RegExp(opts.not, "i") : null;
   const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
   const HELP = /(^|\.)(help|support|faq|blog|news|docs|community)\.|\/(help|support|faq|articles?|blog|news|knowledge|guides?|how-to)\b|how-to-/i;
-  const DENY = /claim(?!\s*history)|deposit(?!\s*history)|withdraw(?!al\s*history|\s*history)|wallet|\bbet\b|place bet|buy|purchase|spin now|log ?out|sign ?out|delete|remove|cancel|send|submit|accept|decline|redeem|activate|opt[- ]?in|subscribe/i;
+  const DENY = /claim(?!\s*history)|deposit(?!\s*history)|withdraw(?!al\s*history|\s*history)|wallet|^bet( now)?$|place bet|buy|purchase|spin now|log ?out|sign ?out|delete|remove|cancel|send|submit|accept|decline|redeem|activate|opt[- ]?in|subscribe/i;
   const host = location.hostname.replace(/^www\./, ""), base = host.split(".").slice(-2).join(".");
   const textOf = (el) => (el.innerText || el.getAttribute("aria-label") || el.title || "").trim().replace(/\s+/g, " ");
   const shown = (el) => { const r = el.getBoundingClientRect(); return r.width > 2 && r.height > 2; };

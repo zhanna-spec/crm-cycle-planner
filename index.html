@@ -1242,7 +1242,7 @@ footer { color: var(--muted); font-size: 12px; margin-top: 24px; text-align: cen
   function offersOf(op) { return state.competitors.filter(function (x) { return x.opId === op.id; }); }
   var OFFER_KINDS = [["welcome", "Welcome offer"], ["second", "2nd deposit offer"], ["third", "3rd deposit offer"], ["reload", "Reload offer"], ["cashback", "Cashback"], ["freespins", "Free spins offer"], ["vip", "Loyalty / VIP reward"], ["sports", "Sportsbook offer"], ["other_offer", "Other offer"]];
   var TOUR_KINDS = [];
-  var PAGE_KINDS = [["registration", "Registration process"], ["deposit", "Deposit / cashier"], ["homepage", "Homepage"], ["navigation", "Site menu"], ["promotions", "Promotions page"], ["tournament", "Tournament"], ["loyalty", "Loyalty programme"], ["gamification", "Missions / gamification"], ["app", "Mobile app"], ["rg", "Responsible gambling"], ["other_page", "Other page"]];
+  var PAGE_KINDS = [["registration", "Registration process"], ["deposit", "Deposit / cashier"], ["homepage", "Homepage"], ["navigation", "Site menu"], ["promotions", "Promotions page"], ["tournament", "Tournament"], ["loyalty", "Loyalty programme"], ["gamification", "Missions / gamification"], ["referral", "Refer a friend"], ["inbox", "Inbox / messages"], ["account", "Account area"], ["withdrawal", "Withdrawal"], ["app", "Mobile app"], ["rg", "Responsible gambling"], ["other_page", "Other page"]];
   var COMPARE_FIELDS = {
     registration: ["Number of steps", "Fields asked", "Verification before play", "Bonus shown during sign-up", "One-click or social sign-up", "Asks for a deposit right after"],
     deposit: ["Payment methods", "Minimum deposit", "How the bonus is opted into", "Steps to deposit", "Fees or limits shown"],
@@ -1251,6 +1251,10 @@ footer { color: var(--muted); font-size: 12px; margin-top: 24px; text-align: cen
     promotions: ["Number of promotions", "Types of offers", "Terms easy to find", "Personalised offers"],
     loyalty: ["Programme type", "Number of levels", "How points are earned", "Main rewards", "Where it's shown"],
     gamification: ["Mechanics", "Rewards", "Time limits", "Progress shown"],
+    referral: ["Reward for referrer", "Reward for friend", "Conditions", "How to share"],
+    inbox: ["Number of messages", "Message types", "Offers in messages", "Personalised", "How it's shown"],
+    account: ["Bonus overview", "Wagering progress shown", "Communication preferences", "Limits and settings"],
+    withdrawal: ["Methods", "Minimum withdrawal", "Steps to withdraw", "Retention offer or warning", "Pending time shown"],
     app: ["Platforms", "App-only offers", "Sign-up in the app", "Push notification prompt"],
     rg: ["Tools offered", "Limits offered at sign-up", "Reality checks", "Where it's shown"],
     tournament: ["Prize pool", "Top prize", "Number of winners", "Duration", "How to join", "Scoring", "Eligible games", "Minimum bet", "How often it runs", "Prize type"],

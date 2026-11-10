@@ -3,25 +3,39 @@
 // The standard checklist. "words" match the text (or address) of a link, button or menu entry.
 // popup: the section usually opens as a pop-up from a button. details: open rules, levels, cards on that page.
 const DEFAULT_SECTIONS = [
+  // Getting players in
   { key: "register", label: "Sign-up", words: "^(register|registrieren|sign[\\s_-]*up|signup|join( now)?|open account|create[\\s_-]*(an[\\s_-]*)?account|konto[\\s_-]*erstellen|registrati|inscri.*|regístrate|registrarse)$", popup: true },
-  { key: "deposit", label: "Deposit / cashier", words: "^(deposit|deposit now|wallet|cashier|einzahlen|einzahlung|kasse|depositar|depósito|deposita|dépôt|déposer)$", popup: true },
-  { key: "promotions", label: "Promotions", words: "promo|promotion|bonus(es)?\\b|offers?\\b|angebot|aktion|promociones|ofertas|promozioni|offres|aanbieding|kampanj|kampanya", not: "^my\\b|terms|conditions|rules|requirement|shop", details: true },
+  { key: "welcome", label: "Welcome offer", words: "welcome|new[\\s_-]*player|first[\\s_-]*deposit|1st[\\s_-]*deposit|willkommen|bienvenid|benvenut|bienvenue", not: "terms|conditions|rules|requirement", details: true },
+  { key: "promotions", label: "Promotions", words: "promo|promotion|bonus(es)?\\b|offers?\\b|campaigns?\\b|angebot|aktion|promociones|ofertas|promozioni|offres|aanbieding|kampanj|kampanya", not: "^my\\b|terms|conditions|rules|requirement|shop|welcome", details: true },
+  { key: "terms", label: "Bonus terms", words: "bonus[\\s_-]*(t&cs?|terms|rules|conditions|policy|requirement)|promotion[\\s_-]*(terms|rules|requirement)|wagering[\\s_-]*requirement|bonusbedingungen|bonus[\\s_-]*regeln|bonusvoorwaarden|terms[\\s_-]*(and|&)[\\s_-]*conditions", details: true, help: true },
+  // Keeping players
   { key: "tournaments", label: "Tournaments / races", words: "tourn|turnier|torneo|tournoi|leaderboard|rangliste|\\brace\\b|races\\b|drops?[\\s_&-]*(and|&)?[\\s_-]*wins|prize[\\s_-]*drop|wettbewerb", details: true },
-  { key: "vip", label: "VIP / loyalty", words: "\\bvip\\b|loyal|club\\b|rewards?\\b|treue|fidelidad|fedelt|fidélité|rakeback|levels?\\b", details: true },
-  { key: "missions", label: "Missions / shop / wheel", words: "mission|quest|challenge|achievement|badges?\\b|\\bshop\\b|store\\b|bonus[\\s_-]*shop|wheel|lucky[\\s_-]*spin|daily[\\s_-]*(spin|reward)|mini[\\s_-]*games?", details: true },
-  { key: "bonuses", label: "My bonuses (logged in)", words: "my[\\s_-]*(bonus(es)?|rewards|offers|free[\\s_-]*spins)|bonus[\\s_-]*(wallet|balance|history)|active[\\s_-]*bonus|free[\\s_-]*spins\\b|freespins", details: true },
-  { key: "inbox", label: "Inbox / messages (logged in)", words: "inbox|messages?\\b|notifications?\\b|mailbox|postfach|nachrichten", details: false },
-  { key: "terms", label: "Bonus terms", words: "bonus[\\s_-]*(terms|rules|conditions|policy|requirement)|promotion[\\s_-]*(terms|requirement)|bonusbedingungen|bonus[\\s_-]*regeln|bonusvoorwaarden|terms[\\s_-]*(and|&)[\\s_-]*conditions", details: true, help: true },
+  { key: "vip", label: "VIP / loyalty", words: "\\bvip\\b|loyal|club\\b|rewards?\\b|levels?\\b|rakeback|cashback|treue|fidelidad|fedelt|fidélité", not: "shop|store", details: true },
+  { key: "missions", label: "Missions / achievements", words: "mission|quest|achievement|badges?\\b|challenges?\\b", details: true },
+  { key: "shop", label: "Bonus shop", words: "\\bshop\\b|\\bstore\\b|bonus[\\s_-]*shop|rewards?[\\s_-]*shop|exchange|marketplace|prämien|tienda", not: "app[\\s_-]*store|play[\\s_-]*store|google[\\s_-]*play", details: true },
+  { key: "wheel", label: "Wheel / mini-games", words: "wheel|lucky[\\s_-]*spin|daily[\\s_-]*(spin|reward|bonus|drop)|mystery[\\s_-]*(box|chest|bonus)|scratch|mini[\\s_-]*games?|treasure|\\bchests?\\b", details: true },
+  { key: "referral", label: "Refer a friend", words: "refer|referral|invite[\\s_-]*(a[\\s_-]*)?friends?|bring[\\s_-]*a[\\s_-]*friend|freunde[\\s_-]*werben|invita", details: true },
+  { key: "jackpots", label: "Jackpots", words: "jackpot", details: true },
+  { key: "sports", label: "Sports promos", words: "free[\\s_-]*bets?|acca|odds[\\s_-]*boost|price[\\s_-]*boost|bet[\\s_-]*insurance|bet[\\s_-]*builder|sports?[\\s_-]*(promo|promotions|bonus|offers?)", details: true, off: true },
+  // Logged in only
+  { key: "deposit", label: "Deposit / cashier", words: "^(deposit|deposit now|wallet|cashier|einzahlen|einzahlung|kasse|depositar|depósito|deposita|dépôt|déposer)$", popup: true, loggedIn: true },
+  { key: "bonuses", label: "My bonuses", words: "my[\\s_-]*(bonus(es)?|rewards|offers|free[\\s_-]*spins)|bonus[\\s_-]*(wallet|balance|history)|active[\\s_-]*bonus|free[\\s_-]*spins\\b|freespins", details: true, loggedIn: true },
+  { key: "inbox", label: "Inbox / messages", words: "inbox|messages?\\b|notifications?\\b|mailbox|postfach|nachrichten", loggedIn: true },
+  { key: "account", label: "Account / profile", words: "my[\\s_-]*account|my[\\s_-]*profile|^profile$|account[\\s_-]*settings|communication|marketing[\\s_-]*preferences|preferences|mein[\\s_-]*konto|mi[\\s_-]*cuenta", loggedIn: true },
+  { key: "withdrawal", label: "Withdrawal", words: "^(withdraw|withdrawal|withdraw funds|auszahlen|auszahlung|retirar|retiro|prelevare|prelievo|retrait)$", popup: true, loggedIn: true },
+  // Compliance and extras
+  { key: "rg", label: "Responsible gambling", words: "responsible|safer[\\s_-]*gambling|player[\\s_-]*protection|verantwort|juego[\\s_-]*responsable|gioco[\\s_-]*responsabile|jeu[\\s_-]*responsable", help: true },
   { key: "app", label: "App", words: "\\bapp\\b|download[\\s_-]*(the[\\s_-]*)?app|mobile[\\s_-]*app" },
-  { key: "rg", label: "Responsible gambling", words: "responsible|verantwort|juego[\\s_-]*responsable|gioco[\\s_-]*responsabile|jeu[\\s_-]*responsable|safer[\\s_-]*gambling", help: true }
+  { key: "help", label: "Help / FAQ", words: "^(help|help cent(er|re)|support|faq|faqs)$", help: true, off: true }
 ];
+const GROUPS = { register: "Getting players in", tournaments: "Keeping players", deposit: "Logged in only", rg: "Compliance and extras" };
 // Menu entries that are game categories or account basics; not worth suggesting.
-const NOT_SUGGESTED = /^(home|casino|live( casino| dealer)?|sports?( ?book| ?betting)?|slots?|table games|new( games)?|popular|top( games)?|all games|games|jackpots? games|roulette|blackjack|baccarat|poker|crash( games)?|instant( games)?|megaways|providers?|search|favou?rites|recent(ly played)?|log ?in|sign ?in|log ?out|register|sign ?up|join( now)?|deposit|wallet|cashier|menu|close|back|english|deutsch|español|language|light|dark|en|de|es|fr|it)$/i;
+const NOT_SUGGESTED = /^(home|casino|live( casino| dealer)?|sports?( ?book| ?betting)?|withdraw(al)?|help( cent(er|re))?|support|faqs?|slots?|table games|new( games)?|popular|top( games)?|all games|games|jackpots? games|roulette|blackjack|baccarat|poker|crash( games)?|instant( games)?|megaways|providers?|search|favou?rites|recent(ly played)?|log ?in|sign ?in|log ?out|register|sign ?up|join( now)?|deposit|wallet|cashier|menu|close|back|english|deutsch|español|language|light|dark|en|de|es|fr|it)$/i;
 
 const main = document.getElementById("main");
 const esc = (s) => String(s == null ? "" : s).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
 const reEsc = (s) => s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-let target = null, prefs = { off: [], custom: [] }, sections = [], suggestions = [], pages = [], base = [];
+let target = null, prefs = { off: [], on: [], custom: [] }, sections = [], suggestions = [], pages = [], base = [];
 
 // Search words typed by the person ("daily wheel, lucky spin") become a pattern.
 function wordsFrom(name, extra) {
@@ -72,7 +86,7 @@ function build(info) {
   base = [{ type: "page", url: home, cat: "homepage", label: "Homepage", sub: "", checked: true }];
   if (!onHome) base.push({ type: "page", url: here, cat: "current", label: "This page", sub: shortText(info.title), checked: true });
   if (info.menu.length >= 3) base.push({ type: "menu", url: home, cat: "menu", label: "Site menu", sub: info.menu.length + " entries", menu: info.menu, checked: true });
-  sections = DEFAULT_SECTIONS.concat(prefs.custom.map((c) => Object.assign({ details: true, custom: true }, c))).map((s) => Object.assign({}, s, { checked: prefs.off.indexOf(s.key) < 0, seen: seenOnPage(s, info) }));
+  sections = DEFAULT_SECTIONS.concat(prefs.custom.map((c) => Object.assign({ details: true, custom: true }, c))).map((s) => Object.assign({}, s, { checked: s.off ? prefs.on.indexOf(s.key) >= 0 : prefs.off.indexOf(s.key) < 0, seen: seenOnPage(s, info) }));
   // menu entries no section covers become suggestions
   const res = sections.map((s) => new RegExp(s.words, "i"));
   const taken = new Set();
@@ -91,7 +105,7 @@ function row(item, list, i, extra) {
   const small = list === "b" ? (item.type === "menu" ? "Opens the menu on the homepage" : item.url)
     : list === "x" ? "Seen in the menu"
     : list === "p" ? item.url
-    : item.seen ? "Seen on this page: “" + shortText(item.seen) + "”" : item.popup ? "Will look for the button" : "Will search the page and menus";
+    : item.seen ? "Seen on this page: “" + shortText(item.seen) + "”" : item.loggedIn ? "Only when logged in" : item.popup ? "Will look for the button" : "Will search the page and menus";
   return '<div class="item"><label><input type="checkbox" data-list="' + list + '" data-i="' + i + '"' + (item.checked ? " checked" : "") + "><span><b>" + esc(item.label) + "</b> " + sub + "<small>" + esc(small) + "</small></span></label>" + (extra || "") + "</div>";
 }
 
@@ -100,7 +114,7 @@ function render() {
     "<h2>Always</h2>" +
     '<div class="list">' + base.map((p, i) => row(p, "b", i)).join("") + "</div>" +
     "<h2>Sections to find</h2>" +
-    '<div class="list">' + sections.map((s, i) => row(s, "s", i, s.custom ? '<button class="x" data-rm="' + i + '" title="Remove from my list" aria-label="Remove ' + esc(s.label) + '">✕</button>' : "")).join("") + pages.map((p, i) => row(p, "p", i)).join("") + "</div>" +
+    '<div class="list">' + sections.map((s, i) => (GROUPS[s.key] || (s.custom && !(sections[i - 1] || {}).custom ? "Your own" : "") ? '<div class="grp">' + esc(GROUPS[s.key] || "Your own") + "</div>" : "") + row(s, "s", i, s.custom ? '<button class="x" data-rm="' + i + '" title="Remove from my list" aria-label="Remove ' + esc(s.label) + '">✕</button>' : "")).join("") + pages.map((p, i) => row(p, "p", i)).join("") + "</div>" +
     '<details id="addbox"><summary>+ Add a section to my list</summary>' +
     '<div class="col"><input type="text" id="newName" placeholder="Name, e.g. Daily wheel" maxlength="40"><input type="text" id="newWords" placeholder="Other words it may be called (optional, comma separated)" maxlength="200"><button id="addSec">Add to my list</button></div>' +
     '<div class="row"><input type="url" id="extra" placeholder="Or paste a page link for this scan"><button id="add">Add</button></div></details>' +
@@ -120,7 +134,12 @@ main.addEventListener("change", async (e) => {
   const i = e.target.getAttribute("data-i"); if (i === null) return;
   const l = e.target.getAttribute("data-list"), item = listOf(l)[+i];
   item.checked = e.target.checked;
-  if (l === "s") { prefs.off = prefs.off.filter((k) => k !== item.key); if (!item.checked) prefs.off.push(item.key); await savePrefs(); }
+  if (l === "s") {
+    prefs.off = prefs.off.filter((k) => k !== item.key); prefs.on = prefs.on.filter((k) => k !== item.key);
+    if (item.off && item.checked) prefs.on.push(item.key);
+    if (!item.off && !item.checked) prefs.off.push(item.key);
+    await savePrefs();
+  }
   count();
 });
 main.addEventListener("click", async (e) => {
@@ -177,7 +196,7 @@ function showProgress() {
   const { scanStatus } = await chrome.storage.local.get("scanStatus");
   if (scanStatus && scanStatus.state === "running") { document.getElementById("site").textContent = "A scan is running"; showProgress(); return; }
   const stored = (await chrome.storage.sync.get("sectionPrefs")).sectionPrefs;
-  if (stored) prefs = { off: stored.off || [], custom: stored.custom || [] };
+  if (stored) prefs = { off: stored.off || [], on: stored.on || [], custom: stored.custom || [] };
   // ?tab=<id> lets the popup be opened as a normal page for testing.
   const q = new URLSearchParams(location.search).get("tab");
   const tab = q ? await chrome.tabs.get(+q) : (await chrome.tabs.query({ active: true, currentWindow: true }))[0];

@@ -220,8 +220,9 @@ const SORT_KINDS: Record<string, string> = {
   welcome: "welcome offer (first deposit bonus)", second: "2nd deposit offer", third: "3rd deposit offer", reload: "reload offer",
   cashback: "cashback", freespins: "free spins offer", vip: "loyalty or VIP reward", sports: "sportsbook offer", other_offer: "other bonus offer",
   registration: "registration process or sign-up form", deposit: "deposit or cashier page", homepage: "homepage", promotions: "promotions overview page",
-  tournament: "one tournament, race or prize drop", loyalty: "loyalty or VIP programme page", gamification: "missions or gamification",
-  app: "mobile app page", rg: "responsible gambling page", other_page: "other page worth reviewing", irrelevant: "nothing relevant (game lobby, unrelated legal text, error page)",
+  tournament: "one tournament, race or prize drop", loyalty: "loyalty or VIP programme page", gamification: "missions, bonus shop, wheel, mini-games or other gamification",
+  referral: "refer-a-friend programme", inbox: "player inbox or on-site messages", account: "player account area (my bonuses, profile, communication preferences)",
+  withdrawal: "withdrawal page or form", app: "mobile app page", rg: "responsible gambling page", other_page: "other page worth reviewing", irrelevant: "nothing relevant (game lobby, unrelated legal text, error page)",
 };
 const SORT_SCHEMA = {
   type: "object", additionalProperties: false, required: ["items"],
