@@ -67,7 +67,29 @@ async function collectSite() {
     const t = textOf(el).slice(0, 40); if (!t || seen.has(t.toLowerCase()) || !vis(el)) return;
     seen.add(t.toLowerCase()); menu.push({ text: t, href: el.href || "" });
   });
-  return { url: location.href, title: document.title, host: location.hostname, origin: location.origin, path: location.pathname, links, buttons: Array.from(new Set(buttons)), menu: menu.slice(0, 80), menuOpened: opened };
+  // Signs of being logged in or out. Hidden menu entries count too (a "Log out" link in a closed menu).
+  const login = { inScore: 0, outScore: 0, inWhy: [], outWhy: [] };
+  const all = Array.from(document.querySelectorAll("a, button, [role=button], [role=menuitem]"));
+  const shownText = all.filter(vis).map(textOf).map((t) => t.trim());
+  const anyText = all.map((el) => (el.textContent || el.getAttribute("aria-label") || "").trim().replace(/\s+/g, " "));
+  const sign = (side, pts, why) => { login[side + "Score"] += pts; login[side + "Why"].push(why); };
+  if (anyText.some((t) => /^(log ?out|sign ?out|logout|abmelden|ausloggen|cerrar sesión|salir|déconnexion|esci|uitloggen)$/i.test(t))) sign("in", 3, "a Log out option");
+  if (shownText.some((t) => /^(log ?in|sign ?in|login|anmelden|einloggen|iniciar sesión|entrar|connexion|se connecter|accedi|inloggen)$/i.test(t))) sign("out", 3, "a Log in button");
+  if (shownText.some((t) => /^(register|sign ?up|join( now)?|create account|open account|registrieren|regístrate|registrati|s'inscrire)$/i.test(t))) sign("out", 1, "a Register button");
+  if (Array.from(document.querySelectorAll("input[type=password]")).some(vis)) sign("out", 1, "a password field");
+  if (shownText.some((t) => /^(deposit|deposit now|wallet|cashier|einzahlen|depositar)$/i.test(t))) sign("in", 1, "a Deposit button");
+  // a balance near the top of the page, like "€12.50" or "0.00 USDT"
+  const money = /^([€$£₺₹¥₽]|EUR|USD|GBP|CAD|AUD|NZD|BTC|ETH|USDT)?\s?\d{1,7}([.,]\d{2,8})\s?([€$£₺₹¥₽]|EUR|USD|GBP|CAD|AUD|NZD|BTC|ETH|USDT|mBTC)?$/i;
+  const balance = Array.from(document.querySelectorAll("header *, [class*=header] *, [class*=Header] *, [class*=balance] *, [class*=Balance], [class*=balance]")).some((el) => {
+    if (!vis(el) || el.children.length > 2) return false;
+    const r = el.getBoundingClientRect(), t = (el.innerText || "").trim();
+    return r.top < 160 && t.length <= 20 && money.test(t) && /[€$£₺₹¥₽]|[A-Z]{3}/i.test(t);
+  });
+  if (balance) sign("in", 2, "a balance in the header");
+  const avatar = Array.from(document.querySelectorAll("header button, header a, header [role=button], [class*=header] button, [class*=Header] button")).some((b) => vis(b) &&
+    /avatar|profile|account|user[-_ ]?menu|\buser\b/i.test((b.getAttribute("aria-label") || "") + " " + (b.title || "") + " " + String(b.className || "")) && !/log ?in|sign ?in|register/i.test(b.innerText || ""));
+  if (avatar) sign("in", 1, "an account button");
+  return { login, url: location.href, title: document.title, host: location.hostname, origin: location.origin, path: location.pathname, links, buttons: Array.from(new Set(buttons)), menu: menu.slice(0, 80), menuOpened: opened };
 }
 
 function clean(u) { try { const x = new URL(u); x.hash = ""; return x.toString(); } catch (e) { return ""; } }
@@ -118,7 +140,7 @@ function render() {
   main.innerHTML =
     "<h2>This run is</h2>" +
     '<div class="seg"><label><input type="radio" name="run" value="logged-out"' + (runMode === "logged-out" ? " checked" : "") + '><span>Logged out</span></label><label><input type="radio" name="run" value="logged-in"' + (runMode === "logged-in" ? " checked" : "") + "><span>Logged in</span></label></div>" +
-    (guessed ? '<p class="note">' + (runMode === "logged-in" ? "You seem to be logged in on this site." : "You seem to be logged out on this site.") + " The list shows the sections for this kind of run.</p>" : "") +
+    (guessed ? '<p class="note">' + esc(guessed) + "</p>" : "") +
     "<h2>Always</h2>" +
     '<div class="list">' + base.map((p, i) => row(p, "b", i)).join("") + "</div>" +
     "<h2>Sections to find</h2>" +
@@ -218,11 +240,10 @@ function showProgress() {
     target = { id: tab.id, info: res.result };
     document.getElementById("site").textContent = res.result.host;
     build(res.result);
-    // A Deposit / Wallet button and no Log in / Register button usually means logged in.
-    const btns = res.result.buttons.concat(res.result.links.map((l) => l.text));
-    const hasIn = btns.some((t) => /^(deposit|deposit now|wallet|cashier|my account|log ?out|sign ?out)$/i.test(t.trim()));
-    const hasOut = btns.some((t) => /^(log ?in|sign ?in|register|sign ?up|join( now)?|create account)$/i.test(t.trim()));
-    if (hasIn !== hasOut) { runMode = hasIn ? "logged-in" : "logged-out"; guessed = true; }
+    const lg = res.result.login;
+    if (lg.inScore - lg.outScore >= 2) { runMode = "logged-in"; guessed = "You seem to be logged in (" + lg.inWhy.slice(0, 2).join(", ") + "). Change it if that's wrong."; }
+    else if (lg.outScore - lg.inScore >= 2) { runMode = "logged-out"; guessed = "You seem to be logged out (" + lg.outWhy.slice(0, 2).join(", ") + "). Change it if that's wrong."; }
+    else guessed = "Couldn't tell if you're logged in. Check the switch.";
     render();
   } catch (err) {
     main.innerHTML = '<p class="warn">Couldn\'t read this page: ' + esc(err.message) + "</p>";
