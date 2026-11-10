@@ -1558,6 +1558,17 @@ footer { color: var(--muted); font-size: 12px; margin-top: 24px; text-align: cen
   }
   // Offers of one type, and most website sections, appear once per operator; tournaments and "other" items are told apart by name.
   function groupKey(kind) { return kind === "tournament" || kind === "other_offer" || kind === "other_page" ? null : kind; }
+  // A small grey version of a screenshot, to spot the same picture coming from different pages.
+  function printOf(img) {
+    try {
+      var c = document.createElement("canvas"); c.width = 160; c.height = 100;
+      var x = c.getContext("2d"); x.drawImage(img, 0, 0, 160, 100);
+      var d = x.getImageData(0, 0, 160, 100).data, g = new Uint8Array(16000);
+      for (var i = 0; i < 16000; i++) g[i] = (d[i * 4] * 3 + d[i * 4 + 1] * 6 + d[i * 4 + 2]) / 10;
+      return g;
+    } catch (e) { return null; }
+  }
+  function samePrint(a, b) { var n = 0; for (var i = 0; i < a.length; i++) if (i % 160 < 155 && Math.abs(a[i] - b[i]) > 16 && ++n > 12) return false; return true; }
   async function processScan(id, op, pages, run) {
     scanJob = { id: id, opId: op.id, run: run, total: pages.length, done: 0, made: 0, skipped: 0, failed: 0, current: "", errors: [], finished: false, phase: "sort" };
     selectOp(op.id); renderScanPanel();
@@ -1567,11 +1578,12 @@ footer { color: var(--muted); font-size: 12px; margin-top: 24px; text-align: cen
       var pg = pages[i];
       scanJob.current = "sorting " + (pg.label || pg.title || pg.url); renderScanPanel();
       try {
-        pg.images = []; pg.thumbs = [];
+        pg.images = []; pg.thumbs = []; pg.prints = [];
         for (var k = 0; k < pg.shots.length && k < 14; k++) {
           var img = await loadSrc(pg.shots[k]);
           pg.images.push({ media_type: "image/jpeg", data: scaled(img, 1568, 0, 0.85).split(",")[1] });
           pg.thumbs.push(scaled(img, 1200, 900, 0.8));
+          pg.prints.push(printOf(img));
         }
         // the site's menu becomes its own "Site menu" item without sorting
         if (pg.type === "menu" || pg.hint === "menu") {
@@ -1603,13 +1615,17 @@ footer { color: var(--muted); font-size: 12px; margin-top: 24px; text-align: cen
       var g2 = groups[n];
       scanJob.current = kindLabel(g2.kind) + (g2.title ? ": " + g2.title : ""); renderScanPanel();
       try {
-        var imgs = [], thumbs = [], paths = [], texts = [];
+        var imgs = [], thumbs = [], paths = [], texts = [], prints = [];
         var mains = g2.entries.filter(function (e) { return e.main; });
         var use = mains.length ? mains : g2.entries;
         for (var q = 0; q < use.length; q++) {
           var en = use[q], p2 = en.page;
           var pick = en.idx.length ? en.idx : (en.main ? p2.images.map(function (_, z) { return z; }) : [0]);
           for (var r = 0; r < pick.length && imgs.length < 8; r++) {
+            // the same banner or pop-up can come from several pages: keep it once
+            var pr = (p2.prints || [])[pick[r]];
+            if (pr && prints.some(function (q) { return samePrint(pr, q); })) continue;
+            if (pr) prints.push(pr);
             var key = p2.url + "#" + pick[r];
             if (!stored.has(key)) { var up = await uploadPaths([p2.images[pick[r]]], "scan-" + id); stored.set(key, up ? up[0] : null); }
             imgs.push(p2.images[pick[r]]); thumbs.push(p2.thumbs[pick[r]]);

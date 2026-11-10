@@ -362,11 +362,29 @@ async function capture(windowId) {
   return chrome.tabs.captureVisibleTab(windowId, { format: "jpeg", quality: 72 });
 }
 
-
-async function capture(windowId) {
-  // Chrome allows about two captures per second.
-  await sleep(650);
-  return chrome.tabs.captureVisibleTab(windowId, { format: "jpeg", quality: 72 });
+// A small grey version of a screenshot, to tell near-identical screenshots apart.
+async function printOf(dataUrl) {
+  const bmp = await createImageBitmap(await (await fetch(dataUrl)).blob());
+  const c = new OffscreenCanvas(160, 100), x = c.getContext("2d");
+  x.drawImage(bmp, 0, 0, 160, 100);
+  const d = x.getImageData(0, 0, 160, 100).data, g = new Uint8Array(16000);
+  for (let i = 0; i < 16000; i++) g[i] = (d[i * 4] * 3 + d[i * 4 + 1] * 6 + d[i * 4 + 2]) / 10;
+  return g;
+}
+// The same picture when hardly any spot differs (JPEG noise aside).
+// The right edge (the scrollbar moves when scrolling) is left out.
+function samePrint(a, b) { let n = 0; for (let i = 0; i < a.length; i++) if (i % 160 < 155 && Math.abs(a[i] - b[i]) > 16 && ++n > 12) return false; return true; }
+// Drops screenshots that look the same as one already kept (a scroll that didn't move the content,
+// a click that changed nothing, a slide shown twice).
+async function dedupe(r) {
+  const shots = [], labels = [], prints = [];
+  for (let i = 0; i < r.shots.length; i++) {
+    let pr = null;
+    try { pr = await printOf(r.shots[i]); } catch (e) { /* keep it if it can't be compared */ }
+    if (pr && prints.some((q) => q && samePrint(pr, q))) continue;
+    prints.push(pr); shots.push(r.shots[i]); labels.push((r.shotLabels || [])[i] || "");
+  }
+  return Object.assign(r, { shots, shotLabels: labels });
 }
 const bare = (u) => String(u || "").split("#")[0];
 const currentUrl = async (tabId) => (await chrome.tabs.get(tabId)).url;
@@ -446,7 +464,7 @@ async function scanPage(tabId, windowId, url, opts) {
     }
   }
   await run(tabId, scrollToY, [0]).catch(() => 0);
-  return { title: info.title, text: text.slice(0, 40000), shots, shotLabels: labels };
+  return dedupe({ title: info.title, text: text.slice(0, 40000), shots, shotLabels: labels });
 }
 
 // The pop-up that's open now, scrolled through.
@@ -458,7 +476,7 @@ async function scanDialog(tabId, windowId, what) {
     await sleep(600);
     shots.push(await capture(windowId)); labels.push("pop-up scrolled " + k);
   }
-  return { title: "", text: await run(tabId, dialogText).catch(() => ""), shots, shotLabels: labels };
+  return dedupe({ title: "", text: await run(tabId, dialogText).catch(() => ""), shots, shotLabels: labels });
 }
 
 // The site's menu, opened and photographed, with its entries as text.
@@ -528,7 +546,7 @@ async function scanOffer(tabId, windowId, pg, results) {
     }
   }
   if (!shots.length) return { error: "Couldn't find it on the homepage or promotions page" };
-  return { url: promoUrl || pg.url, found: "found on the " + where.join(" and "), title: "", text, shots, shotLabels: labels, noIndex: true };
+  return dedupe({ url: promoUrl || pg.url, found: "found on the " + where.join(" and "), title: "", text, shots, shotLabels: labels, noIndex: true });
 }
 
 async function scanFind(tabId, windowId, pg, results, scanned) {
