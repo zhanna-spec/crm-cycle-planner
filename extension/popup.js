@@ -227,14 +227,22 @@ main.addEventListener("click", async (e) => {
 });
 
 function showProgress() {
-  main.innerHTML = '<h2>Scanning</h2><div class="bar"><i id="bar"></i></div><p class="note" id="prog">Starting…</p>';
+  main.innerHTML = '<h2>Scanning</h2><div class="bar"><i id="bar"></i></div><p class="note" id="prog">Starting…</p>' +
+    '<div class="col" id="stopBox"><button id="stopKeep">Stop and keep what\'s done</button><button id="stopDiscard" class="quiet">Cancel scan</button></div>';
+  const stop = async (mode) => {
+    document.getElementById("stopBox").innerHTML = '<p class="note">Stopping after the current step…</p>';
+    await chrome.runtime.sendMessage({ type: "stop", mode });
+  };
+  document.getElementById("stopKeep").onclick = () => stop("keep");
+  document.getElementById("stopDiscard").onclick = () => stop("discard");
   const update = (st) => {
     if (!st) return;
     const pct = st.total ? Math.round(100 * (st.done || 0) / st.total) : 0;
     const bar = document.getElementById("bar"); if (bar) bar.style.width = pct + "%";
     const p = document.getElementById("prog"); if (!p) return;
     if (st.state === "running") p.textContent = "Section " + Math.min(st.total, (st.done || 0) + 1) + " of " + st.total + (st.current ? ": " + st.current : "");
-    if (st.state === "done") main.innerHTML = '<p class="ok">Done. The planner has opened in a new tab with the scan.</p>';
+    if (st.state === "done") main.innerHTML = '<p class="ok">' + (st.partial ? "Stopped. The " + st.kept + (st.kept === 1 ? " section" : " sections") + " finished so far are in the planner, which has opened in a new tab." : "Done. The planner has opened in a new tab with the scan.") + "</p>";
+    if (st.state === "stopped") main.innerHTML = '<p class="ok">' + (st.message ? esc(st.message) : "The scan was cancelled.") + " Click the extension again to start a new scan.</p>";
     if (st.state === "error") main.innerHTML = '<p class="warn">The scan stopped: ' + esc(st.message) + "</p>";
   };
   chrome.storage.local.get("scanStatus").then((r) => update(r.scanStatus));

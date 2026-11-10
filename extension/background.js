@@ -4,7 +4,17 @@ const PLANNER_URL = "https://zhanna-spec.github.io/crm-cycle-planner/#scan";
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 const MAX_SCROLL_SHOTS = 5;
 
+// Stopping: "keep" sends what's done so far to the planner, "discard" throws the scan away.
+let scanning = false, stopMode = null;
+class Stopped extends Error {}
+function checkStop() { if (stopMode) throw new Stopped("stopped"); }
+
 chrome.runtime.onMessage.addListener((msg, _sender, reply) => {
+  if (msg && msg.type === "stop") {
+    if (scanning) stopMode = msg.mode === "discard" ? "discard" : "keep";
+    else chrome.storage.local.set({ scanStatus: { state: "stopped" } }); // nothing is running (an old status)
+    reply({ ok: true });
+  }
   if (msg && msg.type === "scan") {
     runScan(msg).catch((err) => chrome.storage.local.set({ scanStatus: { state: "error", message: String(err && err.message || err) } }));
     reply({ ok: true });
@@ -23,6 +33,7 @@ function waitForLoad(tabId, timeoutMs) {
 }
 
 async function navigate(tabId, url) {
+  checkStop();
   const loaded = waitForLoad(tabId, 25000);
   await chrome.tabs.update(tabId, { url, active: true });
   await loaded;
@@ -468,8 +479,10 @@ function clickTab(i) {
 }
 
 async function capture(windowId) {
+  checkStop();
   // Chrome allows about two captures per second.
   await sleep(650);
+  checkStop();
   return chrome.tabs.captureVisibleTab(windowId, { format: "jpeg", quality: 72 });
 }
 
@@ -749,9 +762,12 @@ async function runScan({ tabId, pages, run: runLabel, site }) {
   const tab = await chrome.tabs.get(tabId);
   const startUrl = tab.url;
   const total = pages.length;
+  scanning = true; stopMode = null;
   await chrome.storage.local.set({ scanStatus: { state: "running", done: 0, total, current: "" } });
   const results = [], scanned = new Map();
+  try {
   for (let i = 0; i < pages.length; i++) {
+    if (stopMode) break;
     const pg = pages[i];
     await chrome.storage.local.set({ scanStatus: { state: "running", done: i, total, current: pg.type === "find" ? "looking for " + pg.label : pg.label } });
     const base = { url: pg.url, label: pg.label, hint: pg.cat || "", type: pg.type };
@@ -775,12 +791,20 @@ async function runScan({ tabId, pages, run: runLabel, site }) {
       scanned.set(bare(pg.url), out);
       results.push(out);
     } catch (err) {
+      if (stopMode) break; // stopped in the middle of this section: leave it out
       results.push(Object.assign(base, { error: String(err && err.message || err), shots: [] }));
     }
   }
+  } finally { scanning = false; }
+  const mode = stopMode; stopMode = null;
   try { await navigate(tabId, startUrl); } catch (e) { /* ignore */ }
+  const done = results.filter((r) => r.shots && r.shots.length);
+  if (mode === "discard" || (mode && !done.length)) {
+    await chrome.storage.local.set({ scanStatus: { state: "stopped", message: mode === "discard" ? "" : "Nothing was finished yet, so there's nothing to import." } });
+    return;
+  }
   const scan = { id: Date.now().toString(36) + Math.random().toString(36).slice(2, 6), site, run: runLabel, at: new Date().toISOString(), pages: results };
-  await chrome.storage.local.set({ pendingScan: scan, scanStatus: { state: "done", done: total, total } });
+  await chrome.storage.local.set({ pendingScan: scan, scanStatus: { state: "done", done: total, total, partial: !!mode, kept: done.length } });
   const { plannerUrl } = await chrome.storage.local.get("plannerUrl");
   await chrome.tabs.create({ url: plannerUrl || PLANNER_URL });
 }
