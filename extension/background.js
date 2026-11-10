@@ -487,6 +487,22 @@ function authForm() {
     .some((el) => { const r = el.getBoundingClientRect(); return r.width > 20 && r.height > 8 && getComputedStyle(el).visibility !== "hidden"; });
 }
 
+// Runs inside the scanned page: closes the open pop-up with its close button (×, Close) or Escape.
+function closeDialog() {
+  const d = Array.from(document.querySelectorAll("[role=dialog], [aria-modal=true], dialog[open], [class*=modal], [class*=Modal], [class*=drawer], [class*=Drawer]"))
+    .filter((el) => { const r = el.getBoundingClientRect(); return r.width > 200 && r.height > 150; })
+    .sort((a, b) => { const ra = a.getBoundingClientRect(), rb = b.getBoundingClientRect(); return rb.width * rb.height - ra.width * ra.height; })[0];
+  const scope = d || document;
+  const btn = Array.from(scope.querySelectorAll("button, [role=button], a, span, div, svg")).find((b) => {
+    const r = b.getBoundingClientRect(); if (r.width < 8 || r.width > 80 || r.height < 8 || r.height > 80) return false;
+    const t = (b.textContent || "").trim(), l = (b.getAttribute("aria-label") || "") + " " + (b.getAttribute("title") || "") + " " + String(b.getAttribute("class") || "");
+    return /^(×|✕|✖|x|close|schließen|cerrar|fermer|chiudi|sluiten)$/i.test(t) || (!t || t.length <= 1) && /close|dismiss|schlie|cerrar|fermer|chiudi/i.test(l);
+  });
+  if (btn) ["pointerdown", "mousedown", "pointerup", "mouseup", "click"].forEach((t) => btn.dispatchEvent(new MouseEvent(t, { bubbles: true, cancelable: true, view: window })));
+  document.dispatchEvent(new KeyboardEvent("keydown", { key: "Escape", code: "Escape", keyCode: 27, bubbles: true }));
+  return !!btn;
+}
+
 // Runs inside the scanned page: opens the terms inside an open pop-up ("Terms", "T&Cs", "Show more").
 function openDialogTerms() {
   const d = Array.from(document.querySelectorAll("[role=dialog], [aria-modal=true], dialog[open], [class*=modal], [class*=Modal], [class*=drawer], [class*=Drawer]"))
@@ -675,6 +691,9 @@ async function scanCards(tabId, windowId, url, pg) {
       } else if (opened.kind === "dialog") {
         if (await run(tabId, openDialogTerms).catch(() => false)) await sleep(1200);
         out.push(Object.assign({ url: now, label, hint: pg.cat, type: "popup" }, await scanDialog(tabId, windowId, opened.how)));
+        // close it before the next offer; reload the page only if it won't close
+        await run(tabId, closeDialog).catch(() => false); await sleep(700);
+        if (!(await run(tabId, hasDialog).catch(() => true)) && bare(await currentUrl(tabId)) === bare(url)) continue;
       } else {
         out.push(Object.assign({ url: now, label, hint: pg.cat, type: "inline" }, await dedupe({ title: "", text: (await run(tabId, pageInfo).catch(() => ({ text: "" }))).text, shots: [await capture(windowId)], shotLabels: ["opened " + label] })));
       }

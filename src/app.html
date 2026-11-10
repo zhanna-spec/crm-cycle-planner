@@ -1693,7 +1693,8 @@ footer { color: var(--muted); font-size: 12px; margin-top: 24px; text-align: cen
             var pr = (p2.prints || [])[pick[r]];
             if (pr && prints.some(function (q) { return samePrint(pr, q); })) continue;
             if (pr) prints.push(pr);
-            var key = p2.url + "#" + pick[r];
+            // one key per scanned page: pop-ups opened on the same page share its address
+            var key = pages.indexOf(p2) + "#" + pick[r];
             if (!stored.has(key)) { var up = await uploadPaths([p2.images[pick[r]]], "scan-" + id); stored.set(key, up ? up[0] : null); }
             imgs.push(p2.images[pick[r]]); thumbs.push(p2.thumbs[pick[r]]);
             if (stored.get(key)) paths.push(stored.get(key));
