@@ -2,7 +2,7 @@
 
 const PLANNER_URL = "https://zhanna-spec.github.io/crm-cycle-planner/#scan";
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
-const MAX_SCROLL_SHOTS = 8;
+const MAX_SCROLL_SHOTS = 5;
 
 chrome.runtime.onMessage.addListener((msg, _sender, reply) => {
   if (msg && msg.type === "scan") {
@@ -71,6 +71,20 @@ function pageInfo() {
 // jumps instead of gliding, and waits a moment so content that loads on scroll can appear.
 async function scrollToY(y) {
   const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+  // how many game tiles are on screen: a screen full of them is a game lobby, not content we need
+  const games = () => {
+    const seen = new Set();
+    document.querySelectorAll("img, [style*=background-image]").forEach((im) => {
+      const r = im.getBoundingClientRect();
+      if (r.width < 70 || r.width > 420 || r.height < 50 || r.bottom < 0 || r.top > window.innerHeight) return;
+      const ratio = r.width / r.height; if (ratio < 0.5 || ratio > 1.9) return;
+      const tile = im.closest("a, [class*=game], [class*=Game], [class*=tile], [class*=Tile], [class*=thumb], [class*=card]") || im;
+      const hint = (tile.getAttribute("href") || "") + " " + String(tile.getAttribute("class") || "") + " " + (tile.getAttribute("data-testid") || "");
+      if (!/game|slot|play|casino|live|provider|tile|thumb/i.test(hint)) return;
+      seen.add(Math.round(r.left / 20) + ":" + Math.round((r.top + window.scrollY) / 20));
+    });
+    return seen.size;
+  };
   const root = document.scrollingElement || document.documentElement;
   const scrolls = (el) => el.scrollHeight > el.clientHeight + 50 && el.clientHeight > window.innerHeight * 0.4 && /(auto|scroll|overlay)/.test(getComputedStyle(el).overflowY);
   let box = null;
@@ -86,11 +100,11 @@ async function scrollToY(y) {
   if (box) {
     box.scrollTo({ top: y, behavior: "instant" });
     await sleep(400);
-    return { pos: Math.round(box.scrollTop), max: box.scrollHeight - box.clientHeight, view: box.clientHeight };
+    return { pos: Math.round(box.scrollTop), max: box.scrollHeight - box.clientHeight, view: box.clientHeight, games: games() };
   }
   window.scrollTo({ top: y, behavior: "instant" });
   await sleep(400);
-  return { pos: Math.round(window.scrollY), max: root.scrollHeight - window.innerHeight, view: window.innerHeight };
+  return { pos: Math.round(window.scrollY), max: root.scrollHeight - window.innerHeight, view: window.innerHeight, games: games() };
 }
 
 // Runs inside the scanned page: finds things worth opening for details (See how rewards work,
@@ -421,10 +435,14 @@ async function scanPage(tabId, windowId, url, opts) {
   // top to bottom; the end is checked again at each step because pages often grow while scrolling
   const first = await run(tabId, scrollToY, [0]).catch(() => null) || { pos: 0, max: 0, view: info.innerHeight };
   const step = Math.max(200, Math.floor(first.view * 0.85));
-  let lastPos = -1;
+  // The aim is the page's content and structure, not everything in it: one screen of a game lobby
+  // is enough, and content that keeps loading while scrolling isn't followed.
+  let lastPos = -1, gameScreens = 0;
   for (let k = 0; k < MAX_SCROLL_SHOTS; k++) {
     const at = k ? await run(tabId, scrollToY, [k * step]).catch(() => null) : first;
     if (!at || (k > 0 && at.pos <= lastPos + 5)) break; // didn't move: we're at the bottom
+    if (at.games >= 8 && ++gameScreens > 1) break; // a second screen of game tiles
+    if (k > 1 && at.max > first.max * 1.4 + first.view) break; // the page keeps growing (endless loading)
     lastPos = at.pos;
     await sleep(300);
     shots.push(await capture(windowId)); labels.push(k ? "scrolled down " + k : "top of page");
