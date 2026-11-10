@@ -1571,20 +1571,25 @@ footer { color: var(--muted); font-size: 12px; margin-top: 24px; text-align: cen
       scanJob.current = "sorting " + (pg.label || pg.title || pg.url); renderScanPanel();
       try {
         pg.images = []; pg.thumbs = [];
-        for (var k = 0; k < pg.shots.length && k < 4; k++) {
+        for (var k = 0; k < pg.shots.length && k < 8; k++) {
           var img = await loadSrc(pg.shots[k]);
           pg.images.push({ media_type: "image/jpeg", data: scaled(img, 1568, 0, 0.85).split(",")[1] });
           pg.thumbs.push(scaled(img, 1200, 900, 0.8));
         }
-        var sorted = await backend("sort_page", { images: pg.images, page_text: pg.text || "", url: pg.url, link_text: pg.label || "" });
+        var sorted = await backend("sort_page", { images: pg.images, image_labels: (pg.shotLabels || []).slice(0, pg.images.length), page_text: pg.text || "", url: pg.url, link_text: pg.label || "" });
         var items = (sorted.items || []).filter(function (it) { return it && it.kind && it.kind !== "irrelevant"; }).slice(0, 6);
         if (!items.length) scanJob.skipped++;
         items.forEach(function (it) {
           var key = groupKey(it.kind);
           var g = groups.filter(function (x) { return x.kind === it.kind && (key ? true : sameTitle(x.title, it.title)); })[0];
-          if (!g) { g = { kind: it.kind, title: it.title || "", pages: [] }; groups.push(g); }
+          if (!g) { g = { kind: it.kind, title: it.title || "", entries: [] }; groups.push(g); }
           if ((it.title || "").length > g.title.length && it.kind !== "promotions" && it.kind !== "homepage") g.title = it.title;
-          if (g.pages.indexOf(pg) < 0) g.pages.push(pg);
+          // which screenshots show this item (numbered from 1); none listed means the whole page
+          var idx = (it.screens || []).map(function (n) { return n - 1; }).filter(function (n) { return n >= 0 && n < pg.images.length; });
+          g.entries = g.entries || [];
+          var ex = g.entries.filter(function (e) { return e.page === pg; })[0];
+          if (ex) { ex.idx = uniqDays(ex.idx.concat(idx)); ex.main = ex.main || it.main !== false; }
+          else g.entries.push({ page: pg, idx: idx, main: it.main !== false });
         });
       } catch (err) { scanJob.failed++; scanJob.errors.push((pg.label || pg.url) + ": " + err.message); }
       scanJob.done++; renderScanPanel();
@@ -1597,16 +1602,22 @@ footer { color: var(--muted); font-size: 12px; margin-top: 24px; text-align: cen
       scanJob.current = kindLabel(g2.kind) + (g2.title ? ": " + g2.title : ""); renderScanPanel();
       try {
         var imgs = [], thumbs = [], paths = [], texts = [];
-        for (var q = 0; q < g2.pages.length; q++) {
-          var p2 = g2.pages[q];
-          if (!stored.has(p2)) stored.set(p2, await uploadPaths(p2.images, "scan-" + id));
-          var room = 8 - imgs.length; if (room <= 0) break;
-          imgs = imgs.concat(p2.images.slice(0, room)); thumbs = thumbs.concat(p2.thumbs.slice(0, room));
-          var pp = stored.get(p2); if (pp) paths = paths.concat(pp.slice(0, room));
+        var mains = g2.entries.filter(function (e) { return e.main; });
+        var use = mains.length ? mains : g2.entries;
+        for (var q = 0; q < use.length; q++) {
+          var en = use[q], p2 = en.page;
+          var pick = en.idx.length ? en.idx : (en.main ? p2.images.map(function (_, z) { return z; }) : [0]);
+          for (var r = 0; r < pick.length && imgs.length < 8; r++) {
+            var key = p2.url + "#" + pick[r];
+            if (!stored.has(key)) { var up = await uploadPaths([p2.images[pick[r]]], "scan-" + id); stored.set(key, up ? up[0] : null); }
+            imgs.push(p2.images[pick[r]]); thumbs.push(p2.thumbs[pick[r]]);
+            if (stored.get(key)) paths.push(stored.get(key));
+          }
           texts.push("Page: " + (p2.label || "") + " (" + p2.url + ")\n" + (p2.text || ""));
         }
+        g2.pages = use.map(function (e) { return e.page; });
         var text = texts.join("\n\n---\n\n").slice(0, 40000);
-        var base = { opId: op.id, source: "scan", run: run, url: g2.pages[0].url, pagesSeen: g2.pages.map(function (x) { return x.url; }), thumbs: paths.length ? [] : thumbs.slice(0, 4), images: paths, status: "done", addedAt: new Date().toISOString() };
+        var base = { opId: op.id, source: "scan", run: run, url: g2.pages[0].url, pagesSeen: g2.pages.map(function (x) { return x.url; }), thumbs: paths.length === imgs.length ? [] : thumbs.slice(0, 4), images: paths.length === imgs.length ? paths : [], status: "done", addedAt: new Date().toISOString() };
         if (isPageKind(g2.kind)) {
           var pgItem = Object.assign({ id: uid(), section: g2.kind, title: g2.title || kindLabel(g2.kind), summary: "", steps: [], key_facts: [], strengths: [], friction: [], ideas: [], uncertain: [], text: text }, base);
           state.research.unshift(pgItem); imageCache[pgItem.id] = imgs; save(); renderCompetitors();

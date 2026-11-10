@@ -228,8 +228,13 @@ const SORT_SCHEMA = {
   properties: {
     items: {
       type: "array", items: {
-        type: "object", additionalProperties: false, required: ["kind", "title"],
-        properties: { kind: { type: "string", enum: Object.keys(SORT_KINDS) }, title: { type: "string" } },
+        type: "object", additionalProperties: false, required: ["kind", "title", "main", "screens"],
+        properties: {
+          kind: { type: "string", enum: Object.keys(SORT_KINDS) },
+          title: { type: "string" },
+          main: { type: "boolean" },
+          screens: { type: "array", items: { type: "integer" } },
+        },
       },
     },
   },
@@ -241,16 +246,23 @@ const SORT_SYSTEM = [
   "A page can contain several things: a promotions page usually counts as promotions plus one item for each concrete offer or tournament on it. List each separately, at most 6 items, most important first.",
   "A bonus terms page counts as the offer it describes. The homepage counts as homepage, plus the welcome offer if it is shown with its numbers.",
   "title is a short name, such as the offer headline or the tournament name.",
+  "main is true when this page is mainly about the item (its own page, or a full section or card describing it). main is false when the item is only mentioned in passing, for example in the site header, a sidebar, a small teaser or a banner that links elsewhere.",
+  "screens lists the numbers of the screenshots that actually show the item (screenshots are numbered from 1 in the order given). Leave out screenshots where the item isn't visible. Use an empty list when the item only appears in the page text.",
   "If nothing on the page is relevant, return a single item with kind irrelevant.",
 ].join("\n");
 
 function sortPage(apiKey: string, body: Record<string, unknown>) {
   const images = (Array.isArray(body.images) ? body.images : [])
     .filter((im: { media_type?: string; data?: string }) => im && IMAGE_TYPES.includes(im.media_type ?? "") && typeof im.data === "string" && im.data.length > 0)
-    .slice(0, 4) as { media_type: "image/jpeg" | "image/png" | "image/webp" | "image/gif"; data: string }[];
-  const text = typeof body.page_text === "string" ? body.page_text.trim().slice(0, 12000) : "";
+    .slice(0, 8) as { media_type: "image/jpeg" | "image/png" | "image/webp" | "image/gif"; data: string }[];
+  const labels = Array.isArray(body.image_labels) ? body.image_labels.map((l) => String(l).slice(0, 60)) : [];
+  const text = typeof body.page_text === "string" ? body.page_text.trim().slice(0, 16000) : "";
   if (!images.length && !text) throw new UserFacingError("bad_request", "The scanned page was empty.");
-  const content: Anthropic.Beta.BetaContentBlockParam[] = images.map((im) => ({ type: "image", source: { type: "base64", media_type: im.media_type, data: im.data } }));
+  const content: Anthropic.Beta.BetaContentBlockParam[] = [];
+  images.forEach((im, i) => {
+    content.push({ type: "text", text: `Screenshot ${i + 1}${labels[i] ? " (" + labels[i] + ")" : ""}:` });
+    content.push({ type: "image", source: { type: "base64", media_type: im.media_type, data: im.data } });
+  });
   content.push({ type: "text", text: `Page address: ${String(body.url ?? "").slice(0, 300)}\nLink text that led here: ${String(body.link_text ?? "").slice(0, 100)}\n\nPage text:\n<page>\n${text}\n</page>\n\nList what this page contains.` });
   return askClaude(apiKey, SORT_SYSTEM, content, SORT_SCHEMA);
 }
