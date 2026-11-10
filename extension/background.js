@@ -202,6 +202,7 @@ async function findSection(src, opts) {
       const byText = t && t.length <= 40 && re.test(t), byPath = path && re.test(path);
       if (!byText && !byPath) return;
       if (no && no.test(t + " " + path)) return;
+      if (opts.linkOnly && (!href || /regist|sign-?up|login|deposit|cashier|wallet|account/i.test(href))) return;
       if (!opts.popup && t && DENY.test(t)) return;
       let score = 0;
       if (byText) score += 3;
@@ -258,6 +259,94 @@ function clickFound() {
   return true;
 }
 
+// Runs inside the scanned page: moves the first banner carousel on by one slide.
+// Returns the text of the slide now showing, or null when there's no carousel.
+async function carouselNext() {
+  const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+  const cls = (el) => String(el.getAttribute("class") || "");
+  const roots = Array.from(document.querySelectorAll("[class*=swiper], [class*=carousel], [class*=Carousel], [class*=slider], [class*=Slider], [class*=slick], [class*=splide], [class*=glide], [class*=hero], [class*=Hero], [class*=banner], [class*=Banner], [aria-roledescription=carousel]"))
+    .filter((el) => { const r = el.getBoundingClientRect(); return r.width > 300 && r.height > 100 && r.top + window.scrollY < window.innerHeight * 2; });
+  const showing = (root) => Array.from(root.querySelectorAll("[class*=slide], [class*=Slide], li, [role=group]")).filter((el) => {
+    const r = el.getBoundingClientRect(), cs = getComputedStyle(el);
+    return r.width > 100 && r.left > -20 && r.left < window.innerWidth * 0.6 && cs.visibility !== "hidden" && +cs.opacity > 0.2;
+  }).map((el) => (el.innerText || "").trim()).join(" ").slice(0, 300);
+  for (const root of roots) {
+    const next = Array.from(root.querySelectorAll("button, [role=button], a, div, span")).find((b) => {
+      const r = b.getBoundingClientRect(); if (r.width < 8 || r.height < 8 || r.width > 120) return false;
+      const l = (b.getAttribute("aria-label") || "") + " " + cls(b) + " " + (b.title || "");
+      return /next|right|forward|arrow-?r/i.test(l) && !/prev|left|back/i.test(l);
+    });
+    const dots = Array.from(root.querySelectorAll("[class*=bullet], [class*=dot], [class*=Dot], .slick-dots button, [class*=pagination] button, [class*=indicator] button, [class*=indicator] li, [role=tab]"))
+      .filter((b) => { const r = b.getBoundingClientRect(); return r.width > 3 && r.height > 3 && r.width < 60; });
+    if (!next && dots.length < 2) continue;
+    const from = showing(root);
+    window.scrollTo(0, Math.max(0, root.getBoundingClientRect().top + window.scrollY - 80));
+    if (next) next.click();
+    else {
+      const cur = dots.findIndex((d) => /active|selected|current/i.test(cls(d)) || d.getAttribute("aria-selected") === "true" || d.getAttribute("aria-current") === "true");
+      dots[(cur + 1) % dots.length].click();
+    }
+    await sleep(900);
+    return { from, to: showing(root) || "slide" };
+  }
+  return null;
+}
+
+// Runs inside the scanned page: finds the banner or card that talks about an offer (words in src),
+// scrolls it into view and marks it. Hidden carousel slides don't count until they're showing.
+// Also names a "more info" / terms button inside it, if there is one.
+function findOfferBlock(src, not) {
+  const re = new RegExp(src, "i"), no = not ? new RegExp(not, "i") : null;
+  const MORE = /more|details|info|terms|t&c|rules|learn|read|conditions|see offer|view/i;
+  const DENY = /claim|deposit|register|sign ?up|join|log ?in|play|bet now|opt[- ]?in|activate|redeem/i;
+  const vw = window.innerWidth;
+  const showing = (el) => {
+    const r = el.getBoundingClientRect();
+    if (r.width < 150 || r.height < 60 || r.width > vw * 1.05 || r.left < -10 || r.right > vw + 10) return false;
+    for (let e = el, i = 0; e && i < 6; e = e.parentElement, i++) { const cs = getComputedStyle(e); if (cs.visibility === "hidden" || +cs.opacity < 0.2 || cs.display === "none" || e.getAttribute("aria-hidden") === "true") return false; }
+    return true;
+  };
+  // Start from the words themselves: only text that is actually showing counts (not a hidden slide).
+  let best = null;
+  const walker = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT);
+  for (let n = walker.nextNode(); n; n = walker.nextNode()) {
+    if (!re.test(n.nodeValue || "")) continue;
+    const leaf = n.parentElement;
+    if (!leaf || leaf.closest("header, nav, footer, aside, script, style, [role=dialog]")) continue;
+    const lr = leaf.getBoundingClientRect();
+    if (lr.width < 2 || lr.left < 0 || lr.right > vw + 2) continue;
+    // climb to the banner or card around it
+    let box = leaf;
+    while (box && box !== document.body) {
+      const r = box.getBoundingClientRect();
+      if (r.width >= 150 && r.height >= 60) break;
+      box = box.parentElement;
+    }
+    if (!box || box === document.body || !showing(box)) continue;
+    const t = (box.innerText || "").trim();
+    if (t.length > 1500 || (no && no.test(t.slice(0, 120)))) continue;
+    const r = box.getBoundingClientRect(), area = r.width * r.height;
+    if (r.height > window.innerHeight * 1.2) continue;
+    if (!best || area < best.area) best = { el: box, area };
+  }
+  if (!best) return null;
+  document.querySelectorAll("[data-ccp-block]").forEach((e) => e.removeAttribute("data-ccp-block"));
+  best.el.setAttribute("data-ccp-block", "1");
+  const r = best.el.getBoundingClientRect();
+  window.scrollTo(0, Math.max(0, r.top + window.scrollY - Math.max(60, (window.innerHeight - r.height) / 2)));
+  const btn = Array.from(best.el.querySelectorAll("a, button, [role=button]")).concat(best.el.matches("a") ? [] : [])
+    .find((b) => { const t = (b.innerText || b.getAttribute("aria-label") || "").trim(); return t && t.length <= 30 && MORE.test(t) && !DENY.test(t); });
+  return { text: (best.el.innerText || "").trim().slice(0, 3000), more: btn ? (btn.innerText || btn.getAttribute("aria-label")).trim() : "" };
+}
+
+// Runs inside the scanned page: clicks the "more info" button inside the marked offer block.
+function clickInBlock(text) {
+  const box = document.querySelector("[data-ccp-block]"); if (!box) return false;
+  const b = Array.from(box.querySelectorAll("a, button, [role=button]")).find((x) => (x.innerText || x.getAttribute("aria-label") || "").trim() === text);
+  if (!b) return false;
+  b.click(); return true;
+}
+
 // Runs inside the scanned page: clicks one marked tab and brings it into view.
 function clickTab(i) {
   const b = document.querySelector('[data-ccp-tab="' + i + '"]');
@@ -306,6 +395,20 @@ async function scanPage(tabId, windowId, url, opts) {
     if ((k + 1) * step >= info.scrollHeight - 50) break;
   }
   let text = info.text;
+  // banner carousels: photograph each slide (up to 5)
+  if (opts.banners) {
+    const seen = new Set();
+    for (let k = 0; k < 5; k++) {
+      const mv = await run(tabId, carouselNext).catch(() => null);
+      if (!mv) break;
+      seen.add(mv.from);
+      const slide = mv.to;
+      if (seen.has(slide)) break;
+      seen.add(slide);
+      shots.push(await capture(windowId)); labels.push("banner slide " + (k + 2));
+      text += "\n\n--- Banner slide " + (k + 2) + " ---\n" + slide;
+    }
+  }
   const back = async () => { if (opts.stay) return false; await freshPage(tabId, url); return true; };
   await run(tabId, scrollToY, [0]).catch(() => 0); await sleep(300);
   const tabs = await run(tabId, findTabs).catch(() => []) || [];
@@ -368,9 +471,71 @@ async function scanMenu(tabId, windowId, pg) {
 }
 
 // One section from the checklist: start on the homepage, click around until it turns up, then photograph it.
+// An offer that may not have its own page (a welcome offer): look for it in the homepage banners
+// and as a card on the promotions page, and open the card's "more info" or terms.
+async function scanOffer(tabId, windowId, pg, results) {
+  const shots = [], labels = [], where = [];
+  let text = "";
+  // 1. homepage banners, clicking through the carousel
+  await freshPage(tabId, pg.url);
+  const seen = new Set();
+  for (let k = 0; k < 8; k++) {
+    const b = await run(tabId, findOfferBlock, [pg.words, pg.not || ""]).catch(() => null);
+    if (b) {
+      await sleep(500);
+      shots.push(await capture(windowId)); labels.push(pg.label + " on the homepage");
+      text += "--- On the homepage ---\n" + b.text + "\n\n"; where.push("homepage banner");
+      break;
+    }
+    const mv = await run(tabId, carouselNext).catch(() => null);
+    if (!mv) break;
+    seen.add(mv.from);
+    if (seen.has(mv.to) && k > 0) break;
+    seen.add(mv.to);
+  }
+  // 2. the promotions page
+  let promo = results.find((r) => !r.error && /(^|,)promotions(,|$)/.test(r.hint || ""));
+  let promoUrl = promo && promo.url;
+  if (!promoUrl && pg.promo) {
+    await freshPage(tabId, pg.url);
+    const hit = await run(tabId, findSection, [pg.promo.words, { not: pg.promo.not, linkOnly: true }]).catch(() => null);
+    promoUrl = hit && hit.href;
+  }
+  if (promoUrl) {
+    await freshPage(tabId, promoUrl);
+    const b = await run(tabId, findOfferBlock, [pg.words, pg.not || ""]).catch(() => null);
+    if (b) {
+      await sleep(500);
+      shots.push(await capture(windowId)); labels.push(pg.label + " card on the promotions page");
+      text += "--- On the promotions page ---\n" + b.text + "\n\n"; where.push("promotions page");
+      if (b.more) {
+        const before = bare(await currentUrl(tabId));
+        if (await run(tabId, clickInBlock, [b.more]).catch(() => false)) {
+          await sleep(1800);
+          if (bare(await currentUrl(tabId)) !== before) {
+            await waitForLoad(tabId, 8000); await sleep(1200);
+            const r = await scanPage(tabId, windowId, "", { stay: true });
+            r.shots.forEach((sh, i) => { shots.push(sh); labels.push("opened “" + b.more + "”: " + r.shotLabels[i]); });
+            text += "--- Opened “" + b.more + "” ---\n" + r.text.slice(0, 12000);
+          } else {
+            shots.push(await capture(windowId)); labels.push("opened “" + b.more + "”");
+            const more = (await run(tabId, hasDialog).catch(() => false)) ? await run(tabId, dialogText).catch(() => "") : (await run(tabId, pageInfo).catch(() => ({ text: "" }))).text;
+            text += "--- Opened “" + b.more + "” ---\n" + String(more).slice(0, 8000);
+            for (let k = 1; k < 4 && (await run(tabId, scrollDialog).catch(() => false)); k++) { await sleep(600); shots.push(await capture(windowId)); labels.push("opened “" + b.more + "”, scrolled " + k); }
+          }
+        }
+      }
+    }
+  }
+  if (!shots.length) return { error: "Couldn't find it on the homepage or promotions page" };
+  return { url: promoUrl || pg.url, found: "found on the " + where.join(" and "), title: "", text, shots, shotLabels: labels, noIndex: true };
+}
+
 async function scanFind(tabId, windowId, pg, results, scanned) {
   await freshPage(tabId, pg.url);
-  const hit = await run(tabId, findSection, [pg.words, { popup: pg.popup, help: pg.help, not: pg.not }]).catch(() => null);
+  const hit = await run(tabId, findSection, [pg.words, { popup: pg.popup, help: pg.help, not: pg.not, linkOnly: pg.content }]).catch(() => null);
+  // offers without their own page are looked for in banners and on the promotions page
+  if (pg.content && (!hit || scanned.has(bare(hit.href)))) return scanOffer(tabId, windowId, pg, results);
   if (!hit) return { error: "Couldn't find it on the site" };
   const found = "found “" + hit.text.slice(0, 30) + "” " + hit.where;
   const sameAs = (u) => { const r = scanned.get(bare(u)); if (r) { r.label += " + " + pg.label; r.hint += "," + pg.cat; } return r; };
@@ -410,11 +575,12 @@ async function runScan({ tabId, pages, run: runLabel, site }) {
         if (r.merged) continue; // same page as a section already scanned
         const out = Object.assign(base, r, { type: r.type || "page" });
         if (r.found) out.label = pg.label + " (" + r.found + ")";
-        if (!r.error) scanned.set(bare(out.url), out);
+        if (!r.error && !r.noIndex) scanned.set(bare(out.url), out);
+        delete out.noIndex;
         if (r.error) out.shots = [];
         results.push(out); continue;
       }
-      const r = await scanPage(tabId, tab.windowId, pg.url, { details: pg.details });
+      const r = await scanPage(tabId, tab.windowId, pg.url, { details: pg.details, banners: pg.cat === "homepage" });
       const out = Object.assign(base, r);
       scanned.set(bare(pg.url), out);
       results.push(out);

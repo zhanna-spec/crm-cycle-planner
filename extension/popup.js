@@ -5,8 +5,8 @@
 const DEFAULT_SECTIONS = [
   // Getting players in
   { key: "register", label: "Sign-up", words: "^(register|registrieren|sign[\\s_-]*up|signup|join( now)?|open account|create[\\s_-]*(an[\\s_-]*)?account|konto[\\s_-]*erstellen|registrati|inscri.*|regístrate|registrarse)$", popup: true, loggedOut: true },
-  { key: "welcome", label: "Welcome offer", words: "welcome|new[\\s_-]*player|first[\\s_-]*deposit|1st[\\s_-]*deposit|willkommen|bienvenid|benvenut|bienvenue", not: "terms|conditions|rules|requirement", details: true },
   { key: "promotions", label: "Promotions", words: "promo|promotion|bonus(es)?\\b|offers?\\b|campaigns?\\b|angebot|aktion|promociones|ofertas|promozioni|offres|aanbieding|kampanj|kampanya", not: "^my\\b|terms|conditions|rules|requirement|shop|welcome", details: true },
+  { key: "welcome", label: "Welcome offer", words: "welcome|new[\\s_-]*player|first[\\s_-]*deposit|1st[\\s_-]*deposit|willkommen|bienvenid|benvenut|bienvenue", not: "terms|conditions|rules|requirement", details: true, content: true },
   { key: "terms", label: "Bonus terms", words: "bonus[\\s_-]*(t&cs?|terms|rules|conditions|policy|requirement)|promotion[\\s_-]*(terms|rules|requirement)|wagering[\\s_-]*requirement|bonusbedingungen|bonus[\\s_-]*regeln|bonusvoorwaarden|terms[\\s_-]*(and|&)[\\s_-]*conditions", details: true, help: true },
   // Keeping players
   { key: "tournaments", label: "Tournaments / races", words: "tourn|turnier|torneo|tournoi|leaderboard|rangliste|\\brace\\b|races\\b|drops?[\\s_&-]*(and|&)?[\\s_-]*wins|prize[\\s_-]*drop|wettbewerb", details: true },
@@ -16,7 +16,7 @@ const DEFAULT_SECTIONS = [
   { key: "wheel", label: "Wheel / mini-games", words: "wheel|lucky[\\s_-]*spin|daily[\\s_-]*(spin|reward|bonus|drop)|mystery[\\s_-]*(box|chest|bonus)|scratch|mini[\\s_-]*games?|treasure|\\bchests?\\b", details: true },
   { key: "referral", label: "Refer a friend", words: "refer|referral|invite[\\s_-]*(a[\\s_-]*)?friends?|bring[\\s_-]*a[\\s_-]*friend|freunde[\\s_-]*werben|invita", details: true },
   { key: "jackpots", label: "Jackpots", words: "jackpot", details: true },
-  { key: "sports", label: "Sports promos", words: "free[\\s_-]*bets?|acca|odds[\\s_-]*boost|price[\\s_-]*boost|bet[\\s_-]*insurance|bet[\\s_-]*builder|sports?[\\s_-]*(promo|promotions|bonus|offers?)", details: true, off: true },
+  { key: "sports", label: "Sports promos", words: "free[\\s_-]*bets?|acca|odds[\\s_-]*boost|price[\\s_-]*boost|bet[\\s_-]*insurance|bet[\\s_-]*builder|sports?[\\s_-]*(promo|promotions|bonus|offers?)", details: true, off: true, content: true },
   // Logged in only
   { key: "deposit", label: "Deposit / cashier", words: "^(deposit|deposit now|wallet|cashier|einzahlen|einzahlung|kasse|depositar|depósito|deposita|dépôt|déposer)$", popup: true, loggedIn: true },
   { key: "bonuses", label: "My bonuses", words: "my[\\s_-]*(bonus(es)?|rewards|offers|free[\\s_-]*spins)|bonus[\\s_-]*(wallet|balance|history)|active[\\s_-]*bonus|free[\\s_-]*spins\\b|freespins", details: true, loggedIn: true },
@@ -28,6 +28,7 @@ const DEFAULT_SECTIONS = [
   { key: "app", label: "App", words: "\\bapp\\b|download[\\s_-]*(the[\\s_-]*)?app|mobile[\\s_-]*app" },
   { key: "help", label: "Help / FAQ", words: "^(help|help cent(er|re)|support|faq|faqs)$", help: true, off: true }
 ];
+const PROMO = DEFAULT_SECTIONS.find((x) => x.key === "promotions");
 const GROUPS = { register: "Getting players in", tournaments: "Keeping players", deposit: "Your account", rg: "Compliance and extras" };
 // Which sections belong to which run: logged-in only ones are hidden on a logged-out run and the other way round.
 const fits = (s) => !(runMode === "logged-out" && s.loggedIn) && !(runMode === "logged-in" && s.loggedOut);
@@ -206,7 +207,7 @@ main.addEventListener("click", async (e) => {
   if (t.id === "go") {
     const home = base[0].url;
     const list = chosen().map((p) => p.type ? { type: p.type, url: p.url, label: p.label + (p.sub && p.type === "page" ? " (" + p.sub + ")" : ""), cat: p.cat, menu: p.menu || null, details: p.cat === "current" || p.cat === "custom" }
-      : { type: "find", url: home, label: p.label, cat: p.key, words: p.words, not: p.not || "", popup: !!p.popup, details: !!p.details, help: !!p.help });
+      : { type: "find", url: home, label: p.label, cat: p.key, words: p.words, not: p.not || "", content: !!p.content, promo: p.content ? { words: PROMO.words, not: PROMO.not } : null, popup: !!p.popup, details: !!p.details, help: !!p.help });
     const run = document.querySelector('input[name="run"]:checked').value;
     await chrome.runtime.sendMessage({ type: "scan", tabId: target.id, pages: list, run, site: { host: target.info.host, title: target.info.title, url: target.info.url } });
     showProgress();

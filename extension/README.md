@@ -29,6 +29,7 @@ For the logged-in run, log in to the site yourself first, then scan again and ch
 
 ## Good to know
 
+- Offers without their own page (like a welcome offer) are looked for in the homepage banners, clicking through the slides, and as a card on the promotions page, where it also opens the card's More info or terms. The homepage scan photographs every banner slide.
 - If two sections lead to the same page (for example VIP and missions both on /rewards), it scans that page once.
 - Apart from opening the sign-up and deposit pop-ups (without filling them in), it never clicks buttons that act on the account, such as Claim, Bet, Buy, Opt in or Log out, and never flips switches.
 - Some sites block scrolling or change pages with scripts; if a page comes out empty, add it by hand.
