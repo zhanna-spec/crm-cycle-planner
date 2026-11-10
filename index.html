@@ -290,6 +290,17 @@ textarea.inp { resize: vertical; min-height: 70px; }
 .scanhint { font-size: 12px; color: var(--muted); margin: 0; }
 .scanhint a { color: var(--accent); font-weight: 500; }
 
+/* Logged in/out switch, own brand, where you stand */
+.runbar { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 10px; }
+.runbar .seg { min-width: 260px; }
+.ownpill { display: inline-block; font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; padding: 2px 7px; border-radius: 999px; background: var(--sun); color: #4A3200; vertical-align: middle; }
+.opitem.on .ownpill { background: #FFFFFF; color: var(--accent); }
+.stand { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 12px; }
+.stand span { font-size: 12px; padding: 4px 10px; border-radius: 999px; background: var(--sunk); }
+.stand span.top { background: var(--mint-soft); color: var(--mint); font-weight: 600; }
+.stand span.low { background: var(--coral-soft); color: var(--coral); }
+.ownbtn { justify-content: center; }
+
 /* View switch */
 .viewnav { display: flex; gap: 4px; background: var(--surface); padding: 5px; border-radius: 16px; box-shadow: var(--shadow-sm); width: max-content; max-width: 100%; margin-bottom: 16px; overflow-x: auto; scrollbar-width: none; }
 .viewnav a { display: inline-flex; align-items: center; gap: 8px; padding: 9px 16px; border-radius: 12px; font-weight: 500; color: var(--muted); text-decoration: none; white-space: nowrap; }
@@ -521,9 +532,11 @@ footer { color: var(--muted); font-size: 12px; margin-top: 24px; text-align: cen
             <label class="field"><span>Operator name</span><input class="inp" id="opName" type="text" maxlength="80" required placeholder="LuckyNova"></label>
             <label class="field"><span>Website (optional)</span><input class="inp" id="opSite" type="text" placeholder="luckynova.com"></label>
             <label class="field"><span>Market (optional)</span><input class="inp" id="opMarket" type="text" placeholder="UK, Germany, Ontario…"></label>
+            <label class="row" style="gap:8px"><input type="checkbox" id="opOwn"><span>This is our own website</span></label>
             <div class="row"><button class="btn primary" type="submit">Add operator</button><button class="btn" type="button" id="opCancel">Cancel</button></div>
           </form>
           <button class="btn primary" type="button" id="opAdd">+ Add operator</button>
+          <button class="btn ownbtn" type="button" id="ownAdd">+ Add your own website</button>
           <p class="scanhint">Scan a whole website automatically with the <a href="https://github.com/zhanna-spec/crm-cycle-planner/blob/main/extension/README.md" target="_blank" rel="noopener">site scanner extension</a>.</p>
         </section>
         <section class="panel stack" aria-labelledby="keyH">
@@ -533,11 +546,20 @@ footer { color: var(--muted); font-size: 12px; margin-top: 24px; text-align: cen
       </div>
       <div class="stack" style="gap:18px;min-width:0">
         <section class="panel stack" id="scanPanel" hidden aria-live="polite"></section>
+        <section class="panel runbar" id="runBar" aria-label="Logged out or logged in">
+          <span class="small">Show what players see</span>
+          <div class="seg" id="runSeg">
+            <label><input type="radio" name="runView" value="all" checked><span>All</span></label>
+            <label><input type="radio" name="runView" value="logged-out"><span>Logged out</span></label>
+            <label><input type="radio" name="runView" value="logged-in"><span>Logged in</span></label>
+          </div>
+        </section>
         <section class="panel" id="opHead"></section>
         <section class="panel stack" id="trayPanel" aria-labelledby="upH">
           <h2 class="ptitle" id="upH">Add an offer</h2>
           <div class="tray">
             <label class="field" id="trayKindField"><span>What are you adding?</span><select class="inp" id="trayKind"></select></label>
+            <div class="field" id="trayRunField"><span>Seen when</span><div class="seg"><label><input type="radio" name="trayRun" value="logged-out" checked><span>Logged out</span></label><label><input type="radio" name="trayRun" value="logged-in"><span>Logged in</span></label></div></div>
             <div class="trayhead" id="trayTarget" hidden></div>
             <div class="drop" id="drop" role="button" tabindex="0" aria-label="Add screenshots">
               <i class="ci"><svg viewBox="0 0 20 20" fill="none" stroke="#FFFFFF" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="14" height="12" rx="2"/><circle cx="7.5" cy="8.5" r="1.5"/><path d="M17 13l-4-4-7 7"/></svg></i>
@@ -733,7 +755,7 @@ footer { color: var(--muted); font-size: 12px; margin-top: 24px; text-align: cen
   }
 
   // ---------- state ----------
-  var state, history = [], ui = { sel: null, focusDay: null, editingDay: null, armed: null, pickDay: null, addingDay: false, compSel: null, opSel: null, opEditing: null, cmpKind: "welcome", pageSec: "all" };
+  var state, history = [], ui = { sel: null, focusDay: null, editingDay: null, armed: null, pickDay: null, addingDay: false, compSel: null, opSel: null, opEditing: null, cmpKind: "welcome", pageSec: "all", runView: "all" };
   try { state = JSON.parse(localStorage.getItem("ccp2_state")); } catch (e) { state = null; }
   if (!state || !Array.isArray(state.cycles) || !state.cycles.length) {
     var first = makeCycle("Welcome journey", "acquisition", true, 6, 10);
@@ -1240,16 +1262,21 @@ footer { color: var(--muted); font-size: 12px; margin-top: 24px; text-align: cen
   function pagesOf(op) { return state.research.filter(function (x) { return x.opId === op.id; }); }
   function findPage(id) { return state.research.filter(function (x) { return x.id === id; })[0]; }
   function findItem(id) { return findComp(id) || findPage(id); }
+  function ownOp() { return (state.operators || []).filter(function (o) { return o.isOwn; })[0] || null; }
+  function isOwnItem(x) { var o = findOp(x.opId); return !!(o && o.isOwn); }
+  function runMatch(x) { return ui.runView === "all" || !x.run || x.run === ui.runView; }
   function plural(n, one, many) { return n + " " + (n === 1 ? one : many); }
-  function opColor(op) { return AV[Math.max(0, state.operators.indexOf(op)) % AV.length]; }
+  function opColor(op) { return op && op.isOwn ? "var(--accent)" : AV[Math.max(0, state.operators.indexOf(op)) % AV.length]; }
   function siteUrl(w) { w = (w || "").trim(); if (!w) return ""; return /^https?:\/\//i.test(w) ? w : "https://" + w; }
   function curOp() { var o = ui.opSel ? findOp(ui.opSel) : null; if (!o) ui.opSel = null; return o; }
 
   function renderOpList() {
     var ops = state.operators, el = document.getElementById("opList"), total = state.competitors.length;
     el.innerHTML = '<button type="button" class="opitem' + (!ui.opSel ? " on" : "") + '" data-op=""><span class="avatar" style="background:var(--accent)">' + svg('<rect x="3" y="4" width="6" height="12" rx="1.5"/><rect x="11" y="4" width="6" height="12" rx="1.5"/>', "#FFFFFF") + '</span><span class="meta2"><b>Overview</b><small>' + ops.length + (ops.length === 1 ? " operator" : " operators") + " · " + total + (total === 1 ? " offer" : " offers") + "</small></span></button>" +
-      ops.map(function (o) { var n = offersOf(o).length, np = pagesOf(o).length; return '<button type="button" class="opitem' + (ui.opSel === o.id ? " on" : "") + '" data-op="' + o.id + '"><span class="avatar" style="background:' + opColor(o) + '">' + esc(o.name.charAt(0).toUpperCase()) + '</span><span class="meta2"><b>' + esc(o.name) + "</b><small>" + plural(n, "offer", "offers") + (np ? " · " + plural(np, "page", "pages") : "") + (o.market ? " · " + esc(o.market) : "") + "</small></span></button>"; }).join("");
+      ops.slice().sort(function (a, b) { return (b.isOwn ? 1 : 0) - (a.isOwn ? 1 : 0); }).map(function (o) { var n = offersOf(o).length, np = pagesOf(o).length; return '<button type="button" class="opitem' + (ui.opSel === o.id ? " on" : "") + '" data-op="' + o.id + '"><span class="avatar" style="background:' + opColor(o) + '">' + esc(o.name.charAt(0).toUpperCase()) + '</span><span class="meta2"><b>' + esc(o.name) + (o.isOwn ? ' <span class="ownpill">Your brand</span>' : "") + "</b><small>" + plural(n, "offer", "offers") + (np ? " · " + plural(np, "page", "pages") : "") + (o.market ? " · " + esc(o.market) : "") + "</small></span></button>"; }).join("");
     if (!ops.length) el.innerHTML += '<p class="small">Add the operators you want to track. Then select one to add its offers.</p>';
+    var ob = document.getElementById("ownAdd"), own = ownOp();
+    if (ob && document.getElementById("opForm").hidden) { ob.hidden = false; ob.textContent = own ? "Go to your website (" + own.name + ")" : "+ Add your own website"; }
   }
   function renderOpHead(op) {
     var el = document.getElementById("opHead");
@@ -1260,11 +1287,12 @@ footer { color: var(--muted); font-size: 12px; margin-top: 24px; text-align: cen
     if (ui.opEditing === op.id) {
       el.innerHTML = '<form class="stack" id="opEditForm" style="gap:10px"><div class="grid2"><label class="field"><span>Operator name</span><input class="inp" id="opEName" type="text" maxlength="80" required value="' + esc(op.name) + '"></label><label class="field"><span>Website</span><input class="inp" id="opESite" type="text" value="' + esc(op.website || "") + '"></label></div>' +
         '<label class="field"><span>Market</span><input class="inp" id="opEMarket" type="text" value="' + esc(op.market || "") + '"></label><label class="field"><span>Notes</span><textarea class="inp" id="opENotes" rows="3" placeholder="Licence, brand group, anything worth remembering">' + esc(op.notes || "") + "</textarea></label>" +
+        '<label class="row" style="gap:8px"><input type="checkbox" id="opEOwn"' + (op.isOwn ? " checked" : "") + "><span>This is our own website</span></label>" +
         '<div class="row"><button class="btn primary" type="submit">Save</button><button class="btn" type="button" data-opact="cancel">Cancel</button></div></form>';
       return;
     }
     var n = offersOf(op).length + pagesOf(op).length, url = siteUrl(op.website);
-    el.innerHTML = '<div class="ophead"><span class="avatar" style="background:' + opColor(op) + '">' + esc(op.name.charAt(0).toUpperCase()) + '</span><div class="grow"><h2>' + esc(op.name) + '</h2><div class="sub2"><span>' + plural(offersOf(op).length, "offer", "offers") + " · " + plural(pagesOf(op).length, "page", "pages") + "</span>" + (url ? '<a href="' + esc(url) + '" target="_blank" rel="noopener">' + esc(op.website) + "</a>" : "") + (op.market ? "<span>" + esc(op.market) + "</span>" : "") + "</div></div>" +
+    el.innerHTML = '<div class="ophead"><span class="avatar" style="background:' + opColor(op) + '">' + esc(op.name.charAt(0).toUpperCase()) + '</span><div class="grow"><h2>' + esc(op.name) + (op.isOwn ? ' <span class="ownpill">Your brand</span>' : "") + '</h2><div class="sub2"><span>' + plural(offersOf(op).length, "offer", "offers") + " · " + plural(pagesOf(op).length, "page", "pages") + "</span>" + (url ? '<a href="' + esc(url) + '" target="_blank" rel="noopener">' + esc(op.website) + "</a>" : "") + (op.market ? "<span>" + esc(op.market) + "</span>" : "") + "</div></div>" +
       '<div class="row"><button class="btn" type="button" data-opact="edit">Edit details</button><button class="btn danger' + (ui.armed === "op" ? " armed" : "") + '" type="button" data-opact="delete">' + (ui.armed === "op" ? "Click again to delete" + (n ? " with " + plural(n, "item", "items") : "") : "Delete") + "</button></div></div>" +
       (op.notes ? '<p class="opnotes">' + esc(op.notes) + "</p>" : "");
   }
@@ -1298,7 +1326,8 @@ footer { color: var(--muted); font-size: 12px; margin-top: 24px; text-align: cen
   function renderCompetitors() {
     ensureOperators();
     var op = curOp();
-    var allOffers = op ? offersOf(op) : state.competitors;
+    var allOffers = (op ? offersOf(op) : state.competitors).filter(runMatch);
+    document.querySelectorAll('input[name="runView"]').forEach(function (r) { r.checked = r.value === ui.runView; });
     var offerFilter = isPageKind(ui.cmpKind) ? "all" : ui.cmpKind;
     var list = allOffers.filter(function (x) { return offerFilter === "all" || offerKind(x) === offerFilter; });
     document.getElementById("compCount").textContent = state.operators.length;
@@ -1337,7 +1366,7 @@ footer { color: var(--muted); font-size: 12px; margin-top: 24px; text-align: cen
       var foot = x.status === "reading" ? '<div class="cfoot">' + del + "</div>" : '<div class="cfoot" style="flex-wrap:wrap"><button class="btn" type="button" data-cedit="' + x.id + '">Edit</button><button class="btn" type="button" data-cmore="' + x.id + '">Add screenshots or terms</button>' + (canRetry ? '<button class="btn" type="button" data-cretry="' + x.id + '">Try again</button>' : "") + del + "</div>";
       return '<article class="ccard">' + th + '<div class="cbody">' + body + "</div>" + foot + "</article>";
     }).join("") + "</div>";
-    var pages = op ? pagesOf(op) : state.research;
+    var pages = (op ? pagesOf(op) : state.research).filter(runMatch);
     var secs = PAGE_KINDS.filter(function (k) { return state.research.some(function (x) { return x.section === k[0]; }); });
     if (ui.pageSec !== "all" && !secs.some(function (k) { return k[0] === ui.pageSec; })) ui.pageSec = "all";
     var shownPages = op ? pages : pages.filter(function (x) { return ui.pageSec === "all" || x.section === ui.pageSec; });
@@ -1350,8 +1379,10 @@ footer { color: var(--muted); font-size: 12px; margin-top: 24px; text-align: cen
       document.getElementById("cmpH").textContent = (isTour(ui.cmpKind) ? "Tournaments" : kindLabel(ui.cmpKind)) + (op ? " at " + op.name : " side by side");
       renderSectionCompare(op);
     } else {
-      document.getElementById("cmpH").textContent = op ? op.name + " compared with you" : "Offers side by side";
-      renderCompare(list.filter(function (x) { return x.status !== "reading"; }));
+      document.getElementById("cmpH").textContent = op ? (op.isOwn ? "Your offers compared with competitors" : op.name + " compared with you") : "Offers side by side";
+      var own = ownOp();
+      var scope = (!op || (own && op.id === own.id)) ? state.competitors : state.competitors.filter(function (x) { return x.opId === op.id || (own && x.opId === own.id); });
+      renderCompare(scope.filter(function (x) { return x.status !== "reading" && runMatch(x) && (offerFilter === "all" || offerKind(x) === offerFilter); }));
     }
     renderTray();
   }
@@ -1371,22 +1402,26 @@ footer { color: var(--muted); font-size: 12px; margin-top: 24px; text-align: cen
     var el = document.getElementById("cmp"), sec = ui.cmpKind, fields = COMPARE_FIELDS[sec] || [];
     var tourT = isTour(sec);
     document.getElementById("cmpNote").textContent = tourT ? "Every tournament answered the same questions, so they line up." : "Each operator's " + kindLabel(sec).toLowerCase() + " answered the same questions, so they line up.";
-    var rows = (op ? pagesOf(op) : state.research).filter(function (x) { return x.section === sec && x.status !== "reading"; });
+    var own = ownOp();
+    var rows = state.research.filter(function (x) { return x.section === sec && x.status !== "reading" && runMatch(x) && (!op || (own && op.id === own.id) || x.opId === op.id || (own && x.opId === own.id)); });
+    rows.sort(function (a, b) { return (isOwnItem(b) ? 1 : 0) - (isOwnItem(a) ? 1 : 0); });
     if (!rows.length) { el.innerHTML = '<p class="small">No ' + esc(tourT ? "tournaments" : kindLabel(sec).toLowerCase()) + " added yet. Select an operator, choose “" + esc(kindLabel(sec)) + "” under What are you adding, and add screenshots or notes.</p>"; return; }
     var best = Math.max.apply(null, rows.map(function (x) { return +x.rating || 0; }));
     el.innerHTML = '<table class="cmp"><thead><tr><th>Operator</th>' + (tourT ? "<th>Tournament</th><th>Appeal</th>" : "<th>Rating</th>") + fields.map(function (f) { return "<th>" + esc(f) + "</th>"; }).join("") + "<th>Why</th><th></th></tr></thead><tbody>" +
       rows.map(function (x) {
         var o = findOp(x.opId) || { name: "?" }, cmpv = x.comparison || {}, missing = !x.rating || fields.some(function (f) { return !(f in cmpv); });
-        return '<tr><td><div class="who"><span class="avatar" style="background:' + opColor(o) + '">' + esc(o.name.charAt(0).toUpperCase()) + "</span>" + esc(o.name) + "</div></td>" + (tourT ? '<td class="val"><b>' + esc(x.title || "Tournament") + "</b></td>" : "") +
+        return '<tr class="' + (o.isOwn ? "you" : "") + '"><td><div class="who"><span class="avatar" style="background:' + opColor(o) + '">' + esc(o.name.charAt(0).toUpperCase()) + "</span>" + esc(o.name) + (o.isOwn ? ' <span class="ownpill">You</span>' : "") + "</div></td>" + (tourT ? '<td class="val"><b>' + esc(x.title || "Tournament") + "</b></td>" : "") +
           "<td>" + (x.rating ? (rows.length > 1 && +x.rating === best ? '<span class="best">' + stars(x.rating) + "</span>" : stars(x.rating)) : '<span class="small">–</span>') + "</td>" +
           fields.map(function (f) { var v = cmpv[f]; return '<td class="val">' + (v && v !== "Not shown" ? esc(v) : '<span class="small">' + (v ? "Not shown" : "–") + "</span>") + "</td>"; }).join("") +
           '<td class="why">' + esc(x.rating_reason || "") + "</td>" +
           "<td>" + (missing && aiReady() ? '<button class="btn rowupd" type="button" data-pretry="' + x.id + '" title="Fill in the comparison columns">Update</button>' : "") + "</td></tr>";
-      }).join("") + "</tbody></table>";
+      }).join("") + "</tbody></table>" + standLine(rows, [["rating", tourT ? "Appeal" : "Rating", "high"]]);
   }
   function renderCompare(list) {
-    var el = document.getElementById("cmp"), you = ui.cmpKind === "welcome" || ui.cmpKind === "all" ? yourOffer() : null;
-    document.getElementById("cmpNote").textContent = you ? "Your row uses the first offer in " + cyc().name : (ui.cmpKind === "welcome" || ui.cmpKind === "all") ? "Add an offer to a cycle to compare yourself" : "";
+    var own = ownOp(), ownRows = list.filter(isOwnItem);
+    var el = document.getElementById("cmp"), you = !own && (ui.cmpKind === "welcome" || ui.cmpKind === "all") ? yourOffer() : null;
+    document.getElementById("cmpNote").textContent = own ? (ownRows.length ? "Your rows come from " + own.name + "." : "No " + (ui.cmpKind === "all" ? "offers" : kindLabel(ui.cmpKind).toLowerCase() + "s") + " added for " + own.name + " yet.") : you ? "Your row uses the first offer in " + cyc().name + ". Add your own website on the left to compare your real offers." : "Add your own website on the left to compare yourself.";
+    list = ownRows.concat(list.filter(function (x) { return !isOwnItem(x); }));
     if (!list.length) { el.innerHTML = '<p class="small">' + (ui.cmpKind === "all" ? "Offers you add appear here, with the best value in each column highlighted." : "No " + esc(kindLabel(ui.cmpKind).toLowerCase()) + "s to compare yet.") + "</p>"; return; }
     var rows = (you ? [Object.assign({ you: true }, you)] : []).concat(list);
     var cols = [["max_bonus", "Max bonus", "high"], ["free_spins", "Free spins", "high"], ["wagering", "Wagering", "low"], ["min_deposit", "Min deposit", "low"], ["max_bet", "Max bet", "high"], ["expiry_days", "Days to wager", "high"]];
@@ -1407,14 +1442,31 @@ footer { color: var(--muted); font-size: 12px; margin-top: 24px; text-align: cen
       rows.map(function (x, i) {
         var idx = x.you ? -1 : list.indexOf(x);
         var av = x.you ? '<span class="avatar" style="background:var(--accent)">Y</span>' : '<span class="avatar" style="background:' + opColor(findOp(x.opId)) + '">' + esc((x.name || "?").charAt(0).toUpperCase()) + "</span>";
-        return '<tr class="' + (x.you ? "you" : "") + '"><td><div class="who">' + av + esc(x.name || "Unnamed") + "</div></td><td>" + (ui.cmpKind === "all" && !x.you ? '<span class="kindpill">' + esc(kindLabel(offerKind(x))) + "</span> " : "") + esc(x.you ? compHeadline(x) : (x.title || compHeadline(x))) + "</td>" + cols.map(function (c) { return cell(x, c); }).join("") + "<td>" + (x.you ? "" : '<button class="iconbtn rowdel" type="button" data-cdelete="' + x.id + '" title="Delete offer" aria-label="Delete ' + esc(x.name || "offer") + '">' + svg('<path d="M4 6h12M8 6V4h4v2M6 6l1 10h6l1-10"/>') + "</button>") + "</td></tr>";
-      }).join("") + "</tbody></table>";
+        var mine = x.you || isOwnItem(x);
+        return '<tr class="' + (mine ? "you" : "") + '"><td><div class="who">' + av + esc(x.name || "Unnamed") + (isOwnItem(x) ? ' <span class="ownpill">You</span>' : "") + "</div></td><td>" + (ui.cmpKind === "all" && !x.you ? '<span class="kindpill">' + esc(kindLabel(offerKind(x))) + "</span> " : "") + esc(x.you ? compHeadline(x) : (x.title || compHeadline(x))) + (ui.runView === "all" && x.run ? '<small class="srcline">' + (x.run === "logged-in" ? "Logged in" : "Logged out") + "</small>" : "") + "</td>" + cols.map(function (c) { return cell(x, c); }).join("") + "<td>" + (x.you ? "" : '<button class="iconbtn rowdel" type="button" data-cdelete="' + x.id + '" title="Delete offer" aria-label="Delete ' + esc(x.name || "offer") + '">' + svg('<path d="M4 6h12M8 6V4h4v2M6 6l1 10h6l1-10"/>') + "</button>") + "</td></tr>";
+      }).join("") + "</tbody></table>" + (ui.cmpKind !== "all" ? standLine(rows.filter(function (x) { return !x.you; }), cols) : "");
+  }
+  // "Where you stand": your best value in each column, ranked against competitors.
+  function ordinal(n) { return n === 1 ? "best" : n + (n === 2 ? "nd" : n === 3 ? "rd" : "th"); }
+  function standLine(rows, cols) {
+    var mine = rows.filter(isOwnItem), others = rows.filter(function (x) { return !isOwnItem(x); });
+    if (!mine.length || !others.length) return "";
+    var chips = [];
+    cols.forEach(function (c) {
+      var key = c[0], high = c[2] === "high";
+      var myVals = mine.map(function (x) { return x[key]; }).filter(has).map(Number); if (!myVals.length) return;
+      var my = high ? Math.max.apply(null, myVals) : Math.min.apply(null, myVals);
+      var theirs = others.map(function (x) { return x[key]; }).filter(has).map(Number); if (!theirs.length) return;
+      var better = theirs.filter(function (v) { return high ? v > my : v < my; }).length, n = theirs.length + 1, rank = better + 1;
+      chips.push('<span class="' + (rank === 1 ? "top" : rank === n ? "low" : "") + '">' + esc(c[1]) + ": " + ordinal(rank) + " of " + n + "</span>");
+    });
+    return chips.length ? '<div class="stand"><span style="background:none;padding-left:0;font-weight:600">Where you stand</span>' + chips.join("") + "</div>" : "";
   }
 
   // ---------- website scans from the site scanner extension ----------
   var incomingScan = null, scanJob = null;
   function srcLine(x) {
-    if (x.source !== "scan") return "";
+    if (x.source !== "scan") return x.run ? '<small class="srcline">' + (x.run === "logged-in" ? "Logged in" : "Logged out") + "</small>" : "";
     var host = ""; try { host = new URL(x.url).pathname; } catch (e) { host = ""; }
     return '<small class="srcline">From scan · ' + (x.run === "logged-in" ? "logged in" : "logged out") + (x.url ? ' · <a href="' + esc(x.url) + '" target="_blank" rel="noopener">' + esc(host.length > 1 ? host : "page") + "</a>" : "") + "</small>";
   }
@@ -1441,7 +1493,7 @@ footer { color: var(--muted); font-size: 12px; margin-top: 24px; text-align: cen
     var form = document.getElementById("scanForm");
     form.innerHTML = '<h3 id="scanTitle">Website scan of ' + esc(host) + "</h3>" +
       '<p class="small">' + plural(ok.length, "page", "pages") + " scanned " + (scan.run === "logged-in" ? "while logged in" : "while logged out") + (bad ? ", " + plural(bad, "page", "pages") + " couldn't be opened" : "") + ". Claude sorts each page into offers, tournaments and website content, then reads them. About 3 to 6 cents per page.</p>" +
-      '<label class="field"><span>Operator</span><select class="inp" id="scanOp">' + state.operators.map(function (o) { return '<option value="' + o.id + '"' + (guess && guess.id === o.id ? " selected" : "") + ">" + esc(o.name) + "</option>"; }).join("") + '<option value="__new"' + (guess ? "" : " selected") + ">New operator…</option></select></label>" +
+      '<label class="field"><span>Operator</span><select class="inp" id="scanOp">' + state.operators.map(function (o) { return '<option value="' + o.id + '"' + (guess && guess.id === o.id ? " selected" : "") + ">" + esc(o.name) + (o.isOwn ? " (your website)" : "") + "</option>"; }).join("") + '<option value="__new"' + (guess ? "" : " selected") + ">New operator…</option></select></label>" +
       '<label class="field" id="scanNewWrap"' + (guess ? " hidden" : "") + '><span>New operator name</span><input class="inp" id="scanNewName" type="text" maxlength="80" value="' + esc(newName) + '"></label>' +
       '<div class="field"><span>This scan was</span><div class="seg"><label><input type="radio" name="scanRun" value="logged-out"' + (scan.run !== "logged-in" ? " checked" : "") + '><span>Logged out</span></label><label><input type="radio" name="scanRun" value="logged-in"' + (scan.run === "logged-in" ? " checked" : "") + "><span>Logged in</span></label></div></div>" +
       '<div class="field"><span>Pages to import</span><div class="scanlist">' + scan.pages.map(function (pg, i) {
@@ -1688,6 +1740,7 @@ footer { color: var(--muted); font-size: 12px; margin-top: 24px; text-align: cen
     document.getElementById("trayTermsLabel").textContent = tour ? "Tournament rules or your notes (optional)" : page ? "Page text or your notes (optional)" : "Terms and conditions (optional)";
     document.getElementById("trayTerms").placeholder = tour ? "Paste the tournament rules: prizes, dates, how points are scored, eligible games" : page ? "Paste text from the page, or describe what you saw (for example each registration step)" : "Paste the bonus terms as text";
     document.getElementById("addManual").hidden = page;
+    document.getElementById("trayRunField").hidden = !!t;
     var shots = document.getElementById("trayShots");
     shots.hidden = !tray.images.length;
     shots.innerHTML = tray.images.map(function (im, i) { return '<div class="shot"><img src="' + im.thumb + '" alt="Screenshot ' + (i + 1) + '"><button type="button" data-unshot="' + i + '" aria-label="Remove screenshot ' + (i + 1) + '">×</button></div>'; }).join("");
@@ -1717,7 +1770,7 @@ footer { color: var(--muted); font-size: 12px; margin-top: 24px; text-align: cen
     var kind = target ? (target.section || offerKind(target)) : tray.kind;
     if (isPageKind(kind)) { submitPage(op, target, kind, terms, images, thumbs); return; }
     var x = target, isNew = !x;
-    if (isNew) { x = { id: uid(), opId: op.id, name: op.name, kind: kind, title: "", conditions: [], uncertain: [], thumbs: [], terms: "", status: "done", addedAt: new Date().toISOString() }; state.competitors.unshift(x); }
+    if (isNew) { x = { id: uid(), opId: op.id, name: op.name, kind: kind, run: trayRun(), title: "", conditions: [], uncertain: [], thumbs: [], terms: "", status: "done", addedAt: new Date().toISOString() }; state.competitors.unshift(x); }
     if (cloud && curWs && images.length) { preview[x.id] = (preview[x.id] || []).concat(thumbs); uploadShots(x.id, images, thumbs); }
     else x.thumbs = (x.thumbs || []).concat(thumbs).slice(-MAX_SHOTS);
     if (terms) x.terms = ((x.terms ? x.terms + "\n\n" : "") + terms).slice(0, 40000);
@@ -1728,9 +1781,10 @@ footer { color: var(--muted); font-size: 12px; margin-top: 24px; text-align: cen
     if (!aiReady()) { ui.compSel = x.id; renderCompDrawer(); toast("AI isn't set up yet, so fill in this offer by hand."); return; }
     readOffer(x.id, { images: images, terms: x.terms || "", known: known });
   }
+  function trayRun() { var r = document.querySelector('input[name="trayRun"]:checked'); return r ? r.value : "logged-out"; }
   function submitPage(op, p, kind, text, images, thumbs) {
     var isNew = !p;
-    if (isNew) { p = { id: uid(), opId: op.id, section: kind, title: kindLabel(kind), summary: "", steps: [], key_facts: [], strengths: [], friction: [], ideas: [], uncertain: [], thumbs: [], images: [], text: "", status: "done", addedAt: new Date().toISOString() }; state.research.unshift(p); }
+    if (isNew) { p = { id: uid(), opId: op.id, section: kind, run: trayRun(), title: kindLabel(kind), summary: "", steps: [], key_facts: [], strengths: [], friction: [], ideas: [], uncertain: [], thumbs: [], images: [], text: "", status: "done", addedAt: new Date().toISOString() }; state.research.unshift(p); }
     if (cloud && curWs && images.length) { preview[p.id] = (preview[p.id] || []).concat(thumbs); uploadShots(p.id, images, thumbs); }
     else p.thumbs = (p.thumbs || []).concat(thumbs).slice(-MAX_SHOTS);
     if (text) p.text = ((p.text ? p.text + "\n\n" : "") + text).slice(0, 40000);
@@ -1803,6 +1857,7 @@ footer { color: var(--muted); font-size: 12px; margin-top: 24px; text-align: cen
     };
     dr.innerHTML = '<div class="dhead"><span class="avatar" style="background:var(--coral-bg)">' + esc((x.name || "?").charAt(0).toUpperCase()) + '</span><h3 id="dTitle">Competitor offer</h3><button type="button" class="iconbtn" id="dClose" aria-label="Close">' + svg('<path d="M5 5l10 10M15 5L5 15"/>') + "</button></div>" +
       '<div class="dbody"><label class="field"><span>Operator</span><select class="inp" id="c-opId" data-c="opId">' + state.operators.map(function (o) { return '<option value="' + o.id + '"' + (o.id === x.opId ? " selected" : "") + ">" + esc(o.name) + "</option>"; }).join("") + "</select></label>" +
+      '<label class="field"><span>Seen when</span><select class="inp" id="c-run" data-c="run"><option value=""' + (!x.run ? " selected" : "") + '>Not set</option><option value="logged-out"' + (x.run === "logged-out" ? " selected" : "") + '>Logged out</option><option value="logged-in"' + (x.run === "logged-in" ? " selected" : "") + ">Logged in</option></select></label>" +
       '<label class="field"><span>Offer type</span><select class="inp" id="c-kind" data-c="kind">' + OFFER_KINDS.map(function (k) { return '<option value="' + k[0] + '"' + (offerKind(x) === k[0] ? " selected" : "") + ">" + k[1] + "</option>"; }).join("") + "</select></label>" + f(FIELDS[1]) +
       '<div class="grid2">' + FIELDS.slice(2, 12).map(f).join("") + "</div>" + '<div class="grid2">' + f(FIELDS[12]) + f(FIELDS[13]) + "</div>" +
       '<label class="field"><span>Other conditions (one per line)</span><textarea class="inp" id="c-conds" data-c="conditions" rows="5">' + esc((x.conditions || []).join("\n")) + "</textarea></label>" +
@@ -1831,7 +1886,7 @@ footer { color: var(--muted); font-size: 12px; margin-top: 24px; text-align: cen
   });
   document.getElementById("addManual").addEventListener("click", function () {
     var op = curOp(); if (!op) { toast("Select an operator first."); return; }
-    commit(); var x = { id: uid(), opId: op.id, name: op.name, title: "", conditions: [], uncertain: [], thumbs: [], status: "done", addedAt: new Date().toISOString() };
+    commit(); var x = { id: uid(), opId: op.id, name: op.name, run: trayRun(), title: "", conditions: [], uncertain: [], thumbs: [], status: "done", addedAt: new Date().toISOString() };
     state.competitors.unshift(x); save(); renderCompetitors(); ui.compSel = x.id; ui.armed = null; renderCompDrawer();
     setTimeout(function () { var n = document.getElementById("c-title"); if (n) n.focus(); }, 0);
   });
@@ -1840,16 +1895,22 @@ footer { color: var(--muted); font-size: 12px; margin-top: 24px; text-align: cen
   function selectOp(id) { ui.opSel = id || null; ui.opEditing = null; ui.armed = null; if (tray.targetId) { var t = findComp(tray.targetId); if (!t || t.opId !== ui.opSel) tray.targetId = null; } closeDrawer(); renderCompetitors(); }
   document.getElementById("opList").addEventListener("click", function (e) { var b = e.target.closest("[data-op]"); if (b) selectOp(b.getAttribute("data-op")); });
   document.getElementById("opAdd").addEventListener("click", function () { document.getElementById("opForm").hidden = false; this.hidden = true; document.getElementById("opName").focus(); });
-  document.getElementById("opCancel").addEventListener("click", function () { var f = document.getElementById("opForm"); f.reset(); f.hidden = true; document.getElementById("opAdd").hidden = false; });
+  function setOwn(op, on) { if (on) state.operators.forEach(function (o) { o.isOwn = o === op; }); else op.isOwn = false; }
+  document.getElementById("ownAdd").addEventListener("click", function () {
+    var own = ownOp(); if (own) { selectOp(own.id); return; }
+    document.getElementById("opForm").hidden = false; document.getElementById("opAdd").hidden = true; this.hidden = true;
+    document.getElementById("opOwn").checked = true; document.getElementById("opName").placeholder = "Your brand name"; document.getElementById("opName").focus();
+  });
+  document.getElementById("opCancel").addEventListener("click", function () { var f = document.getElementById("opForm"); f.reset(); f.hidden = true; document.getElementById("opAdd").hidden = false; renderOpList(); });
   document.getElementById("opForm").addEventListener("submit", function (e) {
     e.preventDefault();
     var name = document.getElementById("opName").value.trim(); if (!name) return;
     if (state.operators.some(function (o) { return o.name.toLowerCase() === name.toLowerCase(); })) { toast(name + " is already in the list."); return; }
     commit();
     var op = { id: uid(), name: name, website: document.getElementById("opSite").value.trim(), market: document.getElementById("opMarket").value.trim(), notes: "", addedAt: new Date().toISOString() };
-    state.operators.push(op); save();
+    state.operators.push(op); setOwn(op, document.getElementById("opOwn").checked); save();
     e.target.reset(); e.target.hidden = true; document.getElementById("opAdd").hidden = false;
-    selectOp(op.id); toast(name + " added. Now add its offers.");
+    selectOp(op.id); toast(op.isOwn ? "Your website is added. Scan it or add screenshots, and it shows up in every comparison." : name + " added. Now add its offers.");
   });
   document.getElementById("opHead").addEventListener("click", function (e) {
     var b = e.target.closest("[data-opact]"); if (!b) return;
@@ -1872,6 +1933,7 @@ footer { color: var(--muted); font-size: 12px; margin-top: 24px; text-align: cen
     if (state.operators.some(function (o) { return o.id !== op.id && o.name.toLowerCase() === name.toLowerCase(); })) { toast("Another operator already has that name."); return; }
     commit();
     op.name = name; op.website = document.getElementById("opESite").value.trim(); op.market = document.getElementById("opEMarket").value.trim(); op.notes = document.getElementById("opENotes").value.trim();
+    setOwn(op, document.getElementById("opEOwn").checked);
     ui.opEditing = null; save(); renderCompetitors();
   });
   document.getElementById("ccards").addEventListener("click", function (e) {
@@ -1902,6 +1964,7 @@ footer { color: var(--muted); font-size: 12px; margin-top: 24px; text-align: cen
     if (e.target.id === "cmpKind") { ui.cmpKind = e.target.value; if (isPageKind(ui.cmpKind)) ui.pageSec = ui.cmpKind; renderCompetitors(); }
     if (e.target.id === "pageSec") { ui.pageSec = e.target.value; renderCompetitors(); }
     if (e.target.id === "trayKind") { tray.kind = e.target.value; renderTray(); }
+    if (e.target.name === "runView") { ui.runView = e.target.value; renderCompetitors(); }
   });
   drawer.addEventListener("input", function (e) {
     var t = e.target, k = t.getAttribute("data-c"); if (!k || !ui.compSel) return;
