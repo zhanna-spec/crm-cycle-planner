@@ -29,6 +29,8 @@ const DEFAULT_SECTIONS = [
   { key: "help", label: "Help / FAQ", words: "^(help|help cent(er|re)|support|faq|faqs)$", help: true, off: true }
 ];
 const PROMO = DEFAULT_SECTIONS.find((x) => x.key === "promotions");
+// the planner's website sections for each checklist entry: unticked ones are left out of the import too
+const KINDS = { homepage: ["homepage"], menu: ["navigation"], register: ["registration"], deposit: ["deposit"], promotions: ["promotions"], tournaments: ["tournament"], vip: ["loyalty"], missions: ["missions"], shop: ["shop"], wheel: ["wheel"], referral: ["referral"], bonuses: ["account"], inbox: ["inbox"], account: ["account"], withdrawal: ["withdrawal"], app: ["app"], rg: ["rg"] };
 const GROUPS = { register: "Getting players in", tournaments: "Keeping players", deposit: "Your account", rg: "Compliance and extras" };
 // Which sections belong to which run: logged-in only ones are hidden on a logged-out run and the other way round.
 const fits = (s) => !(runMode === "logged-out" && s.loggedIn) && !(runMode === "logged-in" && s.loggedOut);
@@ -165,6 +167,7 @@ function render() {
     "<h2>This run is</h2>" +
     '<div class="seg"><label><input type="radio" name="run" value="logged-out"' + (runMode === "logged-out" ? " checked" : "") + '><span>Logged out</span></label><label><input type="radio" name="run" value="logged-in"' + (runMode === "logged-in" ? " checked" : "") + "><span>Logged in</span></label></div>" +
     (guessed ? '<p class="note">' + esc(guessed) + "</p>" : "") +
+    '<label class="opt"><input type="checkbox" id="openCards"' + (prefs.cards !== false ? " checked" : "") + '><span><b>Open every promotion and tournament</b><small>Opens each one and reads its terms. About 10 seconds more per promotion. Untick to photograph the promotions and tournament pages as they are.</small></span></label>' +
     "<h2>Always</h2>" +
     '<div class="list">' + base.map((p, i) => row(p, "b", i)).join("") + "</div>" +
     "<h2>Sections to find</h2>" +
@@ -184,6 +187,7 @@ function listOf(l) { return l === "b" ? base : l === "s" ? sections : l === "p" 
 
 main.addEventListener("change", async (e) => {
   if (e.target.name === "run") { runMode = e.target.value; guessed = false; render(); return; }
+  if (e.target.id === "openCards") { prefs.cards = e.target.checked; await savePrefs(); return; }
   const i = e.target.getAttribute("data-i"); if (i === null) return;
   const l = e.target.getAttribute("data-list"), item = listOf(l)[+i];
   item.checked = e.target.checked;
@@ -225,9 +229,13 @@ main.addEventListener("click", async (e) => {
   if (t.id === "go") {
     const home = base[0].url;
     const list = chosen().map((p) => p.type ? { type: p.type, url: p.url, label: p.label + (p.sub && p.type === "page" ? " (" + p.sub + ")" : ""), cat: p.cat, menu: p.menu || null, details: p.cat === "current" || p.cat === "custom" }
-      : { type: "find", url: home, label: p.label, cat: p.key, words: p.words, not: p.not || "", content: !!p.content, cards: !!p.cards, cardLabel: p.cards || "", promo: p.content ? { words: PROMO.words, not: PROMO.not } : null, popup: !!p.popup, details: !!p.details, help: !!p.help });
+      : { type: "find", url: home, label: p.label, cat: p.key, words: p.words, not: p.not || "", content: !!p.content, cards: !!p.cards && prefs.cards !== false, cardLabel: p.cards || "", promo: p.content ? { words: PROMO.words, not: PROMO.not } : null, popup: !!p.popup, details: !!p.details, help: !!p.help });
     const run = document.querySelector('input[name="run"]:checked').value;
-    await chrome.runtime.sendMessage({ type: "scan", tabId: target.id, pages: list, run, site: { host: target.info.host, title: target.info.title, url: target.info.url } });
+    // sections you left unticked: the planner won't make cards for them, even if another page shows them
+    const used = new Set(), skip = new Set();
+    chosen().forEach((p) => (KINDS[p.key || p.cat] || []).forEach((k) => used.add(k)));
+    base.concat(sections.filter(fits)).filter((p) => !p.checked).forEach((p) => (KINDS[p.key || p.cat] || []).forEach((k) => { if (!used.has(k)) skip.add(k); }));
+    await chrome.runtime.sendMessage({ type: "scan", tabId: target.id, pages: list, run, skip: Array.from(skip), site: { host: target.info.host, title: target.info.title, url: target.info.url } });
     showProgress();
   }
 });
@@ -259,7 +267,7 @@ function showProgress() {
   const { scanStatus } = await chrome.storage.local.get("scanStatus");
   if (scanStatus && scanStatus.state === "running") { document.getElementById("site").textContent = "A scan is running"; showProgress(); return; }
   const stored = (await chrome.storage.sync.get("sectionPrefs")).sectionPrefs;
-  if (stored) prefs = { off: stored.off || [], on: stored.on || [], custom: stored.custom || [] };
+  if (stored) prefs = { off: stored.off || [], on: stored.on || [], custom: stored.custom || [], cards: stored.cards };
   // ?tab=<id> lets the popup be opened as a normal page for testing.
   const q = new URLSearchParams(location.search).get("tab");
   const tab = q ? await chrome.tabs.get(+q) : (await chrome.tabs.query({ active: true, currentWindow: true }))[0];

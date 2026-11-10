@@ -1582,7 +1582,7 @@ footer { color: var(--muted); font-size: 12px; margin-top: 24px; text-align: cen
     var pages = Array.prototype.map.call(scanModal.querySelectorAll("[data-scanpg]:checked"), function (cb) { return scan.pages[+cb.getAttribute("data-scanpg")]; });
     window.postMessage({ type: "ccp-scan-received", id: scan.id }, "*");
     incomingScan = null; scanModal.hidden = true; save();
-    processScan(scan.id, op, pages, run);
+    processScan(scan.id, op, pages, run, scan.skip || []);
   });
   function loadSrc(src) { return new Promise(function (res, rej) { var img = new Image(); img.onload = function () { res(img); }; img.onerror = function () { rej(new Error("A screenshot couldn't be read.")); }; img.src = src; }); }
   async function uploadPaths(images, folder) {
@@ -1632,7 +1632,7 @@ footer { color: var(--muted); font-size: 12px; margin-top: 24px; text-align: cen
     if (openedCard(pg)) return isPageKind(kind) && kind !== "tournament" ? -1 : 3;
     return OWN_HINT[kind] && String(pg.hint || "").split(",").indexOf(OWN_HINT[kind]) >= 0 ? 2 : 0;
   }
-  async function processScan(id, op, pages, run) {
+  async function processScan(id, op, pages, run, skip) {
     scanJob = { id: id, opId: op.id, run: run, total: pages.length, done: 0, made: 0, skipped: 0, failed: 0, current: "", errors: [], finished: false, phase: "sort" };
     ui.sec = "overview"; selectOp(op.id); renderScanPanel();
     // 1. sort every page
@@ -1654,7 +1654,8 @@ footer { color: var(--muted); font-size: 12px; margin-top: 24px; text-align: cen
           scanJob.done++; renderScanPanel(); continue;
         }
         var sorted = await backend("sort_page", { images: pg.images, image_labels: (pg.shotLabels || []).slice(0, pg.images.length), page_text: pg.text || "", url: pg.url, link_text: pg.label || "" });
-        var items = (sorted.items || []).filter(function (it) { return it && it.kind && it.kind !== "irrelevant"; }).slice(0, 6);
+        // website sections you unticked in the scanner are left out, even when another page shows them
+        var items = (sorted.items || []).filter(function (it) { return it && it.kind && it.kind !== "irrelevant" && (skip || []).indexOf(it.kind) < 0; }).slice(0, 6);
         // an offer or tournament opened from a list is only that item, never the list page itself
         if (openedCard(pg)) items = items.filter(function (it) { return !isPageKind(it.kind) || it.kind === "tournament" || it.kind === "loyalty"; });
         if (!items.length) scanJob.skipped++;

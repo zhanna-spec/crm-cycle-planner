@@ -821,7 +821,7 @@ async function scanFind(tabId, windowId, pg, results, scanned) {
   return Object.assign({ url: now, found }, await scanPage(tabId, windowId, now, { details: pg.details, stay: true }));
 }
 
-async function runScan({ tabId, pages, run: runLabel, site }) {
+async function runScan({ tabId, pages, run: runLabel, site, skip }) {
   const tab = await chrome.tabs.get(tabId);
   const startUrl = tab.url;
   const total = pages.length;
@@ -867,7 +867,7 @@ async function runScan({ tabId, pages, run: runLabel, site }) {
     await chrome.storage.local.set({ scanStatus: { state: "stopped", message: mode === "discard" ? "" : "Nothing was finished yet, so there's nothing to import." } });
     return;
   }
-  const scan = { id: Date.now().toString(36) + Math.random().toString(36).slice(2, 6), site, run: runLabel, at: new Date().toISOString(), pages: results };
+  const scan = { id: Date.now().toString(36) + Math.random().toString(36).slice(2, 6), site, run: runLabel, at: new Date().toISOString(), pages: results, skip: skip || [] };
   await chrome.storage.local.set({ pendingScan: scan, scanStatus: { state: "done", done: total, total, partial: !!mode, kept: done.length } });
   const { plannerUrl } = await chrome.storage.local.get("plannerUrl");
   await chrome.tabs.create({ url: plannerUrl || PLANNER_URL });
