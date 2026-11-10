@@ -288,6 +288,26 @@ textarea.inp { resize: vertical; min-height: 70px; }
 .srcline { display: block; font-size: 11px; color: var(--muted); font-weight: 400; margin-top: 2px; }
 .srcline a { color: var(--accent); }
 .scanhint { font-size: 12px; color: var(--muted); margin: 0; }
+.secnav { display: flex; flex-direction: column; gap: 12px; }
+.secnavtop { display: flex; justify-content: space-between; align-items: center; gap: 10px; flex-wrap: wrap; }
+.secchips { display: flex; flex-direction: column; gap: 8px; }
+.secrow { display: flex; gap: 6px; align-items: center; flex-wrap: wrap; }
+.secrow > small { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: .05em; color: var(--muted); width: 64px; flex: none; }
+.chip { font: inherit; font-size: 13px; font-weight: 500; border: 0; border-radius: 999px; padding: 6px 12px; background: var(--sunk); color: var(--ink); cursor: pointer; display: inline-flex; gap: 6px; align-items: center; }
+.chip i { font-style: normal; font-size: 11px; font-weight: 600; background: var(--surface); color: var(--accent); border-radius: 999px; padding: 1px 7px; }
+.chip.on { background: var(--accent); color: #FFFFFF; }
+.chip.on i { background: rgba(255,255,255,.25); color: #FFFFFF; }
+.chip:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.ovgroup { display: flex; flex-direction: column; gap: 10px; }
+.ovgrid { display: grid; grid-template-columns: repeat(auto-fill, minmax(210px, 1fr)); gap: 12px; }
+.ovtile { font: inherit; text-align: left; border: 0; border-radius: 16px; background: var(--surface); color: var(--ink); padding: 0; overflow: hidden; cursor: pointer; display: flex; flex-direction: column; box-shadow: 0 1px 2px rgba(30,27,58,.05); }
+.ovtile:hover { box-shadow: 0 4px 14px rgba(106,90,224,.16); }
+.ovtile:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.ovtile .ovimg { height: 110px; background: var(--sunk); overflow: hidden; display: flex; align-items: center; justify-content: center; color: var(--muted); font-size: 12px; }
+.ovtile .ovimg img { width: 100%; height: 100%; object-fit: cover; object-position: top; }
+.ovtile .ovtxt { padding: 10px 12px 12px; display: flex; flex-direction: column; gap: 3px; }
+.ovtile .ovtxt b { font-size: 14px; }
+.ovtile .ovtxt small { color: var(--muted); font-size: 12px; overflow: hidden; text-overflow: ellipsis; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; }
 .scanhint a { color: var(--accent); font-weight: 500; }
 
 /* Logged in/out switch, own brand, where you stand */
@@ -546,17 +566,20 @@ footer { color: var(--muted); font-size: 12px; margin-top: 24px; text-align: cen
       </div>
       <div class="stack" style="gap:18px;min-width:0">
         <section class="panel stack" id="scanPanel" hidden aria-live="polite"></section>
-        <section class="panel runbar" id="runBar" aria-label="Logged out or logged in">
-          <span class="small">Show what players see</span>
-          <div class="seg" id="runSeg">
-            <label><input type="radio" name="runView" value="all" checked><span>All</span></label>
-            <label><input type="radio" name="runView" value="logged-out"><span>Logged out</span></label>
-            <label><input type="radio" name="runView" value="logged-in"><span>Logged in</span></label>
-          </div>
-        </section>
         <section class="panel" id="opHead"></section>
-        <section class="panel stack" id="trayPanel" aria-labelledby="upH">
-          <h2 class="ptitle" id="upH">Add an offer</h2>
+        <section class="panel secnav" id="secNav" aria-label="Sections">
+          <div class="secnavtop">
+            <div class="seg" id="runSeg" aria-label="Show what players see">
+              <label><input type="radio" name="runView" value="all" checked><span>All</span></label>
+              <label><input type="radio" name="runView" value="logged-out"><span>Logged out</span></label>
+              <label><input type="radio" name="runView" value="logged-in"><span>Logged in</span></label>
+            </div>
+            <button class="btn primary" type="button" id="addOpen">+ Add</button>
+          </div>
+          <nav class="secchips" id="secChips" aria-label="Sections"></nav>
+        </section>
+        <section class="panel stack" id="trayPanel" aria-labelledby="upH" hidden>
+          <div class="row" style="justify-content:space-between"><h2 class="ptitle" id="upH" style="margin:0">Add</h2><button class="btn" type="button" id="trayClose">Close</button></div>
           <div class="tray">
             <label class="field" id="trayKindField"><span>What are you adding?</span><select class="inp" id="trayKind"></select></label>
             <div class="field" id="trayRunField"><span>Seen when</span><div class="seg"><label><input type="radio" name="trayRun" value="logged-out" checked><span>Logged out</span></label><label><input type="radio" name="trayRun" value="logged-in"><span>Logged in</span></label></div></div>
@@ -572,8 +595,8 @@ footer { color: var(--muted); font-size: 12px; margin-top: 24px; text-align: cen
             <div class="row"><button class="btn primary" type="button" id="trayRead" disabled style="flex:1;justify-content:center">Read offer</button><button class="btn" type="button" id="addManual">Fill in by hand</button></div>
           </div>
         </section>
-        <section class="panel" aria-labelledby="cmpH">
-          <div class="row" style="justify-content:space-between;margin-bottom:12px"><h2 class="ptitle" id="cmpH" style="margin:0">Offers side by side</h2><label class="row" style="gap:6px"><span class="small">Compare</span><select class="inp" id="cmpKind" style="width:auto"></select></label></div><p class="small" id="cmpNote" style="margin:-4px 0 10px"></p>
+        <section class="panel" aria-labelledby="cmpH" id="cmpPanel">
+          <div class="row" style="justify-content:space-between;margin-bottom:12px"><h2 class="ptitle" id="cmpH" style="margin:0">Side by side</h2></div><p class="small" id="cmpNote" style="margin:-4px 0 10px"></p>
           <div class="cmpwrap" id="cmp"></div>
         </section>
         <div class="stack" id="ccards" style="gap:14px"></div>
@@ -755,7 +778,7 @@ footer { color: var(--muted); font-size: 12px; margin-top: 24px; text-align: cen
   }
 
   // ---------- state ----------
-  var state, history = [], ui = { sel: null, focusDay: null, editingDay: null, armed: null, pickDay: null, addingDay: false, compSel: null, opSel: null, opEditing: null, cmpKind: "welcome", pageSec: "all", runView: "all" };
+  var state, history = [], ui = { sel: null, focusDay: null, editingDay: null, armed: null, pickDay: null, addingDay: false, compSel: null, opSel: null, opEditing: null, cmpKind: "welcome", pageSec: "all", runView: "all", sec: "overview", adding: false };
   try { state = JSON.parse(localStorage.getItem("ccp2_state")); } catch (e) { state = null; }
   if (!state || !Array.isArray(state.cycles) || !state.cycles.length) {
     var first = makeCycle("Welcome journey", "acquisition", true, 6, 10);
@@ -1242,7 +1265,7 @@ footer { color: var(--muted); font-size: 12px; margin-top: 24px; text-align: cen
   function offersOf(op) { return state.competitors.filter(function (x) { return x.opId === op.id; }); }
   var OFFER_KINDS = [["welcome", "Welcome offer"], ["second", "2nd deposit offer"], ["third", "3rd deposit offer"], ["reload", "Reload offer"], ["cashback", "Cashback"], ["freespins", "Free spins offer"], ["vip", "Loyalty / VIP reward"], ["sports", "Sportsbook offer"], ["other_offer", "Other offer"]];
   var TOUR_KINDS = [];
-  var PAGE_KINDS = [["registration", "Registration process"], ["deposit", "Deposit / cashier"], ["homepage", "Homepage"], ["navigation", "Site menu"], ["promotions", "Promotions page"], ["tournament", "Tournament"], ["loyalty", "Loyalty programme"], ["missions", "Missions"], ["shop", "Bonus shop"], ["wheel", "Wheel / mini-games"], ["gamification", "Other gamification"], ["referral", "Refer a friend"], ["inbox", "Inbox / messages"], ["account", "Account area"], ["withdrawal", "Withdrawal"], ["app", "Mobile app"], ["rg", "Responsible gambling"], ["other_page", "Other page"]];
+  var PAGE_KINDS = [["homepage", "Homepage"], ["navigation", "Site menu"], ["registration", "Registration process"], ["deposit", "Deposit / cashier"], ["promotions", "Promotions page"], ["tournament", "Tournament"], ["loyalty", "Loyalty programme"], ["missions", "Missions"], ["shop", "Bonus shop"], ["wheel", "Wheel / mini-games"], ["gamification", "Other gamification"], ["referral", "Refer a friend"], ["inbox", "Inbox / messages"], ["account", "Account area"], ["withdrawal", "Withdrawal"], ["app", "Mobile app"], ["rg", "Responsible gambling"], ["other_page", "Other page"]];
   var COMPARE_FIELDS = {
     registration: ["Number of steps", "Fields asked", "Verification before play", "Bonus shown during sign-up", "One-click or social sign-up", "Asks for a deposit right after"],
     deposit: ["Payment methods", "Minimum deposit", "How the bonus is opted into", "Steps to deposit", "Fees or limits shown"],
@@ -1336,20 +1359,34 @@ footer { color: var(--muted); font-size: 12px; margin-top: 24px; text-align: cen
     var op = curOp();
     var allOffers = (op ? offersOf(op) : state.competitors).filter(runMatch);
     document.querySelectorAll('input[name="runView"]').forEach(function (r) { r.checked = r.value === ui.runView; });
-    var offerFilter = isPageKind(ui.cmpKind) ? "all" : ui.cmpKind;
-    var list = allOffers.filter(function (x) { return offerFilter === "all" || offerKind(x) === offerFilter; });
+    var allPages = (op ? pagesOf(op) : state.research).filter(runMatch);
+    // the section menu: Overview, then every offer type and website section that has something
+    var count = {};
+    allOffers.forEach(function (x) { count[offerKind(x)] = (count[offerKind(x)] || 0) + 1; });
+    allPages.forEach(function (x) { count[x.section] = (count[x.section] || 0) + 1; });
+    var known = OFFER_KINDS.concat(PAGE_KINDS).some(function (k) { return k[0] === ui.sec; });
+    if (ui.sec !== "overview" && !known) ui.sec = "overview";
+    var chip = function (k) { return '<button type="button" class="chip' + (ui.sec === k[0] ? " on" : "") + '" data-sec="' + k[0] + '">' + esc(k[1]) + "<i>" + (count[k[0]] || 0) + "</i></button>"; };
+    var shownKinds = function (kinds) { return kinds.filter(function (k) { return count[k[0]] || ui.sec === k[0]; }); };
+    var offerChips = shownKinds(OFFER_KINDS), pageChips = shownKinds(PAGE_KINDS);
+    document.getElementById("secChips").innerHTML =
+      '<div class="secrow"><button type="button" class="chip' + (ui.sec === "overview" ? " on" : "") + '" data-sec="overview">Overview<i>' + (allOffers.length + allPages.length) + "</i></button></div>" +
+      (offerChips.length ? '<div class="secrow"><small>Offers</small>' + offerChips.map(chip).join("") + "</div>" : "") +
+      (pageChips.length ? '<div class="secrow"><small>Website</small>' + pageChips.map(chip).join("") + "</div>" : "");
+    document.getElementById("addOpen").hidden = !op;
+    document.getElementById("trayPanel").hidden = !op || !(ui.adding || tray.targetId);
+    var overview = ui.sec === "overview";
+    document.getElementById("cmpPanel").hidden = overview;
+    if (!overview) ui.cmpKind = ui.sec;
+    var offerFilter = overview || isPageKind(ui.sec) ? null : ui.sec;
+    var list = offerFilter ? allOffers.filter(function (x) { return offerKind(x) === offerFilter; }) : [];
     document.getElementById("compCount").textContent = state.operators.length;
     document.getElementById("undoBtn").disabled = !history.length;
     renderKeyPanel(); renderOpList(); renderOpHead(op);
-    document.getElementById("trayPanel").hidden = !op;
     document.getElementById("upH").textContent = op ? "Add to " + op.name : "Add";
-    var optK = function (k) { return '<option value="' + k[0] + '"' + (ui.cmpKind === k[0] ? " selected" : "") + ">" + k[1] + "</option>"; };
-    document.getElementById("cmpKind").innerHTML = '<optgroup label="Offers"><option value="all"' + (ui.cmpKind === "all" ? " selected" : "") + '>All offer types</option>' + OFFER_KINDS.map(optK).join("") + '</optgroup><optgroup label="Website content">' + PAGE_KINDS.map(optK).join("") + "</optgroup>";
     // cards
     var cards = document.getElementById("ccards");
-    var kindName = offerFilter === "all" ? "offers" : kindLabel(offerFilter).toLowerCase() + "s";
-    var offerHtml = !list.length ? '<div class="panel empty-c">' + (!state.operators.length ? "Start by adding an operator on the left." : allOffers.length ? "No " + esc(kindName) + (op ? " for " + esc(op.name) : "") + " yet. Change the offer type above to see the others." : op ? "No offers for " + esc(op.name) + " yet. Choose what you're adding above, then add screenshots or text." : "No offers yet. Select an operator on the left to add them.") + "</div>"
-    : '<div class="ccards">' + list.map(function (x) {
+    var offerHtml = '<div class="ccards">' + list.map(function (x) {
       var o = findOp(x.opId) || { name: x.name || "?" };
       var pics = offerPics(x), first = pics[0];
       var th = !pics.length ? '<div class="thumbs none">No screenshots</div>'
@@ -1374,27 +1411,44 @@ footer { color: var(--muted); font-size: 12px; margin-top: 24px; text-align: cen
       var foot = x.status === "reading" ? '<div class="cfoot">' + del + "</div>" : '<div class="cfoot" style="flex-wrap:wrap"><button class="btn" type="button" data-cedit="' + x.id + '">Edit</button><button class="btn" type="button" data-cmore="' + x.id + '">Add screenshots or terms</button>' + (canRetry ? '<button class="btn" type="button" data-cretry="' + x.id + '">Try again</button>' : "") + del + "</div>";
       return '<article class="ccard">' + th + '<div class="cbody">' + body + "</div>" + foot + "</article>";
     }).join("") + "</div>";
-    var pages = (op ? pagesOf(op) : state.research).filter(runMatch);
-    var secs = PAGE_KINDS.filter(function (k) { return state.research.some(function (x) { return x.section === k[0]; }); });
-    if (ui.pageSec !== "all" && !secs.some(function (k) { return k[0] === ui.pageSec; })) ui.pageSec = "all";
-    var shownPages = op ? pages : pages.filter(function (x) { return ui.pageSec === "all" || x.section === ui.pageSec; });
-    var pageFilter = !op && secs.length ? '<label class="row" style="gap:6px"><span class="small">Section</span><select class="inp" id="pageSec"><option value="all">All sections</option>' + secs.map(function (k) { return '<option value="' + k[0] + '"' + (ui.pageSec === k[0] ? " selected" : "") + ">" + k[1] + "</option>"; }).join("") + "</select></label>" : "";
-    var pageHtml = shownPages.length ? '<div class="ccards">' + shownPages.map(function (x) { return pageCard(x, !op); }).join("") + "</div>"
-      : '<div class="panel empty-c">' + (op ? "No website content for " + esc(op.name) + " yet. Choose a page or a tournament under “What are you adding?” above." : "No website content yet. Select an operator and add screenshots of its registration, deposit or tournament pages.") + "</div>";
-    cards.innerHTML = '<div class="sechead"><h3>' + (op ? "Offers" : "All offers") + (offerFilter !== "all" ? ' <span class="kindpill">' + esc(kindLabel(offerFilter)) + "</span>" : "") + "</h3></div>" + offerHtml +
-      '<div class="sechead" style="margin-top:8px"><h3>Website content</h3>' + pageFilter + "</div>" + pageHtml;
-    if (isPageKind(ui.cmpKind)) {
-      document.getElementById("cmpH").textContent = (isTour(ui.cmpKind) ? "Tournaments" : kindLabel(ui.cmpKind)) + (op ? " at " + op.name : " side by side");
-      renderSectionCompare(op);
-    } else {
-      document.getElementById("cmpH").textContent = op ? (op.isOwn ? "Your offers compared with competitors" : op.name + " compared with you") : "Offers side by side";
-      var own = ownOp();
-      var scope = (!op || (own && op.id === own.id)) ? state.competitors : state.competitors.filter(function (x) { return x.opId === op.id || (own && x.opId === own.id); });
-      renderCompare(scope.filter(function (x) { return x.status !== "reading" && runMatch(x) && (offerFilter === "all" || offerKind(x) === offerFilter); }));
+    var shownPages = !overview && isPageKind(ui.sec) ? allPages.filter(function (x) { return x.section === ui.sec; }) : [];
+    if (overview) cards.innerHTML = overviewHtml(op, allOffers, allPages);
+    else {
+      var items = offerFilter ? list.length : shownPages.length, label = kindLabel(ui.sec);
+      var addBtn = op ? '<button class="btn" type="button" data-addsec="' + ui.sec + '">+ Add ' + esc(isTour(ui.sec) ? "a tournament" : label.toLowerCase()) + "</button>" : "";
+      cards.innerHTML = '<div class="sechead"><h3>' + esc(isTour(ui.sec) ? "Tournaments" : label) + ' <span class="small" style="font-weight:400">' + plural(items, "item", "items") + (op ? "" : " across operators") + "</span></h3>" + addBtn + "</div>" +
+        (!items ? '<div class="panel empty-c">Nothing here yet' + (op ? " for " + esc(op.name) + ". Click “+ Add” to add screenshots or text, or scan the site with the extension." : ".") + "</div>"
+          : offerFilter ? offerHtml : '<div class="ccards">' + shownPages.map(function (x) { return pageCard(x, !op); }).join("") + "</div>");
+      if (isPageKind(ui.sec)) {
+        document.getElementById("cmpH").textContent = (isTour(ui.sec) ? "Tournaments" : kindLabel(ui.sec)) + (op ? (op.isOwn ? ": you and competitors" : ": " + op.name + " and you") : " side by side");
+        renderSectionCompare(op);
+      } else {
+        document.getElementById("cmpH").textContent = kindLabel(ui.sec) + (op ? (op.isOwn ? ": you and competitors" : ": " + op.name + " and you") : " side by side");
+        var own = ownOp();
+        var scope = (!op || (own && op.id === own.id)) ? state.competitors : state.competitors.filter(function (x) { return x.opId === op.id || (own && x.opId === own.id); });
+        renderCompare(scope.filter(function (x) { return x.status !== "reading" && runMatch(x) && offerKind(x) === ui.sec; }));
+      }
     }
     renderTray();
   }
 
+  // Overview: one tile per section, offers first, then the website in the order a player meets it.
+  function overviewHtml(op, offers, pages) {
+    if (!offers.length && !pages.length) return '<div class="panel empty-c">' + (!state.operators.length ? "Start by adding an operator on the left." : op ? "Nothing added for " + esc(op.name) + " yet. Click “+ Add” for screenshots or text, or scan the website with the extension." : "Nothing added yet. Select an operator on the left, then add screenshots or scan its website.") + "</div>";
+    var tile = function (kind, items, isOffer) {
+      var first = items[0], pics = offerPics(first), ops = [];
+      items.forEach(function (x) { if (ops.indexOf(x.opId) < 0) ops.push(x.opId); });
+      var line = op
+        ? (isOffer ? (first.status === "reading" ? "Reading…" : compHeadline(first)) : (first.rating ? stars(first.rating) + " " : "") + esc(first.title && first.title !== kindLabel(kind) ? first.title : first.summary || ""))
+        : plural(ops.length, "operator", "operators");
+      return '<button type="button" class="ovtile" data-sec="' + kind + '"><span class="ovimg">' + (pics[0] ? '<img src="' + pics[0] + '" alt="">' : "No screenshot") + '</span><span class="ovtxt"><b>' + esc(isTour(kind) ? "Tournaments" : kindLabel(kind)) + (items.length > 1 ? ' <span class="kindpill">' + items.length + "</span>" : "") + "</b><small>" + (isOffer && op ? esc(line) : line) + "</small></span></button>";
+    };
+    var group = function (title, kinds, items, keyOf, isOffer) {
+      var tiles = kinds.map(function (k) { var its = items.filter(function (x) { return keyOf(x) === k[0]; }); return its.length ? tile(k[0], its, isOffer) : ""; }).join("");
+      return tiles ? '<div class="ovgroup"><div class="sechead"><h3>' + title + "</h3></div><div class=\"ovgrid\">" + tiles + "</div></div>" : "";
+    };
+    return group("Offers", OFFER_KINDS, offers, offerKind, true) + group("Website", PAGE_KINDS, pages, function (x) { return x.section; }, false);
+  }
   function yourOffer() {
     var steps = cyc().steps.slice().sort(function (a, b) { return a.day - b.day; });
     var s = steps.filter(function (x) { return x.offer && ["match", "freespins", "freebet"].indexOf(x.offer.type) >= 0; })[0];
@@ -1582,7 +1636,7 @@ footer { color: var(--muted); font-size: 12px; margin-top: 24px; text-align: cen
   function samePrint(a, b) { var n = 0; for (var i = 0; i < a.length; i++) if (i % 160 < 155 && Math.abs(a[i] - b[i]) > 16 && ++n > 12) return false; return true; }
   async function processScan(id, op, pages, run) {
     scanJob = { id: id, opId: op.id, run: run, total: pages.length, done: 0, made: 0, skipped: 0, failed: 0, current: "", errors: [], finished: false, phase: "sort" };
-    selectOp(op.id); renderScanPanel();
+    ui.sec = "overview"; selectOp(op.id); renderScanPanel();
     // 1. sort every page
     var groups = [];
     for (var i = 0; i < pages.length; i++) {
@@ -1817,6 +1871,7 @@ footer { color: var(--muted); font-size: 12px; margin-top: 24px; text-align: cen
     var known = isNew ? { competitor: op.name } : knownFields(x);
     // keep this session's screenshots so "Try again" can resend them
     imageCache[x.id] = (imageCache[x.id] || []).concat(images).slice(-MAX_SHOTS);
+    ui.adding = false; ui.sec = kind;
     clearTray(); save(); renderCompetitors();
     if (!aiReady()) { ui.compSel = x.id; renderCompDrawer(); toast("AI isn't set up yet, so fill in this offer by hand."); return; }
     readOffer(x.id, { images: images, terms: x.terms || "", known: known });
@@ -1829,6 +1884,7 @@ footer { color: var(--muted); font-size: 12px; margin-top: 24px; text-align: cen
     else p.thumbs = (p.thumbs || []).concat(thumbs).slice(-MAX_SHOTS);
     if (text) p.text = ((p.text ? p.text + "\n\n" : "") + text).slice(0, 40000);
     imageCache[p.id] = (imageCache[p.id] || []).concat(images).slice(-MAX_SHOTS);
+    ui.adding = false; ui.sec = kind;
     clearTray();
     if (!aiReady()) { if (!p.summary && text) p.summary = text.slice(0, 800); save(); renderCompetitors(); toast("Saved. Turn on AI to have Claude review it."); return; }
     save(); renderCompetitors();
@@ -1926,8 +1982,9 @@ footer { color: var(--muted); font-size: 12px; margin-top: 24px; text-align: cen
   });
   document.getElementById("addManual").addEventListener("click", function () {
     var op = curOp(); if (!op) { toast("Select an operator first."); return; }
-    commit(); var x = { id: uid(), opId: op.id, name: op.name, run: trayRun(), title: "", conditions: [], uncertain: [], thumbs: [], status: "done", addedAt: new Date().toISOString() };
-    state.competitors.unshift(x); save(); renderCompetitors(); ui.compSel = x.id; ui.armed = null; renderCompDrawer();
+    var kind = isPageKind(tray.kind) ? "welcome" : tray.kind;
+    commit(); var x = { id: uid(), opId: op.id, name: op.name, kind: kind, run: trayRun(), title: "", conditions: [], uncertain: [], thumbs: [], status: "done", addedAt: new Date().toISOString() };
+    state.competitors.unshift(x); ui.adding = false; ui.sec = kind; save(); renderCompetitors(); ui.compSel = x.id; ui.armed = null; renderCompDrawer();
     setTimeout(function () { var n = document.getElementById("c-title"); if (n) n.focus(); }, 0);
   });
 
@@ -1982,8 +2039,8 @@ footer { color: var(--muted); font-size: 12px; margin-top: 24px; text-align: cen
     if ((t = e.target.closest("[data-cretry]"))) readOffer(t.getAttribute("data-cretry"));
     if ((t = e.target.closest("[data-lb]"))) openLightbox(t.getAttribute("data-lb"));
     if ((t = e.target.closest("[data-cmore]"))) {
-      tray.targetId = t.getAttribute("data-cmore"); renderTray();
-      var panel = document.getElementById("upH"); panel.scrollIntoView({ behavior: "smooth", block: "start" });
+      tray.targetId = t.getAttribute("data-cmore"); ui.adding = true; renderCompetitors();
+      var panel = document.getElementById("trayPanel"); panel.scrollIntoView({ behavior: "smooth", block: "start" });
       toast("Add screenshots or text above, then click " + document.getElementById("trayRead").textContent + ".");
     }
     if ((t = e.target.closest("[data-pretry]"))) readPage(t.getAttribute("data-pretry"));
@@ -2000,9 +2057,23 @@ footer { color: var(--muted); font-size: 12px; margin-top: 24px; text-align: cen
     if (u) { var id = u.getAttribute("data-pdelete"), pg = findPage(id); if (!pg) return; commit(); state.research = state.research.filter(function (x) { return x.id !== id; }); save(); renderCompetitors(); toast(kindLabel(pg.section) + " deleted. Click Undo to bring it back."); }
   });
   document.getElementById("cmp").addEventListener("click", function (e) { var b = e.target.closest("[data-pretry]"); if (b) readPage(b.getAttribute("data-pretry")); });
+  // section menu, overview tiles and the add box
+  function openAdd(kind) {
+    if (!curOp()) { toast("Select an operator on the left first."); return; }
+    ui.adding = true; tray.targetId = null;
+    if (kind && kind !== "overview") tray.kind = kind;
+    renderCompetitors();
+    document.getElementById("trayPanel").scrollIntoView({ behavior: "smooth", block: "start" });
+  }
+  function closeAdd() { ui.adding = false; tray.targetId = null; renderCompetitors(); }
+  document.getElementById("view-competitors").addEventListener("click", function (e) {
+    var t = e.target.closest("[data-sec]");
+    if (t) { ui.sec = t.getAttribute("data-sec"); renderCompetitors(); return; }
+    if ((t = e.target.closest("[data-addsec]"))) { openAdd(t.getAttribute("data-addsec")); return; }
+    if (e.target.closest("#addOpen")) { openAdd(ui.sec); return; }
+    if (e.target.closest("#trayClose")) closeAdd();
+  });
   document.getElementById("view-competitors").addEventListener("change", function (e) {
-    if (e.target.id === "cmpKind") { ui.cmpKind = e.target.value; if (isPageKind(ui.cmpKind)) ui.pageSec = ui.cmpKind; renderCompetitors(); }
-    if (e.target.id === "pageSec") { ui.pageSec = e.target.value; renderCompetitors(); }
     if (e.target.id === "trayKind") { tray.kind = e.target.value; renderTray(); }
     if (e.target.name === "runView") { ui.runView = e.target.value; renderCompetitors(); }
   });
