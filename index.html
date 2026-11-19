@@ -372,15 +372,16 @@ textarea.inp { resize: vertical; min-height: 70px; }
 .fp.on { background: var(--accent); color: #FFFFFF; }
 .gal { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 12px; }
 .mode-m .gal { grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); }
-.shot { margin: 0; border-radius: 14px; background: var(--sunk); overflow: hidden; border: 1px solid var(--line); position: relative; }
-.shot[hidden] { display: none; }
-.shot .frame { border-radius: 0; }
-.shot .frame img, .shot .frame .noimg { aspect-ratio: 16/8; object-fit: cover; object-position: top; height: auto; }
-.mode-m .shot .frame img, .mode-m .shot .frame .noimg { aspect-ratio: 9/15; }
-.shot figcaption { padding: 8px 10px 10px; display: grid; gap: 2px; }
-.shot figcaption .cchip { font-size: 11.5px; color: var(--muted); }
-.shot figcaption b { font-size: 13px; font-weight: 600; line-height: 1.3; }
-.shot .sedit { position: absolute; top: 6px; right: 6px; }
+.gal { align-items: start; }
+.rvshot { margin: 0; border-radius: 14px; background: var(--sunk); overflow: hidden; border: 1px solid var(--line); position: relative; }
+.rvshot[hidden] { display: none; }
+.rvshot .frame { border-radius: 0; }
+.rvshot .frame img, .rvshot .frame .noimg { aspect-ratio: 16/8; object-fit: cover; object-position: top; height: auto; }
+.mode-m .rvshot .frame img, .mode-m .rvshot .frame .noimg { aspect-ratio: 9/15; }
+.rvshot figcaption { padding: 8px 10px 10px; display: grid; gap: 2px; }
+.rvshot figcaption .cchip { font-size: 11.5px; color: var(--muted); }
+.rvshot figcaption b { font-size: 13px; font-weight: 600; line-height: 1.3; }
+.rvshot .sedit { position: absolute; top: 6px; right: 6px; }
 .ebtn { font: inherit; font-size: 12px; font-weight: 600; border: 0; background: var(--sunk); color: var(--accent); border-radius: 8px; padding: 5px 9px; cursor: pointer; }
 .ebtn:hover { background: var(--accent-soft); }
 .rvedit { display: grid; gap: 8px; }
@@ -390,6 +391,17 @@ textarea.inp { resize: vertical; min-height: 70px; }
 .rvcas b { display: block; font-weight: 600; }
 .rvcas small { color: var(--muted); font-size: 12px; }
 .rvcas .cdot { width: 12px; height: 12px; margin: 0; }
+.rvcas[data-rvcas] { cursor: pointer; }
+.rvcas[data-rvcas]:hover { box-shadow: inset 0 0 0 2px var(--accent-soft); }
+.rvcas.on { background: var(--accent); }
+.rvcas.on b, .rvcas.on small, .rvcas.on .ebtn { color: #FFFFFF; }
+.rvcas.on .ebtn { background: rgba(255,255,255,.18); }
+.rvcas:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.rvcashead { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.rvcashead h2 { margin: 0; font-size: 20px; }
+.rvcashead .cdot { width: 12px; height: 12px; margin: 0; display: inline-block; border-radius: 50%; }
+.rvgh { display: flex; align-items: center; gap: 8px; margin: 0; font-size: 16px; }
+.rvgh .ic { width: 18px; height: 18px; color: var(--accent); }
 .rvai { background: var(--surface); border-radius: 20px; padding: 14px 18px; box-shadow: var(--shadow-sm); }
 .rvai textarea { font: inherit; font-size: 14px; border: 1px solid var(--line); background: var(--surface); color: var(--ink); border-radius: 10px; padding: 8px 10px; width: 100%; box-sizing: border-box; margin-top: 4px; }
 .rvq { background: var(--ye-soft); border-radius: 12px; padding: 10px 14px; margin-top: 10px; font-size: 13px; }
@@ -2413,6 +2425,18 @@ footer { color: var(--muted); font-size: 12px; margin-top: 24px; text-align: cen
       return;
     }
     var mode = v.device === "mobile" ? "mode-m" : "mode-d";
+    var casOp = ui.rvCas ? findOp(ui.rvCas) : null;
+    if (ui.rvCas && !casOp) ui.rvCas = null;
+    if (casOp) {
+      var mineAll = r.shots.filter(function (x) { return x.v === v.id && x.op === casOp.id; });
+      var groups = r.sections.map(function (x) { return { id: x.id, name: x.name, list: mineAll.filter(function (y) { return (y.sections || []).indexOf(x.id) >= 0; }) }; })
+        .concat([{ id: "_uns", name: "Not sorted into a section yet", list: mineAll.filter(function (y) { return !(y.sections || []).length; }) }, { id: "_none", name: "Not in any section", list: mineAll.filter(function (y) { return (y.sections || []).join() === "_none"; }) }])
+        .filter(function (g) { return g.list.length; });
+      main.innerHTML = head + '<div class="stack ' + mode + '" style="gap:16px"><div class="rvcashead"><button class="btn" type="button" data-rvcas="">← Back to the report</button><span class="cdot" style="background:' + esc(rvColor(casOp)) + '"></span><h2>' + esc(casOp.name) + '</h2><span class="small">' + plural(mineAll.length, "screenshot", "screenshots") + "</span></div>" +
+        (groups.length ? groups.map(function (g) { return '<div class="allshots"><h3 class="rvgh">' + (g.id.charAt(0) === "_" ? "" : rvIcon(g.id)) + esc(g.name) + ' <span class="small">' + g.list.length + "</span></h3>" + rvGallery(g.list, "c:" + g.id) + "</div>"; }).join("")
+          : '<div class="rvempty small">No screenshots of ' + esc(casOp.name) + " yet. Scan it with the extension, or use + Screenshots.</div>") + "</div>";
+      return;
+    }
     var c = rvCardsFor(v, sec), pts = rvPointsFor(v, sec), editC = ui.rvEdit === "cards";
     var card = function (key, cls, icon, title, list) {
       var body = editC ? '<textarea data-rvcard="' + key + '" rows="' + Math.max(4, (c[key] || []).length + 2) + '" aria-label="' + esc(title) + '">' + esc((c[key] || []).join("\n")) + "</textarea>"
@@ -2452,14 +2476,14 @@ footer { color: var(--muted); font-size: 12px; margin-top: 24px; text-align: cen
     var items = list.slice().sort(function (a, b) { return order(a) - order(b); }).map(function (s) {
       var op = findOp(s.op);
       if (ui.rvShotEdit === s.id) return rvShotEditor(s);
-      return '<figure class="shot"' + (f !== "all" && s.op !== f ? " hidden" : "") + ">" + rvFrame(s, null, 'data-lbs="' + esc(s.id) + '" data-lbscope="' + scope + '"') +
+      return '<figure class="rvshot"' + (f !== "all" && s.op !== f ? " hidden" : "") + ">" + rvFrame(s, null, 'data-lbs="' + esc(s.id) + '" data-lbscope="' + scope + '"') +
         '<figcaption>' + rvChip(op) + "<b>" + esc(s.title || "Untitled") + "</b>" + (s.flag ? '<span class="ktag k-check" style="white-space:normal" title="' + esc(s.flag) + '">Check: ' + esc(s.flag) + "</span>" : "") + '</figcaption><button class="ebtn sedit" type="button" data-rvshot="' + esc(s.id) + '">Edit</button></figure>';
     }).join("");
     return pills + '<div class="gal">' + (items || '<p class="small">No screenshots yet.</p>') + "</div>";
   }
   function rvShotEditor(s) {
     var r = rv();
-    return '<figure class="shot" style="padding:10px"><div class="rvedit">' + rvFrame(s, null, "") +
+    return '<figure class="rvshot" style="padding:10px"><div class="rvedit">' + rvFrame(s, null, "") +
       '<label class="small">Title<input type="text" data-se="title" value="' + esc(s.title || "") + '"></label>' +
       '<label class="small">Casino<select data-se="op">' + state.operators.map(function (o) { return '<option value="' + o.id + '"' + (o.id === s.op ? " selected" : "") + ">" + esc(o.name) + "</option>"; }).join("") + "</select></label>" +
       '<div class="small">Sections</div><div class="row" style="flex-wrap:wrap;gap:4px 10px">' + r.sections.map(function (x) { return '<label class="small"><input type="checkbox" data-se-sec="' + esc(x.id) + '"' + ((s.sections || []).indexOf(x.id) >= 0 ? " checked" : "") + "> " + esc(x.name) + "</label>"; }).join("") + "</div>" +
@@ -2497,7 +2521,7 @@ footer { color: var(--muted); font-size: 12px; margin-top: 24px; text-align: cen
     var ops = state.operators.slice().sort(function (a, b) { return (subj && b.id === subj.id ? 1 : 0) - (subj && a.id === subj.id ? 1 : 0); });
     document.getElementById("rvCasinos").innerHTML = ops.map(function (o) {
       var n = r.shots.filter(function (s) { return s.op === o.id && s.v === v.id; }).length;
-      return '<div class="rvcas"><span class="cdot" style="background:' + esc(rvColor(o)) + '"></span><span class="meta2"><b>' + esc(o.name) + (subj && o.id === subj.id ? ' <span class="ownpill">Reviewed</span>' : "") + "</b><small>" + plural(n, "screenshot", "screenshots") + "</small></span>" +
+      return '<div class="rvcas' + (ui.rvCas === o.id ? " on" : "") + '" data-rvcas="' + o.id + '" role="button" tabindex="0" aria-label="Show the screenshots of ' + esc(o.name) + '"><span class="cdot" style="background:' + esc(rvColor(o)) + '"></span><span class="meta2"><b>' + esc(o.name) + (subj && o.id === subj.id ? ' <span class="ownpill">Reviewed</span>' : "") + "</b><small>" + plural(n, "screenshot", "screenshots") + "</small></span>" +
         '<button class="ebtn" type="button" data-rvadd="' + o.id + '">+ Screenshots</button></div>';
     }).join("") || '<p class="small">Add operators on the Offer terms side, or import a report.</p>';
     var made = r.sections.some(function (x) { var c = (r.cards[v.id] || {})[x.id]; return (c && ((c.works || []).length || (c.gaps || []).length || (c.ideas || []).length)) || ((r.comps[v.id] || {})[x.id] || []).length; });
@@ -2582,17 +2606,18 @@ footer { color: var(--muted); font-size: 12px; margin-top: 24px; text-align: cen
   function rvSaveState() { save(); renderReview(); }
   document.getElementById("reviewApp").addEventListener("click", function (e) {
     var t, r = rv(), v = rvVersion(), sec = rvSection();
-    if ((t = e.target.closest("[data-rvsec]"))) { ui.rvSec = t.getAttribute("data-rvsec"); ui.rvEdit = null; ui.rvShotEdit = null; renderReview(); return; }
+    if ((t = e.target.closest("[data-rvsec]"))) { ui.rvSec = t.getAttribute("data-rvsec"); ui.rvCas = null; ui.rvEdit = null; ui.rvShotEdit = null; renderReview(); return; }
     if ((t = e.target.closest("[data-rvv]"))) { ui.rvV = t.getAttribute("data-rvv"); ui.rvEdit = null; renderReview(); return; }
     if ((t = e.target.closest("[data-rvf]"))) { ui.rvFilter = t.getAttribute("data-rvf") === "all" ? null : t.getAttribute("data-rvf"); renderReview(); return; }
     if ((t = e.target.closest("[data-rvadd]"))) { ui.rvAddOp = t.getAttribute("data-rvadd"); document.getElementById("rvFile").click(); return; }
     if ((t = e.target.closest("[data-rvshot]"))) { ui.rvShotEdit = t.getAttribute("data-rvshot"); renderReview(); return; }
+    if ((t = e.target.closest("[data-rvcas]"))) { var cid = t.getAttribute("data-rvcas"); ui.rvCas = cid && ui.rvCas !== cid ? cid : null; ui.rvShotEdit = null; renderReview(); document.getElementById("rvMain").scrollIntoView({ behavior: "smooth", block: "start" }); return; }
     if (e.target.id === "rvTitle") { ui.rvTitleEdit = true; renderReview(); return; }
     if ((t = e.target.closest(".frame[data-lbp]"))) {
       var p = rvPointsFor(v, sec)[+t.getAttribute("data-lbp")]; if (p) rvLbOpen(p.shots, +t.getAttribute("data-lbi")); return;
     }
     if ((t = e.target.closest(".frame[data-lbs]"))) {
-      var scope = t.getAttribute("data-lbscope"), list = (scope === "uns" ? rvShotsFor(v, null) : scope === "nos" ? r.shots.filter(function (x) { return x.v === v.id && (x.sections || []).join() === "_none"; }) : rvShotsFor(v, sec)).filter(function (s) { return !ui.rvFilter || s.op === ui.rvFilter; });
+      var scope = t.getAttribute("data-lbscope"), list = (/^c:/.test(scope) ? (function (g) { return r.shots.filter(function (x) { return x.v === v.id && x.op === ui.rvCas && (g === "_uns" ? !(x.sections || []).length : g === "_none" ? (x.sections || []).join() === "_none" : (x.sections || []).indexOf(g) >= 0); }); })(scope.slice(2)) : scope === "uns" ? rvShotsFor(v, null) : scope === "nos" ? r.shots.filter(function (x) { return x.v === v.id && (x.sections || []).join() === "_none"; }) : rvShotsFor(v, sec)).filter(function (s) { return !ui.rvFilter || s.op === ui.rvFilter; });
       var cas = rvCasinos(); list.sort(function (a, b) { return cas.indexOf(findOp(a.op)) - cas.indexOf(findOp(b.op)); });
       rvLbOpen(list.map(function (s) { return { shot: s.id, boxes: [], kind: "" }; }), Math.max(0, list.map(function (s) { return s.id; }).indexOf(t.getAttribute("data-lbs")))); return;
     }
@@ -2671,6 +2696,8 @@ footer { color: var(--muted); font-size: 12px; margin-top: 24px; text-align: cen
     }
     var f = e.target.closest && e.target.closest(".frame[data-lbp], .frame[data-lbs]");
     if (f && (e.key === "Enter" || e.key === " ")) { e.preventDefault(); f.click(); }
+    var cs = e.target.closest && e.target.closest(".rvcas[data-rvcas]");
+    if (cs && e.target === cs && (e.key === "Enter" || e.key === " ")) { e.preventDefault(); cs.click(); }
   });
   document.getElementById("reviewApp").addEventListener("focusout", function (e) {
     if (e.target.id === "rvTitleInp" && ui.rvTitleEdit) { commit(); rv().title = e.target.value.trim(); ui.rvTitleEdit = false; rvSaveState(); }
@@ -3906,6 +3933,7 @@ footer { color: var(--muted); font-size: 12px; margin-top: 24px; text-align: cen
       proxy = { loading: false, checked: true, connected: false, ai: false, account: "", canSync: false, problem: err.message, missingFn: true };
     }
     renderKeyPanel(); renderInboxPanel(); renderEmails(); renderTray();
+    if (!document.getElementById("view-competitors").hidden) renderCompetitors();
   }
   function renderProxyPanel(el, kind) {
     var guide = '<a href="' + SETUP_URL + '#8-keep-the-token-on-the-server-signed-in-planner" target="_blank" rel="noopener">Setup guide</a>';
