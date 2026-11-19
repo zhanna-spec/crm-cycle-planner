@@ -403,6 +403,11 @@ textarea.inp { resize: vertical; min-height: 70px; }
 .rvtabs .vbtn { padding: 8px 10px; } .rvtabs .vbtn .ic { width: 17px; height: 17px; }
 .rvtabs .exbtn { font: inherit; font-weight: 600; border: 0; background: var(--sunk); color: var(--accent); padding: 8px 14px; border-radius: 12px; cursor: pointer; }
 .rvtabs .exbtn:hover { background: var(--accent-soft); }
+.rvcheck { display: flex; flex-wrap: wrap; gap: 6px 12px; align-items: center; font-size: 13px; color: var(--ye-d); background: var(--ye-soft); border-radius: 12px; padding: 8px 12px; }
+.rvcheck b { color: var(--ye-d); }
+.rvcheck span { color: var(--ink); }
+.rvcheck span + span::before { content: "· "; color: var(--muted); }
+.rvcheck .ebtn { margin-left: auto; }
 .rvempty { background: var(--surface); border-radius: 20px; padding: 28px; text-align: center; color: var(--muted); box-shadow: var(--shadow-sm); }
 .rvfoot { text-align: center; color: var(--muted); font-size: 13px; }
 .rvprog { background: var(--surface); border-radius: 16px; padding: 14px 18px; box-shadow: var(--shadow-sm); }
@@ -2415,8 +2420,10 @@ footer { color: var(--muted); font-size: 12px; margin-top: 24px; text-align: cen
       return '<div class="qcard ' + cls + '"><h3><span class="qi">' + icon + "</span>" + title + "</h3>" + body + "</div>";
     };
     var busyHere = ui.rvDrafting === v.id + "/" + sec.id;
-    var tools = '<div class="rvtools">' + (editC ? '<span class="small">One point per line. Add “(to check)” at the end of a line that still needs confirming.</span><span class="grow"></span><button class="btn primary" type="button" data-rvact="savecards">Save</button><button class="btn" type="button" data-rvact="canceledit">Cancel</button>'
+    var tools = '<div class="rvtools">' + (editC ? '<span class="small">One point per line. Short phrases; only confirmed points under Potential gaps.</span><span class="grow"></span><button class="btn primary" type="button" data-rvact="savecards">Save</button><button class="btn" type="button" data-rvact="canceledit">Cancel</button>'
       : '<span class="grow"></span>' + (busyHere ? '<span class="small">Claude is writing ' + esc(sec.name) + "…</span>" : aiReady() && rvShotsFor(v, sec).length ? '<button class="ebtn" type="button" data-rvact="draft">' + (c.works.length || c.gaps.length || pts.length ? "Redraft" : "Draft") + " with Claude</button>" : "") + '<button class="ebtn" type="button" data-rvact="editcards">Edit the three cards</button><button class="ebtn" type="button" data-rvact="export">Export</button>') + "</div>";
+    var qs = (r.questions[v.id] || {})[sec.id] || [];
+    if (qs.length && !editC) tools += '<div class="rvcheck"><b>To check</b> ' + qs.map(function (q) { return "<span>" + esc(q) + "</span>"; }).join("") + '<button class="ebtn" type="button" data-rvact="clearq" title="Mark as answered">Done</button></div>';
     var tri = '<div class="tri">' + card("works", "good", "✓", "Works", c.works) + card("gaps", "bad", "!", "Potential gaps", c.gaps) + card("ideas", "do", "→", "Ideas to consider", c.ideas) + "</div>";
     var points = pts.map(function (p, pi) {
       if (ui.rvEdit === "p" + pi) return rvPointEditor(v, sec, p, pi, subj);
@@ -2594,6 +2601,7 @@ footer { color: var(--muted); font-size: 12px; margin-top: 24px; text-align: cen
     if (a === "import") { rvImportPick(); return; }
     if (a === "draft") { rvDraft(v, sec, ""); return; }
     if (a === "createreport") { rvCreateReport(); return; }
+    if (a === "clearq") { commit(); r.questions[v.id] = r.questions[v.id] || {}; r.questions[v.id][sec.id] = []; rvSaveState(); return; }
     if (a === "applynotes") {
       var nt = (document.getElementById("rvNotes").value || "").trim(); if (!nt) { toast("Write your notes first."); return; }
       commit(); r.notes[v.id] = r.notes[v.id] || {}; r.notes[v.id][sec.id] = nt;
