@@ -159,8 +159,35 @@ function row(item, list, i, extra) {
   return '<div class="item"><label><input type="checkbox" data-list="' + list + '" data-i="' + i + '"' + (item.checked ? " checked" : "") + "><span><b>" + esc(item.label) + "</b> " + sub + "<small>" + esc(small) + "</small></span></label>" + (extra || "") + "</div>";
 }
 
+// The website review (all sections at once) is switched off for now. Set this to true to bring it back.
+const SHOW_REVIEW = false;
+// One part per scan: promotions with their terms, or one feature of the casino in depth.
+const PARTS = [["promos", "Promotions & terms"], ["vip", "Loyalty / VIP"], ["missions", "Missions"], ["deposit", "Deposit / cashier"], ["tournaments", "Tournaments"], ["shop", "Store"], ["custom", "Something else…"]];
+const PART_NOTE = {
+  vip: "Finds the loyalty or VIP page and photographs it top to bottom, its tabs, and its details: levels, how to progress, rewards.",
+  missions: "Finds the missions and photographs them with their tabs (available, locked, completed) and opens their details.",
+  deposit: "Opens the cashier, photographs it, the step after choosing a payment method, and the Withdraw / History tabs. It never pays. Log in first: the cashier only opens for players.",
+  tournaments: "Finds the tournaments, races or leaderboards and opens each one (up to 15): rules, prizes, leaderboard.",
+  shop: "Finds the store (bonus shop, rewards store) and photographs it with its tabs and item details.",
+  custom: "Name the feature (e.g. Wheel of Fortune, Bonus Crab, Daily Drop) and any other names it may have. The scanner looks for it and photographs it with its tabs and details."
+};
+function partOf() { const m = prefs.mode; return PARTS.some((p) => p[0] === m) ? m : (SHOW_REVIEW && m === "review" ? "review" : "promos"); }
+function partSwitch() {
+  const m = partOf();
+  return "<h2>What to scan</h2>" + '<select id="partSel" style="width:100%">' + (SHOW_REVIEW ? '<option value="review"' + (m === "review" ? " selected" : "") + ">Website review (all sections)</option>" : "") +
+    PARTS.map((p) => '<option value="' + p[0] + '"' + (m === p[0] ? " selected" : "") + ">" + esc(p[1]) + "</option>").join("") + "</select>";
+}
+function renderPart() {
+  const k = partOf(), label = PARTS.find((p) => p[0] === k)[1];
+  main.innerHTML = partSwitch() + runSwitch() + '<p class="note">' + esc(PART_NOTE[k] || "") + "</p>" +
+    (k === "custom" ? '<label class="opt" style="display:block"><span><b>Feature name</b></span><input type="text" id="partName" value="' + esc(prefs.partName || "") + '" placeholder="e.g. Wheel of Fortune" style="width:100%;margin-top:6px"><span><small>Other names it may have (optional, comma separated)</small></span><input type="text" id="partWords" value="' + esc(prefs.partWords || "") + '" placeholder="e.g. lucky wheel, daily spin" style="width:100%;margin-top:6px"></label>' : "") +
+    blurField() +
+    '<button class="primary" id="go">Scan ' + esc(k === "custom" ? (prefs.partName || "the feature") : label) + "</button>" +
+    "<p class=\"note\">Don't switch tabs until the planner opens. The planner writes it up: what it is, how it works and its key details.</p>";
+}
 // two kinds of scan: the website review (sections), or every promotion with its terms
 function modeSwitch() {
+  if (!SHOW_REVIEW) return partSwitch();
   const m = prefs.mode === "promos" ? "promos" : "review";
   return "<h2>What to scan</h2>" + '<div class="seg"><label><input type="radio" name="mode" value="review"' + (m === "review" ? " checked" : "") + '><span>Website review</span></label><label><input type="radio" name="mode" value="promos"' + (m === "promos" ? " checked" : "") + "><span>Promotions & terms</span></label></div>";
 }
@@ -180,7 +207,9 @@ function renderPromos() {
     '<p class="note">About 10 seconds per promotion. Don\'t switch tabs until the planner opens.</p>';
 }
 function render() {
-  if (prefs.mode === "promos") { renderPromos(); return; }
+  const part = partOf();
+  if (part === "promos") { renderPromos(); return; }
+  if (part !== "review") { renderPart(); return; }
   let lastGroup = "";
   main.innerHTML = modeSwitch() +
     "<h2>This run is</h2>" +
@@ -209,6 +238,8 @@ function listOf(l) { return l === "b" ? base : l === "s" ? sections : l === "p" 
 main.addEventListener("change", async (e) => {
   if (e.target.name === "run") { runMode = e.target.value; guessed = false; render(); return; }
   if (e.target.name === "mode") { prefs.mode = e.target.value; await savePrefs(); render(); return; }
+  if (e.target.id === "partSel") { prefs.mode = e.target.value; await savePrefs(); render(); return; }
+  if (e.target.id === "partName" || e.target.id === "partWords") { prefs[e.target.id] = e.target.value.trim(); await savePrefs(); render(); return; }
   if (e.target.id === "promoTerms") { prefs.promoTerms = e.target.checked; await savePrefs(); return; }
   if (e.target.id === "openCards") { prefs.cards = e.target.checked; await savePrefs(); return; }
   if (e.target.id === "blurWords") { prefs.blur = e.target.value.trim(); await savePrefs(); return; }
@@ -250,7 +281,20 @@ main.addEventListener("click", async (e) => {
     const v = document.getElementById("extra").value.trim();
     try { const u = new URL(v); pages.push({ type: "page", url: u.toString(), cat: "custom", label: "Added by you", sub: u.pathname, checked: true }); await saveSite(); render(); } catch (err) { document.getElementById("extra").focus(); }
   }
-  if (t.id === "go" && prefs.mode === "promos") {
+  if (t.id === "go" && partOf() !== "promos" && partOf() !== "review") {
+    const k = partOf(), home = base[0].url, run = document.querySelector('input[name="run"]:checked').value;
+    let label = PARTS.find((p) => p[0] === k)[1], sec = DEFAULT_SECTIONS.find((x) => x.key === k);
+    if (k === "custom") {
+      if (!prefs.partName) { const n = document.getElementById("partName"); if (n) n.focus(); return; }
+      label = prefs.partName; sec = { words: wordsFrom(prefs.partName, prefs.partWords || ""), not: "" };
+    }
+    const page = { type: "find", url: home, label, cat: k === "custom" ? "custom" : k, words: sec.words, not: sec.not || "", popup: !!sec.popup, details: true };
+    if (k === "tournaments") Object.assign(page, { cards: true, cardLabel: "Tournament", cardLimit: 15 });
+    await chrome.runtime.sendMessage({ type: "scan", kind: "part", part: { key: k, label }, tabId: target.id, pages: [page], run, skip: [], blur: String(prefs.blur || "").split(",").map((w) => w.trim()).filter((w) => w.length >= 3), site: { host: target.info.host, title: target.info.title, url: target.info.url } });
+    showProgress();
+    return;
+  }
+  if (t.id === "go" && partOf() === "promos") {
     const home = base[0].url, P = DEFAULT_SECTIONS.find((x) => x.key === "promotions"), T = DEFAULT_SECTIONS.find((x) => x.key === "terms");
     const list = [{ type: "find", url: home, label: "Promotions", cat: "promotions", words: P.words, not: P.not || "", cards: true, cardLabel: "Offer", cardLimit: 30, details: false }];
     if (prefs.promoTerms === true) list.push({ type: "find", url: home, label: "Bonus terms", cat: "terms", words: T.words, not: T.not || "", details: true, help: true });
@@ -309,7 +353,7 @@ function showProgress() {
   const { scanStatus } = await chrome.storage.local.get("scanStatus");
   if (scanStatus && scanStatus.state === "running") { document.getElementById("site").textContent = "A scan is running"; showProgress(); return; }
   const stored = (await chrome.storage.sync.get("sectionPrefs")).sectionPrefs;
-  if (stored) prefs = { off: stored.off || [], on: stored.on || [], custom: stored.custom || [], cards: stored.cards, blur: stored.blur || "", mode: stored.mode || "review", promoTerms: stored.promoTerms };
+  if (stored) prefs = { off: stored.off || [], on: stored.on || [], custom: stored.custom || [], cards: stored.cards, blur: stored.blur || "", mode: stored.mode || "review", promoTerms: stored.promoTerms, partName: stored.partName || "", partWords: stored.partWords || "" };
   // ?tab=<id> lets the popup be opened as a normal page for testing.
   const q = new URLSearchParams(location.search).get("tab");
   const tab = q ? await chrome.tabs.get(+q) : (await chrome.tabs.query({ active: true, currentWindow: true }))[0];

@@ -205,6 +205,56 @@ function readPromotion(apiKey: string, body: Record<string, unknown>) {
   return askClaude(apiKey, PROMO_SYSTEM, content, PROMO_SCHEMA, "low", 6000);
 }
 
+// ---------- one feature of a casino (loyalty, missions, deposit, tournaments, store, or something unique) ----------
+
+const FEATURE_SCHEMA = {
+  type: "object", additionalProperties: false,
+  required: ["title", "summary", "where", "how_it_works", "key_facts", "stands_out", "uncertain"],
+  properties: {
+    title: { type: "string" },
+    summary: { type: "string" },
+    where: { type: "string" },
+    how_it_works: { type: "array", items: { type: "string" } },
+    key_facts: { type: "array", items: { type: "object", additionalProperties: false, required: ["label", "value"], properties: { label: { type: "string" }, value: { type: "string" } } } },
+    stands_out: { type: "array", items: { type: "string" } },
+    uncertain: { type: "array", items: { type: "string" } },
+  },
+};
+const FEATURE_FACTS: Record<string, string> = {
+  vip: "levels or tiers and their names, how a player progresses (points, deposits, wagering), how points are earned, rewards per level, how to join (automatic / invitation / fast-track), progress shown to the player",
+  missions: "types of missions (daily, weekly, special), what they ask, rewards, time limits, how progress is shown, tabs (available / locked / completed), what mission rewards lead to (points, store)",
+  deposit: "how the cashier opens (pop-up, page), steps, payment methods, minimum and maximum, quick amounts, how a bonus is offered or entered (code field, pre-selected, choice), confirmation or summary, other tabs (withdraw, history)",
+  tournaments: "each tournament or race by name: type, prize, duration or schedule, how points are scored, eligible games, minimum bet, how to join, leaderboard and the player's position",
+  shop: "currency (points, coins), how it's earned, item categories, example items and prices, filters or sorting, purchase history, where the store lives (own page, tab in a hub)",
+  custom: "what it is, how a player takes part, how often, what it costs or needs, what can be won, where it lives on the site",
+};
+const FEATURE_SYSTEM = [
+  "You write up one feature of an online casino for a CRM team, from screenshots of it and the text found on its pages.",
+  "title: a short name for this feature at this casino, e.g. 'Instant VIP' or 'Missions hub'. summary: what it is, in one or two plain sentences.",
+  "where: where it lives on the site and how a player gets there (menu entry, header, dropdown, tab in a hub).",
+  "how_it_works: the steps or rules from the player's point of view, short, in order.",
+  "key_facts: the details that matter, as short label / value pairs, values as written on the site with their units.",
+  "stands_out: up to four short observations about how it's set up or presented (structure, not judgements; no 'best' or 'poor').",
+  "uncertain: what you couldn't read for sure. Use only what the screenshots and text show; quote the site's own labels in single quotes.",
+].join("\n");
+
+function readFeature(apiKey: string, body: Record<string, unknown>) {
+  const images = (Array.isArray(body.images) ? body.images : [])
+    .filter((im: { media_type?: string; data?: string }) => im && IMAGE_TYPES.includes(im.media_type ?? "") && typeof im.data === "string" && im.data.length > 0)
+    .slice(0, 14) as { media_type: "image/jpeg"; data: string }[];
+  const text = typeof body.text === "string" ? body.text.trim().slice(0, 40000) : "";
+  if (!images.length && !text) throw new UserFacingError("bad_request", "No screenshots or text for this feature.");
+  const key = String(body.part ?? "custom").slice(0, 20), label = String(body.label ?? "").slice(0, 80);
+  const labels = (Array.isArray(body.image_labels) ? body.image_labels : []).map((l) => String(l).slice(0, 80));
+  const content: Anthropic.Beta.BetaContentBlockParam[] = [];
+  images.forEach((im, i) => {
+    content.push({ type: "text", text: `Screenshot ${i + 1}${labels[i] ? " (" + labels[i] + ")" : ""}:` });
+    content.push({ type: "image", source: { type: "base64", media_type: im.media_type, data: im.data } });
+  });
+  content.push({ type: "text", text: `Casino: ${String(body.casino ?? "").slice(0, 80)}\nFeature: ${label}\nKey facts to look for: ${FEATURE_FACTS[key] || FEATURE_FACTS.custom}` + (text ? `\n\nText found on its pages:\n<text>\n${text}\n</text>` : "") + "\n\nWrite up this feature." });
+  return askClaude(apiKey, FEATURE_SYSTEM, content, FEATURE_SCHEMA, "low", 8000);
+}
+
 // ---------- which casino sent which emails ----------
 
 const SENDERS_SCHEMA = {
@@ -532,7 +582,7 @@ Deno.serve(async (req) => {
       return reply(await callScript(`${scriptUrl}${sep}${tokenParam}&days=${days}`));
     }
 
-    if (action === "read_offer" || action === "summarise_emails" || action === "analyse_page" || action === "sort_page" || action === "sort_senders" || action === "sort_review_shots" || action === "draft_review_section" || action === "read_promotion") {
+    if (action === "read_offer" || action === "summarise_emails" || action === "analyse_page" || action === "sort_page" || action === "sort_senders" || action === "sort_review_shots" || action === "draft_review_section" || action === "read_promotion" || action === "read_feature") {
       if (!anthropicKey) return reply({ error: "no_ai_key", message: "AI isn't set up yet. Add the ANTHROPIC_API_KEY secret in Supabase." });
       const result = action === "read_offer" ? await readOffer(anthropicKey, body)
         : action === "analyse_page" ? await analysePage(anthropicKey, body)
@@ -541,6 +591,7 @@ Deno.serve(async (req) => {
         : action === "sort_review_shots" ? await sortReviewShots(anthropicKey, body)
         : action === "draft_review_section" ? await draftReviewSection(anthropicKey, body)
         : action === "read_promotion" ? await readPromotion(anthropicKey, body)
+        : action === "read_feature" ? await readFeature(anthropicKey, body)
         : await summariseEmails(anthropicKey, body);
       return reply({ result });
     }

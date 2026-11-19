@@ -37,6 +37,16 @@ Works in Chrome, Edge and Brave. Only people who run scans need it; everyone in 
 
 For the logged-in run, log in to the site yourself first, then scan again and choose **Logged in**.
 
+## What to scan
+
+The website review (all sections in one scan) is switched off for now. Instead you scan one part at a time: choose it under **What to scan** at the top of the popup.
+
+- **Promotions & terms**: every promotion with its terms (see below).
+- **Loyalty / VIP**, **Missions**, **Deposit / cashier** (log in first), **Tournaments** (each tournament is opened), **Store**: that feature in depth, with its tabs, details and pop-ups.
+- **Something else…**: a feature unique to the casino. Give its name (e.g. Wheel of Fortune) and other names it may have.
+
+In the planner each part is written up per casino on the **Features** tab: what it is, where it lives, how it works, its key details and what stands out, with its screenshots.
+
 ## Scan only the promotions
 
 Choose **Promotions & terms** at the top of the popup (it's remembered). The scanner finds the promotions page and opens every promotion one by one, up to 30: its pop-up or own page, More info or the ⓘ icon, and the terms inside. Tick **Also read the general bonus terms** to include the page most promotions refer to. In the planner the promotions appear under **Offer terms** as a list: what each one does, how it works, who can take part and its key terms, with the full text and screenshots. **Download list (CSV)** gives the list as a spreadsheet. Scanning again updates the promotions already in the list.
