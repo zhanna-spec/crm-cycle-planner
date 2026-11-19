@@ -689,6 +689,30 @@ async function scanPage(tabId, windowId, url, opts) {
   return dedupe({ title: info.title, text: text.slice(0, 40000), shots, shotLabels: labels });
 }
 
+// Runs inside the scanned page: brings card i into view and says where it is, in screenshot pixels.
+function cardRect(i) {
+  const c = document.querySelector('[data-ccp-card="' + i + '"]'); if (!c) return null;
+  c.scrollIntoView({ block: "center" });
+  const r = c.getBoundingClientRect(), dpr = window.devicePixelRatio || 1;
+  const x = Math.max(0, r.left), y = Math.max(0, r.top), w = Math.min(window.innerWidth, r.right) - x, h = Math.min(window.innerHeight, r.bottom) - y;
+  return w > 20 && h > 20 ? [x, y, w, h].map((v) => Math.round(v * dpr)) : null;
+}
+// The promotion's own banner: a screenshot cropped to its card.
+async function cardBanner(tabId, windowId, i) {
+  try {
+    const rect = await run(tabId, cardRect, [i]); if (!rect) return "";
+    await sleep(500);
+    const shot = await capture(windowId);
+    const bmp = await createImageBitmap(await (await fetch(shot)).blob());
+    const [x, y, w, h] = [Math.min(rect[0], bmp.width - 1), Math.min(rect[1], bmp.height - 1), Math.min(rect[2], bmp.width - rect[0]), Math.min(rect[3], bmp.height - rect[1])];
+    if (w < 20 || h < 20) return "";
+    const c = new OffscreenCanvas(w, h); c.getContext("2d").drawImage(bmp, x, y, w, h, 0, 0, w, h);
+    const buf = new Uint8Array(await (await c.convertToBlob({ type: "image/jpeg", quality: 0.85 })).arrayBuffer());
+    let bin = ""; for (let k = 0; k < buf.length; k += 0x8000) bin += String.fromCharCode.apply(null, buf.subarray(k, k + 0x8000));
+    return "data:image/jpeg;base64," + btoa(bin);
+  } catch (e) { return ""; }
+}
+
 // Opens every offer (or tournament) card on a page one by one and photographs what each shows,
 // with its terms. Each becomes its own entry, so it's read with its own conditions.
 async function scanCards(tabId, windowId, url, pg) {
@@ -697,6 +721,8 @@ async function scanCards(tabId, windowId, url, pg) {
   const kindWord = pg.cardLabel || "Offer";
   for (let n = 0; n < Math.min(cards.length, pg.cardLimit || 12); n++) {
     const c = cards[n], label = kindWord + ": " + (c.title || "card " + (n + 1));
+    const banner = await cardBanner(tabId, windowId, c.i); // the card as it looks on the promotions page
+    const before0 = out.length;
     await chrome.storage.local.set({ scanStatus: Object.assign((await chrome.storage.local.get("scanStatus")).scanStatus || {}, { current: "opening " + label }) });
     try {
       if (c.href) {
@@ -738,6 +764,8 @@ async function scanCards(tabId, windowId, url, pg) {
       await freshPage(tabId, url); cards = await run(tabId, findOfferCards).catch(() => cards) || cards;
     } catch (e) {
       try { await freshPage(tabId, url); cards = await run(tabId, findOfferCards).catch(() => cards) || cards; } catch (e2) { break; }
+    } finally {
+      if (banner) for (let k = before0; k < out.length; k++) out[k].banner = banner; // however this card ended
     }
   }
   return out;

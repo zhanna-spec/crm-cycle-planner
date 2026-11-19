@@ -446,6 +446,15 @@ textarea.inp { resize: vertical; min-height: 70px; }
 .pthumb { flex: none; width: 120px; height: 72px; border-radius: 10px; object-fit: cover; object-position: top; background: var(--sunk); }
 .pgo { flex: none; font-size: 26px; color: var(--muted); }
 .pnav { align-items: center; flex-wrap: wrap; }
+.pmnav { font: inherit; text-align: left; border: 0; background: var(--sunk); color: var(--ink); border-radius: 12px; padding: 6px; display: flex; gap: 10px; align-items: center; cursor: pointer; width: 100%; }
+.pmnav:hover { box-shadow: inset 0 0 0 2px var(--accent-soft); }
+.pmnav.on { background: var(--accent); color: #FFFFFF; }
+.pmnav.on small { color: rgba(255,255,255,.8); }
+.pmnav img, .pmnav .pmimg { flex: none; width: 64px; height: 48px; border-radius: 8px; object-fit: cover; background: var(--line); }
+.pmnav b { display: block; font-size: 13px; font-weight: 600; line-height: 1.3; }
+.pmnav small { color: var(--muted); font-size: 11px; }
+.pmnav:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.pbanner { display: block; max-width: 320px; max-height: 240px; border-radius: 14px; object-fit: cover; margin-top: 6px; }
 .ppage { --gr: #2FBF8A; --co: #F26D7D; background: var(--surface); border-radius: 20px; padding: 20px 22px; box-shadow: var(--shadow-sm); display: flex; flex-direction: column; gap: 16px; }
 .ppage h2 { margin: 6px 0 0; font-size: 22px; }
 .ppage h3 { margin: 0 0 8px; font-size: 15px; }
@@ -777,6 +786,10 @@ footer { color: var(--muted); font-size: 12px; margin-top: 24px; text-align: cen
           <h2 class="ptitle" id="pmCasH">Casinos</h2>
           <div id="pmCasinos" class="stack" style="gap:8px"></div>
           <p class="scanhint">To add promotions, choose <b>Promotions &amp; terms</b> in the <a href="https://github.com/zhanna-spec/crm-cycle-planner/blob/main/extension/README.md" target="_blank" rel="noopener">site scanner extension</a> and scan a casino.</p>
+        </section>
+        <section class="panel stack" aria-labelledby="pmListH" id="pmListPanel">
+          <h2 class="ptitle" id="pmListH">Promotions</h2>
+          <div id="pmNav" class="stack" style="gap:6px"></div>
         </section>
       </div>
       <div class="stack" id="pmMain" style="gap:16px;min-width:0"></div>
@@ -1720,36 +1733,43 @@ footer { color: var(--muted); font-size: 12px; margin-top: 24px; text-align: cen
     var order = state.operators.map(function (o) { return o.id; });
     return list.sort(function (a, b) { return (a.kind === "terms" ? 1 : 0) - (b.kind === "terms" ? 1 : 0) || order.indexOf(a.opId) - order.indexOf(b.opId) || (a.order || 0) - (b.order || 0); });
   }
+  function bannerSrc(x) {
+    if (x.banner) { if (signed[x.banner]) return signed[x.banner]; if (cloud) requestSign([x.banner]); return ""; }
+    return x.bannerThumb || offerPics(x).filter(Boolean)[0] || "";
+  }
   function renderPromosPage() {
     var all = state.promos || [], ops = state.operators.filter(function (o) { return all.some(function (x) { return x.opId === o.id; }); });
     var cnt = function (id) { return all.filter(function (x) { return (!id || x.opId === id) && x.kind !== "terms"; }).length; };
     document.getElementById("pmCasinos").innerHTML = '<button type="button" class="opitem' + (!ui.pmOp ? " on" : "") + '" data-pmop=""><span class="avatar" style="background:var(--accent)">' + svg('<rect x="3" y="4" width="6" height="12" rx="1.5"/><rect x="11" y="4" width="6" height="12" rx="1.5"/>', "#FFFFFF") + '</span><span class="meta2"><b>All casinos</b><small>' + plural(cnt(""), "promotion", "promotions") + "</small></span></button>" +
       ops.map(function (o) { return '<button type="button" class="opitem' + (ui.pmOp === o.id ? " on" : "") + '" data-pmop="' + o.id + '"><span class="avatar" style="background:' + opColor(o) + '">' + esc(o.name.charAt(0).toUpperCase()) + '</span><span class="meta2"><b>' + esc(o.name) + "</b><small>" + plural(cnt(o.id), "promotion", "promotions") + "</small></span></button>"; }).join("");
-    var main = document.getElementById("pmMain"), list = promoList(), op = ui.pmOp ? findOp(ui.pmOp) : null;
-    var busy = promoBusy ? '<div class="rvprog"><b>' + esc(promoBusy.title) + '</b><div class="scanbar" style="margin:8px 0"><i style="width:' + Math.round(100 * promoBusy.done / Math.max(1, promoBusy.total)) + '%"></i></div><p class="small" style="margin:0">' + esc(promoBusy.text) + "</p></div>" : "";
-    var x = ui.pmOpen ? all.filter(function (p) { return p.id === ui.pmOpen; })[0] : null;
-    if (x) { main.innerHTML = busy + promoPage(x, list); return; }
+    var main = document.getElementById("pmMain"), op = ui.pmOp ? findOp(ui.pmOp) : null;
     var kinds = []; promosOf(op).forEach(function (p) { if (p.kind !== "terms" && kinds.indexOf(p.kind) < 0) kinds.push(p.kind); });
     if (ui.pmKind && kinds.indexOf(ui.pmKind) < 0) ui.pmKind = null;
-    var filters = kinds.length > 1 ? '<div class="fpills"><button class="fp' + (!ui.pmKind ? " on" : "") + '" type="button" data-pmkind="">All types</button>' + kinds.map(function (k) { return '<button class="fp' + (ui.pmKind === k ? " on" : "") + '" type="button" data-pmkind="' + k + '">' + esc(promoKind(k)) + "</button>"; }).join("") + "</div>" : "";
-    var head = '<div class="sechead"><h3>' + (op ? "Promotions at " + esc(op.name) : "All promotions") + ' <span class="small" style="font-weight:400">' + plural(list.filter(function (p) { return p.kind !== "terms"; }).length, "promotion", "promotions") + "</span></h3>" + (list.length ? '<button class="btn" type="button" data-promocsv="1">Download list (CSV)</button>' : "") + "</div>";
-    if (!list.length) { main.innerHTML = busy + head + '<div class="panel empty-c">No promotions yet. In the extension choose <b>Promotions &amp; terms</b> and scan ' + (op ? esc(op.name) : "a casino") + ": every promotion is opened and written up here with its terms.</div>"; return; }
-    main.innerHTML = busy + head + filters + '<div class="plist2">' + list.map(function (p) {
-      var o = findOp(p.opId) || { name: "?" }, t = p.terms || {}, pic = offerPics(p).filter(Boolean)[0];
-      var chips = PROMO_TERMS.filter(function (k) { return t[k[0]]; }).slice(0, 5).map(function (k) { return '<span class="pchip"><small>' + k[1] + "</small>" + esc(t[k[0]]) + "</span>"; }).join("");
-      return '<button type="button" class="prow pbtn" data-pmopen="' + p.id + '">' + (pic ? '<img class="pthumb" src="' + pic + '" alt="">' : '<span class="pthumb"></span>') + '<span class="pmain"><span><span class="kindpill">' + esc(promoKind(p.kind)) + "</span>" + (op ? "" : ' <span class="small">' + esc(o.name) + "</span>") + "</span><b>" + esc(p.title || "Promotion") + "</b>" +
-        (p.status === "reading" ? "<small>Claude is reading this promotion…</small>" : p.status === "error" ? '<small style="color:var(--bad)">' + esc(p.error || "Couldn't read it.") + "</small>" : "<small>" + esc(p.summary || "") + "</small>") + (chips ? '<span class="pchips">' + chips + "</span>" : "") + '</span><span class="pgo" aria-hidden="true">›</span></button>';
-    }).join("") + "</div>";
+    var list = promoList();
+    // the menu: one entry per promotion, with its banner
+    document.getElementById("pmListPanel").hidden = !list.length;
+    document.getElementById("pmNav").innerHTML = (kinds.length > 1 ? '<select class="inp" data-pmkind-sel aria-label="Type of promotion"><option value="">All types (' + promosOf(op).filter(function (p) { return p.kind !== "terms"; }).length + ")</option>" + kinds.map(function (k) { return '<option value="' + k + '"' + (ui.pmKind === k ? " selected" : "") + ">" + esc(promoKind(k)) + "</option>"; }).join("") + "</select>" : "") +
+      list.map(function (p) {
+        var o = findOp(p.opId) || { name: "?" }, src = bannerSrc(p);
+        return '<button type="button" class="pmnav' + (ui.pmOpen === p.id ? " on" : "") + '" data-pmopen="' + p.id + '">' + (src ? '<img src="' + src + '" alt="">' : '<span class="pmimg"></span>') + '<span class="meta2"><b>' + esc(p.title || "Promotion") + "</b><small>" + esc(promoKind(p.kind)) + (op ? "" : " · " + esc(o.name)) + (p.status === "reading" ? " · reading…" : p.status === "error" ? " · couldn't read" : "") + "</small></span></button>";
+      }).join("") + (list.length ? '<button class="btn" type="button" data-promocsv="1" style="margin-top:6px">Download list (CSV)</button>' : "");
+    var busy = promoBusy ? '<div class="rvprog"><b>' + esc(promoBusy.title) + '</b><div class="scanbar" style="margin:8px 0"><i style="width:' + Math.round(100 * promoBusy.done / Math.max(1, promoBusy.total)) + '%"></i></div><p class="small" style="margin:0">' + esc(promoBusy.text) + "</p></div>" : "";
+    if (!list.length) { main.innerHTML = busy + '<div class="panel empty-c">No promotions yet. In the extension choose <b>Promotions &amp; terms</b> and scan ' + (op ? esc(op.name) : "a casino") + ": every promotion is opened and written up here, each on its own page, with its terms.</div>"; return; }
+    // one promotion at a time: the chosen one, or the first
+    var x = list.filter(function (p) { return p.id === ui.pmOpen; })[0] || list[0]; ui.pmOpen = x.id;
+    document.querySelectorAll("#pmNav .pmnav").forEach(function (n) { n.classList.toggle("on", n.getAttribute("data-pmopen") === x.id); });
+    main.innerHTML = busy + promoPage(x, list);
   }
   // one promotion on its own page
   function promoPage(x, list) {
     var o = findOp(x.opId) || { name: "?" }, t = x.terms || {}, i = list.indexOf(x), pics = offerPics(x);
-    var nav = '<div class="row pnav"><button class="btn" type="button" data-pmopen="">← All promotions</button><span class="grow" style="flex:1"></span>' +
+    var nav = '<div class="row pnav"><span class="small">' + esc(o.name) + '</span><span class="grow" style="flex:1"></span>' +
       (list.length > 1 && i >= 0 ? '<button class="btn" type="button" data-pmopen="' + list[(i - 1 + list.length) % list.length].id + '">‹ Previous</button><span class="small">' + (i + 1) + " of " + list.length + '</span><button class="btn" type="button" data-pmopen="' + list[(i + 1) % list.length].id + '">Next ›</button>' : "") + "</div>";
     if (ui.pmEdit === x.id) return nav + promoEditor(x);
     var terms = PROMO_TERMS.map(function (k) { return '<div><small>' + k[1] + "</small>" + (t[k[0]] ? esc(t[k[0]]) : '<span class="muted">Not stated</span>') + "</div>"; }).join("");
     var unsure = (x.uncertain || []).map(function (u) { var k = PROMO_TERMS.filter(function (q) { return q[0] === u || "terms." + q[0] === u; })[0]; return k ? k[1] : String(u).replace(/_/g, " "); });
     return nav + '<article class="ppage"><header><div class="row" style="gap:8px;flex-wrap:wrap"><span class="kindpill">' + esc(promoKind(x.kind)) + '</span><span class="small">' + esc(o.name) + " · " + (x.run === "logged-in" ? "logged in" : "logged out") + " · scanned " + esc(new Date(x.at || Date.now()).toLocaleDateString()) + '</span><span class="grow" style="flex:1"></span><button class="ebtn" type="button" data-pmedit="' + x.id + '">Edit</button><button class="ebtn" type="button" data-promodel="' + x.id + '">Delete</button></div>' +
+      (bannerSrc(x) && x.banner || x.bannerThumb ? '<img class="pbanner" src="' + bannerSrc(x) + '" alt="' + esc(x.title || "") + ' banner">' : "") +
       "<h2>" + esc(x.title || "Promotion") + "</h2>" + (x.status === "reading" ? '<p class="small">Claude is reading this promotion…</p>' : x.status === "error" ? '<div class="errbox">' + esc(x.error || "Couldn't read it.") + "</div>" : '<p class="psum2">' + esc(x.summary || "") + "</p>") + "</header>" +
       (x.kind === "terms" ? "" : '<div class="pterms">' + terms + "</div>") +
       '<div class="pcols2"><div class="stack" style="gap:14px">' +
@@ -1785,6 +1805,9 @@ footer { color: var(--muted); font-size: 12px; margin-top: 24px; text-align: cen
       commit(); state.promos = state.promos.filter(function (q) { return q.id !== id; }); ui.pmOpen = null; save(); renderPromosPage(); toast((p.title || "Promotion") + " deleted. Click Undo to bring it back.");
     }
   });
+  document.getElementById("promosApp").addEventListener("change", function (e) {
+    if (e.target.hasAttribute("data-pmkind-sel")) { ui.pmKind = e.target.value || null; ui.pmOpen = null; renderPromosPage(); }
+  });
   document.getElementById("promosApp").addEventListener("submit", function (e) {
     var f = e.target.closest("[data-pmform]"); if (!f) return; e.preventDefault();
     var x = state.promos.filter(function (q) { return q.id === f.getAttribute("data-pmform"); })[0]; if (!x) return;
@@ -1813,6 +1836,8 @@ footer { color: var(--muted); font-size: 12px; margin-top: 24px; text-align: cen
         var images = [], imgs = [];
         for (var k = 0; k < pg.shots.length && k < 8; k++) { var im = await loadSrc(pg.shots[k]); images.push({ media_type: "image/jpeg", data: scaled(im, 1568, 0, 0.85).split(",")[1] }); }
         var paths = await uploadPaths(images, "promos"); x.images = paths || []; if (!paths) x.thumbs = images.slice(0, 4).map(function (m) { return "data:image/jpeg;base64," + m.data; });
+        // the promotion's own banner, as its card looks on the promotions page
+        if (pg.banner) { var bp = await uploadPaths([{ media_type: "image/jpeg", data: String(pg.banner).split(",")[1] }], "promos"); if (bp && bp[0]) { x.banner = bp[0]; delete x.bannerThumb; } else x.bannerThumb = pg.banner; }
         if (isTerms) { x.summary = "The general bonus terms most promotions refer to."; x.status = "done"; save(); continue; }
         if (!aiReady()) { x.status = "error"; x.error = "Turn on AI to have Claude write up this promotion. Its screenshots and text are kept."; save(); continue; }
         var d = await backend("read_promotion", { casino: op.name, label: label, images: images, text: x.text });
@@ -3971,7 +3996,7 @@ footer { color: var(--muted); font-size: 12px; margin-top: 24px; text-align: cen
       trackers: state.trackers.map(function (t) { var c = Object.assign({}, t); delete c.summarizing; delete c.sumError; return c; }),
       emailOwner: state.emailOwner || {}, notCasino: state.notCasino || {}, autoSortOff: !!state.autoSortOff,
       review: state.review ? JSON.parse(JSON.stringify(state.review, function (k, v) { return k === "data" ? undefined : v; })) : {},
-      promos: (state.promos || []).map(function (x) { var c = Object.assign({}, x); delete c.thumbs; return c; }) };
+      promos: (state.promos || []).map(function (x) { var c = Object.assign({}, x); delete c.thumbs; delete c.bannerThumb; return c; }) };
     var r = await sb.rpc("save_state", { ws: wsId, new_data: payload, expected_version: wsVersion });
     saving = false;
     if (!curWs || curWs.id !== wsId) return;
