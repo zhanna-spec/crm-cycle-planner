@@ -74,6 +74,10 @@ h1 { font-weight: 700; font-size: clamp(22px, 3vw, 30px); letter-spacing: -0.01e
 .app { display: grid; grid-template-columns: 250px minmax(0, 1fr); gap: 18px; align-items: start; }
 @media (max-width: 860px) { .app { grid-template-columns: minmax(0, 1fr); } }
 .side { display: flex; flex-direction: column; gap: 18px; position: sticky; top: calc(env(safe-area-inset-top, 0px) + 12px); }
+/* a side column taller than the window scrolls on its own, without moving the page behind it */
+@media (min-width: 861px) {
+  .side { max-height: calc(100vh - env(safe-area-inset-top, 0px) - 24px); overflow-y: auto; overscroll-behavior: contain; scrollbar-width: thin; scrollbar-color: var(--line) transparent; padding: 4px 8px 12px; margin: -4px -8px 0; }
+}
 @media (max-width: 860px) { .side { display: contents; } #palette { order: 1; } #boardwrap { order: 2; } #settings { order: 3; } }
 .panel { background: var(--surface); border-radius: 24px; padding: 18px; box-shadow: var(--shadow); min-width: 0; }
 .ptitle { font-size: 15px; font-weight: 600; margin: 0 0 4px; }
@@ -2386,7 +2390,7 @@ footer { color: var(--muted); font-size: 12px; margin-top: 24px; text-align: cen
     }).join("") : "";
     lastGroups = un;
     var nc = notCasinoGroups();
-    document.getElementById("autoSortBox").innerHTML = '<label class="row" style="gap:8px;align-items:flex-start;margin-top:4px"><input type="checkbox" id="autoSortOn"' + (state.autoSortOff ? "" : " checked") + '><span class="small"><b style="color:var(--ink)">Sort emails automatically</b><br>New emails go to the casino that sent them. ' + (aiReady() ? "Claude checks unclear senders." : "Turn on AI for unclear senders.") + "</span></label>" +
+    document.getElementById("autoSortBox").innerHTML = '<label class="row" style="gap:8px;align-items:flex-start;flex-wrap:nowrap;margin-top:4px;cursor:pointer"><input type="checkbox" id="autoSortOn" style="margin-top:3px;flex:none"' + (state.autoSortOff ? "" : " checked") + '><span class="small"><b style="color:var(--ink)">Sort emails automatically</b><br>New emails go to the casino that sent them. ' + (aiReady() ? "Claude checks unclear senders." : "Turn on AI for unclear senders.") + "</span></label>" +
       (nc ? '<p class="small" style="margin:6px 0 0">' + plural(nc, "sender or email", "senders or emails") + ' set aside as not a casino. <button class="linkbtn" type="button" id="showNotCasino">' + (ui.showNC ? "Hide" : "Show") + "</button></p>" + (ui.showNC ? notCasinoHtml() : "") : "");
     if (!state.autoSortOff && un.length) setTimeout(autoSort, 0);
 
