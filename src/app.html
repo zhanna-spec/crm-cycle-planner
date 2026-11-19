@@ -287,6 +287,118 @@ textarea.inp { resize: vertical; min-height: 70px; }
 .srcline { display: block; font-size: 11px; color: var(--muted); font-weight: 400; margin-top: 2px; }
 .srcline a { color: var(--accent); }
 .scanhint { font-size: 12px; color: var(--muted); margin: 0; }
+.compmode { display: inline-flex; gap: 4px; background: var(--surface); padding: 5px; border-radius: 14px; box-shadow: var(--shadow-sm); margin-bottom: 18px; }
+.cmb { font: inherit; font-weight: 600; border: 0; background: none; color: var(--muted); padding: 8px 16px; border-radius: 10px; cursor: pointer; }
+.cmb.on { background: var(--accent); color: #FFFFFF; }
+.cmb:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.rv { --gr: #2FBF8A; --gr-d: #1E9A6C; --gr-soft: var(--mint-soft); --co: #F26D7D; --co-d: #D2384B; --ye: #E9A92C; --ye-d: #A8740E; --ye-soft: #FEF4DD; }
+.rvhead { display: flex; align-items: center; gap: 16px; background: var(--hero); color: #FFFFFF; border-radius: 24px; padding: 18px 22px; box-shadow: 0 10px 30px rgba(108,92,231,.25); flex-wrap: wrap; }
+.rvhead .logo { flex: none; width: 48px; height: 48px; border-radius: 14px; background: #FFFFFF; color: var(--accent); display: grid; place-items: center; }
+.rvhead .logo .ic { width: 26px; height: 26px; }
+.rvhead h1 { margin: 0; font-size: 22px; font-weight: 700; flex: 1; min-width: 180px; cursor: text; }
+.rvhead h1:hover { text-decoration: underline dotted rgba(255,255,255,.6); }
+.rvhead .tinp { flex: 1; min-width: 180px; font: inherit; font-size: 20px; font-weight: 700; border: 0; border-radius: 10px; padding: 6px 10px; }
+.rvmodes { display: flex; gap: 4px; background: rgba(255,255,255,.16); padding: 4px; border-radius: 14px; }
+.rvmodes button { font: inherit; font-weight: 600; border: 0; background: none; color: #FFFFFF; padding: 7px 14px; border-radius: 10px; cursor: pointer; display: flex; gap: 6px; align-items: center; }
+.rvmodes button.on { background: #FFFFFF; color: var(--accent); }
+.rvmodes .ic { width: 16px; height: 16px; }
+.rvhead .hbtn2 { font: inherit; font-weight: 600; border: 0; background: rgba(255,255,255,.18); color: #FFFFFF; padding: 8px 12px; border-radius: 10px; cursor: pointer; }
+.rvhead .hbtn2:hover { background: rgba(255,255,255,.28); }
+.rvtabs { position: sticky; top: 8px; z-index: 20; display: flex; gap: 4px; padding: 6px; background: var(--surface); border-radius: 18px; box-shadow: var(--shadow-sm); overflow-x: auto; scrollbar-width: none; }
+.rvtabs button { font: inherit; font-weight: 600; border: 0; background: none; color: var(--ink); padding: 9px 14px; border-radius: 12px; cursor: pointer; display: flex; gap: 7px; align-items: center; white-space: nowrap; }
+.rvtabs button:hover { background: var(--accent-soft); }
+.rvtabs button.on { background: var(--accent); color: #FFFFFF; }
+.rvtabs .ic { width: 17px; height: 17px; }
+.rvtools { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+.rvtools .grow { flex: 1; }
+.tri { display: grid; grid-template-columns: repeat(3, minmax(0,1fr)); gap: 16px; }
+.qcard { background: var(--surface); border-radius: 20px; padding: 18px 20px; box-shadow: var(--shadow-sm); min-width: 0; }
+.qcard h3 { display: flex; align-items: center; gap: 10px; font-size: 16px; margin: 0 0 12px; }
+.qcard h3 .ebtn { margin-left: auto; }
+.qi { width: 28px; height: 28px; border-radius: 9px; display: grid; place-items: center; font-size: 14px; flex: none; }
+.qcard.good .qi { background: var(--gr-soft); color: var(--gr-d); }
+.qcard.bad .qi { background: var(--coral-soft); color: var(--co-d); }
+.qcard.do { background: var(--accent-soft); }
+.qcard.do .qi { background: var(--accent); color: #FFFFFF; }
+.ml { margin: 0; padding: 0; list-style: none; display: grid; gap: 8px; }
+.ml li { position: relative; padding-left: 18px; font-size: 14px; }
+.ml li::before { content: ""; position: absolute; left: 0; top: 7px; width: 8px; height: 8px; border-radius: 50%; }
+.ml.g li::before { background: var(--gr); } .ml.b li::before { background: var(--co); }
+.ml.dn { counter-reset: d; } .ml.dn li { counter-increment: d; padding-left: 28px; }
+.ml.dn li::before { content: counter(d); width: 20px; height: 20px; top: 0; border-radius: 7px; background: var(--accent); color: #FFFFFF; font-size: 12px; font-weight: 700; display: grid; place-items: center; }
+.ml li.chk::after { content: "to check"; margin-left: 6px; font-size: 11px; font-weight: 700; color: var(--ye-d); background: var(--ye-soft); border-radius: 99px; padding: 1px 7px; }
+.none { display: inline-block; background: var(--sunk); color: var(--muted); border-radius: 99px; padding: 3px 12px; font-weight: 600; font-size: 12.5px; }
+.vtitle { font-size: 20px; margin: 6px 2px 0; }
+.vpoint { background: var(--surface); border-radius: 20px; padding: 18px 20px; box-shadow: var(--shadow-sm); }
+.vp-h { display: flex; gap: 12px; align-items: flex-start; margin-bottom: 14px; }
+.vp-h h3 { font-size: 17px; margin: 0; }
+.vp-h p { margin: 3px 0 0; font-size: 14px; color: var(--muted); max-width: 900px; }
+.vp-h .ebtn { margin-left: auto; flex: none; }
+.vp-n { flex: none; width: 30px; height: 30px; border-radius: 10px; background: var(--accent); color: #FFFFFF; display: grid; place-items: center; font-weight: 700; }
+.vgrid { display: grid; gap: 14px; }
+.vgrid.c1 { grid-template-columns: minmax(0,1fr); } .vgrid.c2, .vgrid.c4 { grid-template-columns: repeat(2, minmax(0,1fr)); } .vgrid.c3 { grid-template-columns: repeat(3, minmax(0,1fr)); }
+.mode-m .vgrid { grid-template-columns: repeat(auto-fill, minmax(180px, 240px)); justify-content: start; align-items: start; }
+.vshot { margin: 0; background: var(--sunk); border-radius: 16px; padding: 10px; border: 2px solid transparent; display: flex; flex-direction: column; gap: 9px; min-width: 0; }
+.vshot.k-gap { border-color: var(--coral-soft); } .vshot.k-works { border-color: var(--gr-soft); } .vshot.k-check { border-color: var(--ye-soft); }
+.vh { display: flex; justify-content: space-between; align-items: center; gap: 8px; flex-wrap: wrap; }
+.mode-m .vh { flex-direction: column; align-items: flex-start; gap: 5px; }
+.cchip { display: inline-flex; align-items: center; white-space: nowrap; font-weight: 600; font-size: 13px; }
+.cchip i, .fp i, .cdot { display: inline-block; width: 9px; height: 9px; border-radius: 50%; margin-right: 6px; flex: none; }
+.ktag { font-size: 11px; font-weight: 700; border-radius: 99px; padding: 3px 9px; white-space: nowrap; }
+.ktag.k-good { background: var(--accent-soft); color: var(--accent); } .ktag.k-works { background: var(--gr-soft); color: var(--gr-d); }
+.ktag.k-gap { background: var(--coral-soft); color: var(--co-d); } .ktag.k-check { background: var(--ye-soft); color: var(--ye-d); }
+.frame { position: relative; border-radius: 10px; overflow: hidden; cursor: zoom-in; line-height: 0; background: var(--line); }
+.frame img { display: block; width: 100%; height: auto; }
+.frame .noimg { display: block; aspect-ratio: 16/9; }
+.frame:focus-visible { outline: 3px solid var(--accent); }
+.bx { position: absolute; border: 3px solid #FFD447; border-radius: 7px; background: rgba(255,212,71,.08); box-shadow: 0 0 12px rgba(255,212,71,.75); pointer-events: none; }
+.k-gap .bx { border-color: #FF6B7F; box-shadow: 0 0 12px rgba(255,107,127,.75); } .k-works .bx { border-color: #38E0A0; box-shadow: 0 0 12px rgba(56,224,160,.7); } .k-check .bx { border-color: #FFC23D; }
+.bx i, .lg i { font-style: normal; font-weight: 700; font-size: 11px; width: 19px; height: 19px; border-radius: 50%; display: grid; place-items: center; line-height: 1; }
+.bx i { position: absolute; left: -10px; top: -10px; background: #FFD447; color: #1E1B3A; }
+.k-gap .bx i { background: #FF6B7F; color: #FFFFFF; } .k-works .bx i { background: #38E0A0; }
+.lg { list-style: none; margin: 0; padding: 0; display: grid; gap: 5px; }
+.lg li { display: flex; gap: 8px; align-items: center; font-size: 13px; font-weight: 500; }
+.lg i { flex: none; background: #FFD447; color: #1E1B3A; }
+.k-gap .lg i { background: #FF6B7F; color: #FFFFFF; } .k-works .lg i { background: #38E0A0; } .k-check .lg i { background: #FFC23D; }
+.allshots { background: var(--surface); border-radius: 20px; padding: 16px 20px; box-shadow: var(--shadow-sm); }
+.allshots > summary { cursor: pointer; font-weight: 700; font-size: 15px; }
+.fpills { display: flex; gap: 6px; flex-wrap: wrap; margin: 14px 0; }
+.fp { font: inherit; border: 0; background: var(--sunk); color: var(--ink); border-radius: 99px; padding: 6px 12px; font-size: 13px; font-weight: 600; display: inline-flex; align-items: center; cursor: pointer; }
+.fp.on { background: var(--accent); color: #FFFFFF; }
+.gal { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 12px; }
+.mode-m .gal { grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); }
+.shot { margin: 0; border-radius: 14px; background: var(--sunk); overflow: hidden; border: 1px solid var(--line); position: relative; }
+.shot[hidden] { display: none; }
+.shot .frame { border-radius: 0; }
+.shot .frame img, .shot .frame .noimg { aspect-ratio: 16/8; object-fit: cover; object-position: top; height: auto; }
+.mode-m .shot .frame img, .mode-m .shot .frame .noimg { aspect-ratio: 9/15; }
+.shot figcaption { padding: 8px 10px 10px; display: grid; gap: 2px; }
+.shot figcaption .cchip { font-size: 11.5px; color: var(--muted); }
+.shot figcaption b { font-size: 13px; font-weight: 600; line-height: 1.3; }
+.shot .sedit { position: absolute; top: 6px; right: 6px; }
+.ebtn { font: inherit; font-size: 12px; font-weight: 600; border: 0; background: var(--sunk); color: var(--accent); border-radius: 8px; padding: 5px 9px; cursor: pointer; }
+.ebtn:hover { background: var(--accent-soft); }
+.rvedit { display: grid; gap: 8px; }
+.rvedit textarea, .rvedit input[type=text], .rvedit select { font: inherit; font-size: 14px; border: 1px solid var(--line); background: var(--surface); color: var(--ink); border-radius: 10px; padding: 8px 10px; width: 100%; box-sizing: border-box; }
+.rvcas { display: flex; align-items: center; gap: 10px; padding: 8px 10px; border-radius: 14px; background: var(--sunk); }
+.rvcas .meta2 { flex: 1; min-width: 0; }
+.rvcas b { display: block; font-weight: 600; }
+.rvcas small { color: var(--muted); font-size: 12px; }
+.rvcas .cdot { width: 12px; height: 12px; margin: 0; }
+.rvempty { background: var(--surface); border-radius: 20px; padding: 28px; text-align: center; color: var(--muted); box-shadow: var(--shadow-sm); }
+.rvfoot { text-align: center; color: var(--muted); font-size: 13px; }
+.rvprog { background: var(--surface); border-radius: 16px; padding: 14px 18px; box-shadow: var(--shadow-sm); }
+.rvlb { position: fixed; inset: 0; z-index: 200; background: rgba(30,27,58,.96); display: flex; align-items: center; justify-content: center; padding: 24px; }
+.rvlb[hidden] { display: none; }
+.rvlb-body { max-width: min(1400px, 100%); max-height: 100%; display: flex; flex-direction: column; gap: 12px; overflow: auto; }
+.rvlb-frame { position: relative; align-self: center; line-height: 0; max-width: 100%; }
+.rvlb-frame img { max-width: 100%; max-height: 78vh; object-fit: contain; border-radius: 14px; }
+.rvlb-cap { background: var(--surface); color: var(--ink); border-radius: 16px; padding: 10px 16px; align-self: center; }
+.rvlb-c { display: inline-block; background: var(--accent); color: #FFFFFF; border-radius: 99px; padding: 2px 10px; font-size: 12px; font-weight: 600; margin-right: 8px; }
+.rvlb > button { position: fixed; border: 0; border-radius: 14px; width: 46px; height: 46px; font-size: 26px; background: #FFFFFF; color: var(--accent); cursor: pointer; }
+.rvlb-x { top: 18px; right: 18px; } .rvlb-prev { left: 18px; top: calc(50% - 23px); } .rvlb-next { right: 18px; top: calc(50% - 23px); }
+@media (max-width: 1100px) { .vgrid.c3 { grid-template-columns: repeat(2, minmax(0,1fr)); } }
+@media (max-width: 760px) { .tri, .vgrid.c2, .vgrid.c3, .vgrid.c4 { grid-template-columns: minmax(0,1fr); } .mode-m .vgrid { grid-template-columns: repeat(2, minmax(0,1fr)); } .rvlb-prev, .rvlb-next { top: auto; bottom: 18px; } }
 .secnav { display: flex; flex-direction: column; gap: 12px; }
 .secnavtop { display: flex; justify-content: space-between; align-items: center; gap: 10px; flex-wrap: wrap; }
 .secchips { display: flex; flex-direction: column; gap: 8px; }
@@ -531,7 +643,7 @@ footer { color: var(--muted); font-size: 12px; margin-top: 24px; text-align: cen
 
   <nav class="viewnav" aria-label="Sections">
     <a href="#builder" id="nav-builder"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="4" height="12" rx="1.5"/><rect x="9" y="4" width="4" height="8" rx="1.5"/><rect x="15" y="4" width="2.5" height="5" rx="1"/></svg>Cycle builder</a>
-    <a href="#competitors" id="nav-competitors"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="7" cy="7" r="3"/><circle cx="14" cy="9" r="2.5"/><path d="M2 17c.6-3 2.6-4.5 5-4.5s4.4 1.5 5 4.5M12.5 13.2c2-.4 4.4.6 5 3.8"/></svg>Competitor offers <span class="num" id="compCount">0</span></a>
+    <a href="#competitors" id="nav-competitors"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="7" cy="7" r="3"/><circle cx="14" cy="9" r="2.5"/><path d="M2 17c.6-3 2.6-4.5 5-4.5s4.4 1.5 5 4.5M12.5 13.2c2-.4 4.4.6 5 3.8"/></svg>Competitor review <span class="num" id="compCount">0</span></a>
     <a href="#emails" id="nav-emails"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="14" height="10" rx="2"/><path d="M3.5 6l6.5 5 6.5-5"/></svg>Competitor emails <span class="num" id="trkCount">0</span></a>
   </nav>
 
@@ -572,7 +684,26 @@ footer { color: var(--muted); font-size: 12px; margin-top: 24px; text-align: cen
   </div>
 
   <div id="view-competitors" hidden>
-    <div class="capp">
+    <div class="compmode" role="tablist" aria-label="Competitor view">
+      <button type="button" class="cmb" data-cmode="review" role="tab">Review</button>
+      <button type="button" class="cmb" data-cmode="offers" role="tab">Offer terms</button>
+    </div>
+    <div class="capp" id="reviewApp">
+      <div class="side">
+        <section class="panel stack" aria-labelledby="rvCasH">
+          <h2 class="ptitle" id="rvCasH">Casinos in this review</h2>
+          <div id="rvCasinos" class="stack" style="gap:8px"></div>
+          <input type="file" id="rvFile" accept="image/png,image/jpeg,image/webp,.zip,application/zip" multiple hidden>
+          <p class="scanhint">Scan a casino with the <a href="https://github.com/zhanna-spec/crm-cycle-planner/blob/main/extension/README.md" target="_blank" rel="noopener">site scanner extension</a>, or add its screenshots here (images or a zip).</p>
+        </section>
+        <section class="panel stack" aria-labelledby="rvAiH">
+          <h2 class="ptitle" id="rvAiH">AI screenshot reading</h2>
+          <div id="rvKeyPanel" class="stack"></div>
+        </section>
+      </div>
+      <div class="stack rv" id="rvMain" style="gap:18px;min-width:0"></div>
+    </div>
+    <div class="capp" id="offersApp">
       <div class="side">
         <section class="panel stack" aria-labelledby="opH">
           <h2 class="ptitle" id="opH">Operators</h2>
@@ -632,6 +763,8 @@ footer { color: var(--muted); font-size: 12px; margin-top: 24px; text-align: cen
       </div>
     </div>
   </div>
+  <div id="rvLb" class="rvlb" hidden><button type="button" class="rvlb-x" aria-label="Close">×</button><button type="button" class="rvlb-prev" aria-label="Previous">‹</button><button type="button" class="rvlb-next" aria-label="Next">›</button>
+    <div class="rvlb-body"><div class="rvlb-frame"><img alt=""></div><div class="rvlb-cap"><span class="rvlb-c"></span><b></b></div></div></div>
   <div id="view-emails" hidden>
     <div class="capp">
       <div class="side">
@@ -690,6 +823,7 @@ footer { color: var(--muted); font-size: 12px; margin-top: 24px; text-align: cen
 <div class="modal" id="scanModal" hidden><form class="dialog" id="scanForm" aria-labelledby="scanTitle"></form></div>
 <div class="toast" id="toast" hidden></div>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.118.0/dist/umd/supabase.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
 
 <script>
 (function () {
@@ -809,7 +943,7 @@ footer { color: var(--muted); font-size: 12px; margin-top: 24px; text-align: cen
   }
 
   // ---------- state ----------
-  var state, history = [], ui = { sel: null, focusDay: null, editingDay: null, armed: null, pickDay: null, addingDay: false, compSel: null, opSel: null, opEditing: null, cmpKind: "welcome", pageSec: "all", runView: "all", sec: "overview", adding: false };
+  var state, history = [], ui = { sel: null, focusDay: null, editingDay: null, armed: null, pickDay: null, addingDay: false, compSel: null, opSel: null, opEditing: null, cmpKind: "welcome", pageSec: "all", runView: "all", sec: "overview", adding: false, compMode: "review" };
   try { state = JSON.parse(localStorage.getItem("ccp2_state")); } catch (e) { state = null; }
   if (!state || !Array.isArray(state.cycles) || !state.cycles.length) {
     var first = makeCycle("Welcome journey", "acquisition", true, 6, 10);
@@ -820,6 +954,7 @@ footer { color: var(--muted); font-size: 12px; margin-top: 24px; text-align: cen
   if (!Array.isArray(state.research)) state.research = [];
   if (!Array.isArray(state.trackers)) state.trackers = [];
   if (!Array.isArray(state.emails)) state.emails = [];
+  state.review = state.review && typeof state.review === "object" ? state.review : {};
   if (!state.emailOwner || typeof state.emailOwner !== "object") state.emailOwner = {};
   if (!state.notCasino || typeof state.notCasino !== "object") state.notCasino = {};
   state.trackers.forEach(function (t) { t.summarizing = false; });
@@ -1330,7 +1465,7 @@ footer { color: var(--muted); font-size: 12px; margin-top: 24px; text-align: cen
   function isOwnItem(x) { var o = findOp(x.opId); return !!(o && o.isOwn); }
   function runMatch(x) { return ui.runView === "all" || !x.run || x.run === ui.runView; }
   function plural(n, one, many) { return n + " " + (n === 1 ? one : many); }
-  function opColor(op) { return op && op.isOwn ? "var(--accent)" : AV[Math.max(0, state.operators.indexOf(op)) % AV.length]; }
+  function opColor(op) { return op && op.color ? op.color : op && op.isOwn ? "var(--accent)" : AV[Math.max(0, state.operators.indexOf(op)) % AV.length]; }
   function siteUrl(w) { w = (w || "").trim(); if (!w) return ""; return /^https?:\/\//i.test(w) ? w : "https://" + w; }
   function curOp() { var o = ui.opSel ? findOp(ui.opSel) : null; if (!o) ui.opSel = null; return o; }
 
@@ -1389,6 +1524,10 @@ footer { color: var(--muted); font-size: 12px; margin-top: 24px; text-align: cen
 
   function renderCompetitors() {
     ensureOperators();
+    var review = ui.compMode !== "offers";
+    document.querySelectorAll("[data-cmode]").forEach(function (b) { b.classList.toggle("on", (b.getAttribute("data-cmode") === "review") === review); b.setAttribute("aria-selected", String((b.getAttribute("data-cmode") === "review") === review)); });
+    document.getElementById("reviewApp").hidden = !review; document.getElementById("offersApp").hidden = review;
+    if (review) { document.getElementById("compCount").textContent = state.operators.length; document.getElementById("undoBtn").disabled = !history.length; renderKeyPanel(); renderReview(); return; }
     var op = curOp();
     var allOffers = (op ? offersOf(op) : state.competitors).filter(runMatch);
     document.querySelectorAll('input[name="runView"]').forEach(function (r) { r.checked = r.value === ui.runView; });
@@ -2101,6 +2240,7 @@ footer { color: var(--muted); font-size: 12px; margin-top: 24px; text-align: cen
     var u = e.target.closest("[data-pdelete]");
     if (u) { var id = u.getAttribute("data-pdelete"), pg = findPage(id); if (!pg) return; commit(); state.research = state.research.filter(function (x) { return x.id !== id; }); save(); renderCompetitors(); toast(kindLabel(pg.section) + " deleted. Click Undo to bring it back."); }
   });
+  document.querySelector(".compmode").addEventListener("click", function (e) { var b = e.target.closest("[data-cmode]"); if (b) { ui.compMode = b.getAttribute("data-cmode"); renderCompetitors(); } });
   document.getElementById("cmp").addEventListener("click", function (e) { var b = e.target.closest("[data-pretry]"); if (b) readPage(b.getAttribute("data-pretry")); });
   // section menu, overview tiles and the add box
   function openAdd(kind) {
@@ -2142,6 +2282,516 @@ footer { color: var(--muted); font-size: 12px; margin-top: 24px; text-align: cen
     closeDrawer(); save(); renderCompetitors(); toast("Offer deleted. Undo to bring it back.");
   });
 
+
+  // ---------- competitor review ----------
+  // A review of one casino (the subject, your own brand) against competitors, following the reviewer's method
+  // (report/HANDOFF.md): compare structure and setup, not offers; per section Works / Potential gaps / Ideas to consider,
+  // "How it compares" points with highlighted screenshots, and all screenshots of the section.
+  var RV_SECTIONS = [["homepage", "Homepage"], ["promotions", "Promotions"], ["deposit", "Deposit"], ["loyalty", "Loyalty / VIP"], ["tournaments", "Tournaments"], ["missions", "Missions"], ["store", "Store"]];
+  var RV_ICONS = {
+    homepage: '<path d="M3 10.5 12 3l9 7.5V20a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z"/>',
+    promotions: '<rect x="3" y="8" width="18" height="4" rx="1"/><path d="M12 8v13M5 12v8a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-8M7.5 8a2.5 2.5 0 1 1 0-5C10 3 12 8 12 8s2-5 4.5-5a2.5 2.5 0 1 1 0 5"/>',
+    deposit: '<rect x="2" y="5" width="20" height="14" rx="3"/><path d="M2 10h20M6 15h4"/>',
+    loyalty: '<path d="M3 7l4.5 4L12 4l4.5 7L21 7l-2 12H5z"/>',
+    tournaments: '<path d="M8 21h8M12 17v4M7 4h10v5a5 5 0 0 1-10 0zM7 6H4a3 3 0 0 0 3 4M17 6h3a3 3 0 0 1-3 4"/>',
+    missions: '<circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1"/>',
+    store: '<path d="M6 7h12l1 14H5zM9 7a3 3 0 0 1 6 0"/>',
+    desktop: '<rect x="2" y="4" width="20" height="13" rx="2"/><path d="M8 21h8M12 17v4"/>',
+    mobile: '<rect x="6" y="2" width="12" height="20" rx="2.5"/><path d="M11 18h2"/>',
+    "default": '<circle cx="12" cy="12" r="8"/>'
+  };
+  function rvIcon(k) { return '<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">' + (RV_ICONS[k] || RV_ICONS["default"]) + "</svg>"; }
+  // tags on screenshots: for the subject casino and for competitors
+  var RV_KCLASS = { works: "k-works", gap: "k-gap", check: "k-check", mixed: "k-check", good: "k-good", avoid: "k-gap", note: "k-check" };
+  var RV_SUBJ = { works: "works", gap: "potential gap", check: "to check", mixed: "mixed" };
+  var RV_COMP = { good: "Example", mixed: "Mixed", avoid: "Avoid", note: "For reference" };
+  var RV_PALETTE = ["#6C5CE7", "#E9A92C", "#F26D7D", "#22B3A6", "#3B9EF0", "#B067E0", "#F28C3B", "#2FBF8A", "#E05AA8", "#8C7B6B"];
+
+  function rvNorm(r) {
+    r = r && typeof r === "object" ? r : {};
+    if (!Array.isArray(r.sections) || !r.sections.length) r.sections = RV_SECTIONS.map(function (k) { return { id: k[0], name: k[1] }; });
+    if (!Array.isArray(r.versions) || !r.versions.length) r.versions = [{ id: "desktop", label: "Desktop", device: "desktop", footer: "" }];
+    if (!Array.isArray(r.shots)) r.shots = [];
+    ["cards", "comps", "notes"].forEach(function (k) { if (!r[k] || typeof r[k] !== "object") r[k] = {}; });
+    if (!Array.isArray(r.rules)) r.rules = [];
+    return r;
+  }
+  function rv() { state.review = rvNorm(state.review); return state.review; }
+  function rvSubject() { var r = rv(); return (r.subject && findOp(r.subject)) || ownOp() || null; }
+  function rvTitle() { var r = rv(), s = rvSubject(); return r.title || ((s ? s.name + " " : "") + "Competitor Review"); }
+  function rvVersion() { var r = rv(); var v = r.versions.filter(function (x) { return x.id === ui.rvV; })[0] || r.versions[0]; ui.rvV = v.id; return v; }
+  function rvSection() { var r = rv(); var s = r.sections.filter(function (x) { return x.id === ui.rvSec; })[0] || r.sections[0]; ui.rvSec = s.id; return s; }
+  function rvShot(id) { return rv().shots.filter(function (s) { return s.id === id; })[0] || null; }
+  function rvColor(op) {
+    if (!op) return "#999999";
+    if (op.color) return op.color;
+    var i = Math.max(0, state.operators.indexOf(op));
+    return RV_PALETTE[i % RV_PALETTE.length];
+  }
+  // casinos in the review: the subject first, then every operator with screenshots
+  function rvCasinos() {
+    var r = rv(), s = rvSubject(), out = s ? [s] : [];
+    state.operators.forEach(function (o) { if (out.indexOf(o) < 0 && r.shots.some(function (x) { return x.op === o.id; })) out.push(o); });
+    return out;
+  }
+  function rvSrc(shot) {
+    if (!shot) return "";
+    if (shot.path) { if (signed[shot.path]) return signed[shot.path]; if (cloud) requestSign([shot.path]); return ""; }
+    return shot.data ? "data:image/jpeg;base64," + shot.data : "";
+  }
+  function rvChip(op) { return '<span class="cchip"><i style="background:' + esc(rvColor(op)) + '"></i>' + esc(op ? op.name : "?") + "</span>"; }
+
+  // ---- rendering ----
+  function rvFrame(shot, boxes, attrs) {
+    var src = rvSrc(shot), W = shot && shot.w || 1, H = shot && shot.h || 1;
+    var bx = (boxes || []).map(function (b, i) {
+      return '<span class="bx" style="left:' + (b[0] / W * 100).toFixed(2) + "%;top:" + (b[1] / H * 100).toFixed(2) + "%;width:" + (b[2] / W * 100).toFixed(2) + "%;height:" + (b[3] / H * 100).toFixed(2) + '%"><i>' + (i + 1) + "</i></span>";
+    }).join("");
+    return '<div class="frame" tabindex="0" ' + (attrs || "") + ">" + (src ? '<img src="' + src + '" alt="" loading="lazy">' : '<span class="noimg"></span>') + bx + "</div>";
+  }
+  function rvFigure(p, pi, sh, si, subj) {
+    var shot = rvShot(sh.shot), op = shot ? findOp(shot.op) : null, kind = sh.kind || "good", cls = RV_KCLASS[kind] || "k-good";
+    var isSubj = op && subj && op.id === subj.id;
+    var label = isSubj ? op.name + (RV_SUBJ[kind] ? ": " + RV_SUBJ[kind] : "") : (RV_COMP[kind] || "Example");
+    var legend = (sh.boxes || []).map(function (b, i) { return "<li><i>" + (i + 1) + "</i>" + esc(b[4] || "") + "</li>"; }).join("");
+    return '<figure class="vshot ' + cls + '"><div class="vh">' + rvChip(op) + '<span class="ktag ' + cls + '">' + esc(label) + "</span></div>" +
+      rvFrame(shot, sh.boxes, 'data-lbp="' + pi + '" data-lbi="' + si + '"') + (legend ? '<ol class="lg">' + legend + "</ol>" : "") + "</figure>";
+  }
+  function rvBullets(items, cls) {
+    if (!items || !items.length) return '<p class="none">Not offered</p>';
+    return '<ul class="ml ' + cls + '">' + items.map(function (t) { var chk = /\(to check\)\s*$/i.test(t); return "<li" + (chk ? ' class="chk"' : "") + ">" + esc(String(t).replace(/\s*\(to check\)\s*$/i, "")) + "</li>"; }).join("") + "</ul>";
+  }
+  function rvCardsFor(v, sec) { var r = rv(); r.cards[v.id] = r.cards[v.id] || {}; var c = r.cards[v.id][sec.id] || (r.cards[v.id][sec.id] = { works: [], gaps: [], ideas: [] }); c.works = c.works || []; c.gaps = c.gaps || []; c.ideas = c.ideas || []; return c; }
+  function rvPointsFor(v, sec) { var r = rv(); r.comps[v.id] = r.comps[v.id] || {}; return r.comps[v.id][sec.id] || (r.comps[v.id][sec.id] = []); }
+  function rvShotsFor(v, sec) { return rv().shots.filter(function (s) { return s.v === v.id && (sec ? (s.sections || []).indexOf(sec.id) >= 0 : !(s.sections || []).length); }); }
+
+  function renderReview() {
+    var r = rv(), v = rvVersion(), sec = rvSection(), subj = rvSubject(), main = document.getElementById("rvMain");
+    renderRvSide(v);
+    var modes = r.versions.length > 1 ? '<div class="rvmodes">' + r.versions.map(function (x) { return '<button type="button" data-rvv="' + esc(x.id) + '"' + (x.id === v.id ? ' class="on"' : "") + ">" + rvIcon(x.device) + esc(x.label) + "</button>"; }).join("") + "</div>" : "";
+    var head = '<header class="rvhead"><div class="logo">' + rvIcon("tournaments") + "</div>" +
+      (ui.rvTitleEdit ? '<input class="tinp" id="rvTitleInp" value="' + esc(rvTitle()) + '" aria-label="Report title">' : '<h1 id="rvTitle" title="Click to rename">' + esc(rvTitle()) + "</h1>") +
+      modes + '<button type="button" class="hbtn2" data-rvact="import">Import report</button><button type="button" class="hbtn2" data-rvact="export">Export</button></header>';
+    if (ui.rvExportOpen) head += '<div class="rvprog"><b>Export</b><p class="small" style="margin:6px 0 10px">The report page is the same as your template: one file with all screenshots, ready to share. The data folder is for <code>build.py</code>.</p><div class="row"><button class="btn primary" type="button" data-rvact="exporthtml">Report page (.html)</button><button class="btn" type="button" data-rvact="exportzip">Data folder (.zip)</button><button class="btn" type="button" data-rvact="exportclose">Close</button></div></div>';
+    if (ui.rvBusy) head += '<div class="rvprog"><b>' + esc(ui.rvBusy.title) + '</b><div class="scanbar" style="margin:8px 0"><i style="width:' + Math.round(100 * (ui.rvBusy.done || 0) / Math.max(1, ui.rvBusy.total || 1)) + '%"></i></div><p class="small" style="margin:0">' + esc(ui.rvBusy.text || "") + "</p></div>";
+    var tabs = '<nav class="rvtabs" aria-label="Sections">' + r.sections.map(function (x) {
+      return '<button type="button" data-rvsec="' + esc(x.id) + '"' + (x.id === sec.id ? ' class="on"' : "") + ">" + rvIcon(x.id) + "<span>" + esc(x.name) + "</span></button>";
+    }).join("") + "</nav>";
+    if (!subj && !r.shots.length) {
+      main.innerHTML = head + '<div class="rvempty"><p><b>No review yet.</b></p><p class="small">Add your own website as an operator (it becomes the casino being reviewed), then scan it and its competitors with the extension or add their screenshots on the left. If you already have a report built from the hand-off, use <b>Import report</b>.</p></div>';
+      return;
+    }
+    var mode = v.device === "mobile" ? "mode-m" : "mode-d";
+    var c = rvCardsFor(v, sec), pts = rvPointsFor(v, sec), editC = ui.rvEdit === "cards";
+    var card = function (key, cls, icon, title, list) {
+      var body = editC ? '<textarea data-rvcard="' + key + '" rows="' + Math.max(4, (c[key] || []).length + 2) + '" aria-label="' + esc(title) + '">' + esc((c[key] || []).join("\n")) + "</textarea>"
+        : key === "ideas" ? ((c.ideas || []).length ? '<ol class="ml dn">' + c.ideas.map(function (t) { return "<li>" + esc(t) + "</li>"; }).join("") + "</ol>" : '<p class="none">Not offered</p>') : rvBullets(list, key === "works" ? "g" : "b");
+      return '<div class="qcard ' + cls + '"><h3><span class="qi">' + icon + "</span>" + title + "</h3>" + body + "</div>";
+    };
+    var tools = '<div class="rvtools">' + (editC ? '<span class="small">One point per line. Add “(to check)” at the end of a line that still needs confirming.</span><span class="grow"></span><button class="btn primary" type="button" data-rvact="savecards">Save</button><button class="btn" type="button" data-rvact="canceledit">Cancel</button>'
+      : '<span class="grow"></span><button class="ebtn" type="button" data-rvact="editcards">Edit the three cards</button>') + "</div>";
+    var tri = '<div class="tri">' + card("works", "good", "✓", "Works", c.works) + card("gaps", "bad", "!", "Potential gaps", c.gaps) + card("ideas", "do", "→", "Ideas to consider", c.ideas) + "</div>";
+    var points = pts.map(function (p, pi) {
+      if (ui.rvEdit === "p" + pi) return rvPointEditor(v, sec, p, pi, subj);
+      return '<div class="vpoint"><div class="vp-h"><span class="vp-n">' + (pi + 1) + "</span><div><h3>" + esc(p.title) + "</h3><p>" + esc(p.text) + '</p></div><button class="ebtn" type="button" data-rvact="editpoint" data-pi="' + pi + '">Edit</button></div>' +
+        '<div class="vgrid c' + Math.min(4, (p.shots || []).length || 1) + '">' + (p.shots || []).map(function (sh, si) { return rvFigure(p, pi, sh, si, subj); }).join("") + "</div></div>";
+    }).join("");
+    var gshots = rvShotsFor(v, sec), unsorted = rvShotsFor(v, null);
+    var gal = rvGallery(gshots, "sec") + (unsorted.length ? '<details class="allshots" style="margin-top:14px"' + (ui.rvUnsortedOpen ? " open" : "") + ' data-rvdet="unsorted"><summary>Not sorted into a section yet (' + unsorted.length + ")</summary>" + rvGallery(unsorted, "uns") + "</details>" : "");
+    main.innerHTML = head + tabs +
+      '<div class="stack ' + mode + '" style="gap:16px">' + tools + tri +
+      '<div class="row" style="justify-content:space-between;align-items:center"><h2 class="vtitle">How it compares</h2><button class="ebtn" type="button" data-rvact="addpoint">+ Add a point</button></div>' +
+      (points || '<div class="rvempty small">No comparison points for ' + esc(sec.name) + " yet.</div>") +
+      '<details class="allshots" data-rvdet="all"' + (ui.rvAllOpen ? " open" : "") + "><summary>All screenshots for this section (" + gshots.length + ")</summary>" + gal + "</details>" +
+      (v.footer ? '<p class="rvfoot">' + esc(v.footer) + "</p>" : "") + "</div>";
+    if (ui.rvTitleEdit) { var ti = document.getElementById("rvTitleInp"); if (ti) { ti.focus(); ti.select(); } }
+  }
+  function rvGallery(list, scope) {
+    var cas = rvCasinos().filter(function (o) { return list.some(function (s) { return s.op === o.id; }); });
+    var f = ui.rvFilter && cas.some(function (o) { return o.id === ui.rvFilter; }) ? ui.rvFilter : "all";
+    var pills = cas.length > 1 ? '<div class="fpills"><button class="fp' + (f === "all" ? " on" : "") + '" type="button" data-rvf="all">All</button>' + cas.map(function (o) { return '<button class="fp' + (f === o.id ? " on" : "") + '" type="button" data-rvf="' + o.id + '"><i style="background:' + esc(rvColor(o)) + '"></i>' + esc(o.name) + "</button>"; }).join("") + "</div>" : '<div style="height:12px"></div>';
+    var order = function (s) { var i = cas.indexOf(findOp(s.op)); return i < 0 ? 99 : i; };
+    var items = list.slice().sort(function (a, b) { return order(a) - order(b); }).map(function (s) {
+      var op = findOp(s.op);
+      if (ui.rvShotEdit === s.id) return rvShotEditor(s);
+      return '<figure class="shot"' + (f !== "all" && s.op !== f ? " hidden" : "") + ">" + rvFrame(s, null, 'data-lbs="' + esc(s.id) + '" data-lbscope="' + scope + '"') +
+        '<figcaption>' + rvChip(op) + "<b>" + esc(s.title || "Untitled") + '</b></figcaption><button class="ebtn sedit" type="button" data-rvshot="' + esc(s.id) + '">Edit</button></figure>';
+    }).join("");
+    return pills + '<div class="gal">' + (items || '<p class="small">No screenshots yet.</p>') + "</div>";
+  }
+  function rvShotEditor(s) {
+    var r = rv();
+    return '<figure class="shot" style="padding:10px"><div class="rvedit">' + rvFrame(s, null, "") +
+      '<label class="small">Title<input type="text" data-se="title" value="' + esc(s.title || "") + '"></label>' +
+      '<label class="small">Casino<select data-se="op">' + state.operators.map(function (o) { return '<option value="' + o.id + '"' + (o.id === s.op ? " selected" : "") + ">" + esc(o.name) + "</option>"; }).join("") + "</select></label>" +
+      '<div class="small">Sections</div><div class="row" style="flex-wrap:wrap;gap:4px 10px">' + r.sections.map(function (x) { return '<label class="small"><input type="checkbox" data-se-sec="' + esc(x.id) + '"' + ((s.sections || []).indexOf(x.id) >= 0 ? " checked" : "") + "> " + esc(x.name) + "</label>"; }).join("") + "</div>" +
+      '<div class="row"><button class="btn primary" type="button" data-rvact="saveshot" data-id="' + esc(s.id) + '">Save</button><button class="btn" type="button" data-rvact="canceledit">Cancel</button><button class="btn danger" type="button" data-rvact="delshot" data-id="' + esc(s.id) + '">Delete</button></div></div></figure>';
+  }
+  function rvPointEditor(v, sec, p, pi, subj) {
+    var pool = rvShotsFor(v, sec);
+    var kinds = function (op, k) {
+      var isS = op && subj && op.id === subj.id, list = isS ? [["works", "Works"], ["gap", "Potential gap"], ["check", "To check"], ["mixed", "Mixed"]] : [["good", "Example"], ["mixed", "Mixed"], ["avoid", "Avoid"], ["note", "For reference"]];
+      return list.map(function (x) { return '<option value="' + x[0] + '"' + (x[0] === k ? " selected" : "") + ">" + x[1] + "</option>"; }).join("");
+    };
+    var shots = (p.shots || []).map(function (sh, si) {
+      var shot = rvShot(sh.shot), op = shot ? findOp(shot.op) : null;
+      return '<div class="vshot"><div class="vh">' + rvChip(op) + '<select data-pk="' + si + '" aria-label="Tag">' + kinds(op, sh.kind) + "</select></div>" + rvFrame(shot, sh.boxes, "") +
+        '<label class="small">Highlights, one per line: x, y, width, height, label<textarea data-pb="' + si + '" rows="' + Math.max(2, (sh.boxes || []).length + 1) + '">' + esc((sh.boxes || []).map(function (b) { return [b[0], b[1], b[2], b[3], b[4] || ""].join(", "); }).join("\n")) + "</textarea></label>" +
+        '<div class="row"><button class="ebtn" type="button" data-rvact="shotup" data-si="' + si + '">↑</button><button class="ebtn" type="button" data-rvact="shotdown" data-si="' + si + '">↓</button><button class="ebtn" type="button" data-rvact="shotrm" data-si="' + si + '">Remove</button></div></div>';
+    }).join("");
+    var add = pool.filter(function (s) { return !(p.shots || []).some(function (x) { return x.shot === s.id; }); });
+    return '<div class="vpoint rvedit" data-pedit="' + pi + '"><label class="small">Title<input type="text" data-pe="title" value="' + esc(p.title || "") + '"></label>' +
+      '<label class="small">One or two sentences: what ' + esc(subj ? subj.name : "the subject") + ' does and what competitors do<textarea data-pe="text" rows="3">' + esc(p.text || "") + "</textarea></label>" +
+      '<div class="vgrid c' + Math.min(4, (p.shots || []).length || 1) + '">' + shots + "</div>" +
+      (add.length ? '<label class="small">Add a screenshot<select data-pe="add"><option value="">Choose…</option>' + add.map(function (s) { var o = findOp(s.op); return '<option value="' + esc(s.id) + '">' + esc((o ? o.name : "?") + ": " + (s.title || "Untitled")) + "</option>"; }).join("") + "</select></label>" : "") +
+      '<div class="row"><button class="btn primary" type="button" data-rvact="savepoint" data-pi="' + pi + '">Save</button><button class="btn" type="button" data-rvact="canceledit">Cancel</button><button class="ebtn" type="button" data-rvact="pointup" data-pi="' + pi + '">Move up</button><button class="ebtn" type="button" data-rvact="pointdown" data-pi="' + pi + '">Move down</button><span class="grow" style="flex:1"></span><button class="btn danger" type="button" data-rvact="delpoint" data-pi="' + pi + '">Delete point</button></div></div>';
+  }
+  function renderRvSide(v) {
+    var r = rv(), subj = rvSubject();
+    var ops = state.operators.slice().sort(function (a, b) { return (subj && b.id === subj.id ? 1 : 0) - (subj && a.id === subj.id ? 1 : 0); });
+    document.getElementById("rvCasinos").innerHTML = ops.map(function (o) {
+      var n = r.shots.filter(function (s) { return s.op === o.id && s.v === v.id; }).length;
+      return '<div class="rvcas"><span class="cdot" style="background:' + esc(rvColor(o)) + '"></span><span class="meta2"><b>' + esc(o.name) + (subj && o.id === subj.id ? ' <span class="ownpill">Reviewed</span>' : "") + "</b><small>" + plural(n, "screenshot", "screenshots") + "</small></span>" +
+        '<button class="ebtn" type="button" data-rvadd="' + o.id + '">+ Screenshots</button></div>';
+    }).join("") || '<p class="small">Add operators on the Offer terms side, or import a report.</p>';
+    var kp = document.getElementById("keyPanel"), rk = document.getElementById("rvKeyPanel");
+    if (kp && rk) rk.innerHTML = kp.innerHTML;
+  }
+
+  // ---- lightbox with highlights ----
+  var rvLbList = [], rvLbI = 0;
+  function rvLbOpen(list, i) { rvLbList = list; rvLbShow(i); document.getElementById("rvLb").hidden = false; document.body.style.overflow = "hidden"; }
+  function rvLbShow(i) {
+    rvLbI = (i + rvLbList.length) % rvLbList.length;
+    var it = rvLbList[rvLbI], shot = rvShot(it.shot), op = shot ? findOp(shot.op) : null, lb2 = document.getElementById("rvLb");
+    var fr = lb2.querySelector(".rvlb-frame");
+    fr.className = "rvlb-frame " + (RV_KCLASS[it.kind] || "");
+    fr.innerHTML = rvFrame(shot, it.boxes, "").replace('class="frame"', 'class="frame" style="cursor:default;background:none"');
+    lb2.querySelector(".rvlb-c").textContent = op ? op.name : "";
+    lb2.querySelector(".rvlb-cap b").textContent = shot ? shot.title || "" : "";
+  }
+  function rvLbClose() { document.getElementById("rvLb").hidden = true; document.body.style.overflow = ""; }
+  document.getElementById("rvLb").addEventListener("click", function (e) {
+    if (e.target.closest(".rvlb-x") || e.target === this) rvLbClose();
+    else if (e.target.closest(".rvlb-prev")) rvLbShow(rvLbI - 1);
+    else if (e.target.closest(".rvlb-next")) rvLbShow(rvLbI + 1);
+  });
+  document.addEventListener("keydown", function (e) {
+    if (document.getElementById("rvLb").hidden) return;
+    if (e.key === "Escape") rvLbClose(); else if (e.key === "ArrowLeft") rvLbShow(rvLbI - 1); else if (e.key === "ArrowRight") rvLbShow(rvLbI + 1);
+  });
+
+  // ---- clicks in the review ----
+  function rvSaveState() { save(); renderReview(); }
+  function rvParseBoxes(txt) {
+    return String(txt || "").split("\n").map(function (l) {
+      var m = l.split(","); if (m.length < 4) return null;
+      var n = m.slice(0, 4).map(function (x) { return Math.round(parseFloat(x)); }); if (n.some(isNaN)) return null;
+      return n.concat([m.slice(4).join(",").trim()]);
+    }).filter(Boolean);
+  }
+  document.getElementById("reviewApp").addEventListener("click", function (e) {
+    var t, r = rv(), v = rvVersion(), sec = rvSection();
+    if ((t = e.target.closest("[data-rvsec]"))) { ui.rvSec = t.getAttribute("data-rvsec"); ui.rvEdit = null; ui.rvShotEdit = null; renderReview(); return; }
+    if ((t = e.target.closest("[data-rvv]"))) { ui.rvV = t.getAttribute("data-rvv"); ui.rvEdit = null; renderReview(); return; }
+    if ((t = e.target.closest("[data-rvf]"))) { ui.rvFilter = t.getAttribute("data-rvf") === "all" ? null : t.getAttribute("data-rvf"); renderReview(); return; }
+    if ((t = e.target.closest("[data-rvadd]"))) { ui.rvAddOp = t.getAttribute("data-rvadd"); document.getElementById("rvFile").click(); return; }
+    if ((t = e.target.closest("[data-rvshot]"))) { ui.rvShotEdit = t.getAttribute("data-rvshot"); renderReview(); return; }
+    if (e.target.id === "rvTitle") { ui.rvTitleEdit = true; renderReview(); return; }
+    if ((t = e.target.closest(".frame[data-lbp]"))) {
+      var p = rvPointsFor(v, sec)[+t.getAttribute("data-lbp")]; if (p) rvLbOpen(p.shots, +t.getAttribute("data-lbi")); return;
+    }
+    if ((t = e.target.closest(".frame[data-lbs]"))) {
+      var scope = t.getAttribute("data-lbscope"), list = (scope === "uns" ? rvShotsFor(v, null) : rvShotsFor(v, sec)).filter(function (s) { return !ui.rvFilter || s.op === ui.rvFilter; });
+      var cas = rvCasinos(); list.sort(function (a, b) { return cas.indexOf(findOp(a.op)) - cas.indexOf(findOp(b.op)); });
+      rvLbOpen(list.map(function (s) { return { shot: s.id, boxes: [], kind: "" }; }), Math.max(0, list.map(function (s) { return s.id; }).indexOf(t.getAttribute("data-lbs")))); return;
+    }
+    t = e.target.closest("[data-rvact]"); if (!t) return;
+    var a = t.getAttribute("data-rvact"), pi = +t.getAttribute("data-pi"), pts = rvPointsFor(v, sec);
+    if (a === "import") { rvImportPick(); return; }
+    if (a === "export") { ui.rvExportOpen = !ui.rvExportOpen; renderReview(); return; }
+    if (a === "exportclose") { ui.rvExportOpen = false; renderReview(); return; }
+    if (a === "exporthtml") { rvExportHtml(); return; }
+    if (a === "exportzip") { rvExportZip(); return; }
+    if (a === "editcards") { ui.rvEdit = "cards"; renderReview(); return; }
+    if (a === "canceledit") { ui.rvEdit = null; ui.rvShotEdit = null; renderReview(); return; }
+    if (a === "savecards") {
+      commit(); var c = rvCardsFor(v, sec);
+      document.querySelectorAll("[data-rvcard]").forEach(function (ta) { c[ta.getAttribute("data-rvcard")] = ta.value.split("\n").map(function (x) { return x.trim(); }).filter(Boolean); });
+      ui.rvEdit = null; rvSaveState(); return;
+    }
+    if (a === "addpoint") { commit(); pts.push({ title: "New point", text: "", shots: [] }); ui.rvEdit = "p" + (pts.length - 1); rvSaveState(); return; }
+    if (a === "editpoint") { ui.rvEdit = "p" + pi; renderReview(); return; }
+    var box = t.closest("[data-pedit]");
+    if (box) {
+      var p2 = pts[+box.getAttribute("data-pedit")];
+      // keep what's typed while moving screenshots around
+      var keepTyped = function () {
+        p2.title = box.querySelector('[data-pe="title"]').value.trim(); p2.text = box.querySelector('[data-pe="text"]').value.trim();
+        box.querySelectorAll("[data-pk]").forEach(function (s2) { var x = p2.shots[+s2.getAttribute("data-pk")]; if (x) x.kind = s2.value; });
+        box.querySelectorAll("[data-pb]").forEach(function (ta) { var x = p2.shots[+ta.getAttribute("data-pb")]; if (x) x.boxes = rvParseBoxes(ta.value); });
+      };
+      var si = +t.getAttribute("data-si");
+      if (a === "shotup" || a === "shotdown" || a === "shotrm") {
+        commit(); keepTyped();
+        if (a === "shotrm") p2.shots.splice(si, 1);
+        else { var j = a === "shotup" ? si - 1 : si + 1; if (j >= 0 && j < p2.shots.length) { var tmp = p2.shots[si]; p2.shots[si] = p2.shots[j]; p2.shots[j] = tmp; } }
+        rvSaveState(); return;
+      }
+      if (a === "savepoint") { commit(); keepTyped(); if (!p2.title) p2.title = "Untitled point"; ui.rvEdit = null; rvSaveState(); return; }
+    }
+    if (a === "delpoint") { commit(); pts.splice(pi, 1); ui.rvEdit = null; rvSaveState(); return; }
+    if (a === "pointup" || a === "pointdown") { var k = a === "pointup" ? pi - 1 : pi + 1; if (k < 0 || k >= pts.length) return; commit(); var tp = pts[pi]; pts[pi] = pts[k]; pts[k] = tp; ui.rvEdit = "p" + k; rvSaveState(); return; }
+    if (a === "saveshot" || a === "delshot") {
+      var s = rvShot(t.getAttribute("data-id")); if (!s) return;
+      commit();
+      if (a === "delshot") {
+        r.shots = r.shots.filter(function (x) { return x !== s; });
+        Object.keys(r.comps).forEach(function (vk) { Object.keys(r.comps[vk]).forEach(function (sk) { r.comps[vk][sk].forEach(function (pp) { pp.shots = (pp.shots || []).filter(function (x) { return x.shot !== s.id; }); }); }); });
+      } else {
+        var fig = t.closest("figure");
+        s.title = fig.querySelector('[data-se="title"]').value.trim(); s.op = fig.querySelector('[data-se="op"]').value;
+        s.sections = Array.prototype.filter.call(fig.querySelectorAll("[data-se-sec]"), function (cb) { return cb.checked; }).map(function (cb) { return cb.getAttribute("data-se-sec"); });
+      }
+      ui.rvShotEdit = null; rvSaveState(); return;
+    }
+  });
+  document.getElementById("reviewApp").addEventListener("change", function (e) {
+    var t = e.target;
+    if (t.getAttribute("data-pe") === "add" && t.value) {
+      var box = t.closest("[data-pedit]"), p = rvPointsFor(rvVersion(), rvSection())[+box.getAttribute("data-pedit")], s = rvShot(t.value), subj = rvSubject();
+      commit(); p.title = box.querySelector('[data-pe="title"]').value.trim(); p.text = box.querySelector('[data-pe="text"]').value.trim();
+      var isS = s && subj && s.op === subj.id; p.shots.push({ shot: t.value, kind: isS ? "works" : "good", boxes: [] });
+      if (isS && p.shots.length > 1) p.shots.unshift(p.shots.pop()); // the subject's screenshot goes first
+      rvSaveState();
+    }
+  });
+  document.getElementById("reviewApp").addEventListener("keydown", function (e) {
+    if (e.target.id === "rvTitleInp") {
+      if (e.key === "Enter") { commit(); rv().title = e.target.value.trim(); ui.rvTitleEdit = false; rvSaveState(); }
+      if (e.key === "Escape") { ui.rvTitleEdit = false; renderReview(); }
+    }
+    var f = e.target.closest && e.target.closest(".frame[data-lbp], .frame[data-lbs]");
+    if (f && (e.key === "Enter" || e.key === " ")) { e.preventDefault(); f.click(); }
+  });
+  document.getElementById("reviewApp").addEventListener("focusout", function (e) {
+    if (e.target.id === "rvTitleInp" && ui.rvTitleEdit) { commit(); rv().title = e.target.value.trim(); ui.rvTitleEdit = false; rvSaveState(); }
+  });
+  document.getElementById("reviewApp").addEventListener("toggle", function (e) {
+    var d = e.target.getAttribute && e.target.getAttribute("data-rvdet");
+    if (d === "all") ui.rvAllOpen = e.target.open; if (d === "unsorted") ui.rvUnsortedOpen = e.target.open;
+  }, true);
+
+  // ---- screenshots in: storage ----
+  function rvImgSize(blob) { return new Promise(function (res) { var u = URL.createObjectURL(blob), im = new Image(); im.onload = function () { res({ w: im.naturalWidth, h: im.naturalHeight }); URL.revokeObjectURL(u); }; im.onerror = function () { res({ w: 0, h: 0 }); URL.revokeObjectURL(u); }; im.src = u; }); }
+  async function rvStore(blob, folder) {
+    // kept as uploaded, so highlight boxes stay in the file's own pixels
+    var type = blob.type || "image/jpeg", ext = /png/.test(type) ? ".png" : /webp/.test(type) ? ".webp" : ".jpg";
+    if (!(cloud && curWs)) return { data: await blobToB64(blob) };
+    var path = curWs.id + "/review/" + folder + "/" + uid() + uid() + ext;
+    var r = await sb.storage.from(BUCKET).upload(path, blob, { contentType: type, upsert: false });
+    if (r.error) throw new Error("Couldn't store a screenshot: " + r.error.message);
+    return { path: path };
+  }
+  function rvBusy(title, done, total, text) { ui.rvBusy = title ? { title: title, done: done, total: total, text: text } : null; renderReview(); }
+
+  // ---- screenshots you add yourself (images or a zip), for one casino ----
+  document.getElementById("rvFile").addEventListener("change", async function (e) {
+    var files = Array.prototype.slice.call(e.target.files || []), op = findOp(ui.rvAddOp); e.target.value = "";
+    if (!files.length || !op) return;
+    var v = rvVersion(), blobs = [];
+    try {
+      for (var i = 0; i < files.length; i++) {
+        var f = files[i];
+        if (/\.zip$/i.test(f.name) || /zip/.test(f.type)) {
+          if (!window.JSZip) throw new Error("The zip reader didn't load. Check your connection and try again.");
+          var z = await JSZip.loadAsync(f);
+          var inner = Object.keys(z.files).filter(function (n) { return !z.files[n].dir && /\.(png|jpe?g|webp)$/i.test(n) && !/(^|\/)(__MACOSX|\.)/.test(n); }).sort();
+          for (var j = 0; j < inner.length; j++) { var b = await z.file(inner[j]).async("blob"); blobs.push({ name: inner[j].split("/").pop(), blob: new Blob([b], { type: /\.png$/i.test(inner[j]) ? "image/png" : /\.webp$/i.test(inner[j]) ? "image/webp" : "image/jpeg" }) }); }
+        } else if (/^image\//.test(f.type)) blobs.push({ name: f.name, blob: f });
+      }
+      // Mac copies ("… 2.png") and the same picture as PNG and JPEG are left out
+      var seenNames = {};
+      blobs = blobs.filter(function (b) { var k = b.name.replace(/\.(png|jpe?g|webp)$/i, "").replace(/ \d+$/, "").toLowerCase(); if (seenNames[k]) return false; seenNames[k] = 1; return true; });
+      var added = 0, r = rv();
+      for (var k = 0; k < blobs.length; k++) {
+        rvBusy("Adding screenshots for " + op.name, k, blobs.length, "Storing " + (k + 1) + " of " + blobs.length);
+        var size = await rvImgSize(blobs[k].blob); if (!size.w) continue;
+        var stored = await rvStore(blobs[k].blob, v.id + "/" + op.id);
+        r.shots.push(Object.assign({ id: uid(), v: v.id, op: op.id, file: blobs[k].name, title: blobs[k].name.replace(/\.[a-z]+$/i, ""), sections: [], src: "upload" }, size, stored)); added++;
+      }
+      rvBusy(null); save(); renderReview();
+      toast(plural(added, "screenshot", "screenshots") + " added for " + op.name + ". They're under “Not sorted into a section yet”: open one with Edit to choose its section.");
+    } catch (err) { rvBusy(null); toast(err.message); }
+  });
+
+  // ---- import a report built with the hand-off (config.json, cards.json, comparisons.json, screenshots.json, screenshots/) ----
+  function rvImportPick() {
+    var inp = document.createElement("input"); inp.type = "file"; inp.accept = ".zip,application/zip";
+    inp.onchange = function () { if (inp.files[0]) rvImportZip(inp.files[0]); };
+    inp.click();
+  }
+  async function rvImportZip(file) {
+    if (!window.JSZip) { toast("The zip reader didn't load. Check your connection and try again."); return; }
+    try {
+      rvBusy("Importing the report", 0, 1, "Reading the zip…");
+      var zip = await JSZip.loadAsync(file);
+      var names = Object.keys(zip.files);
+      var cfgName = names.filter(function (n) { return /(^|\/)config\.json$/.test(n) && names.some(function (m) { return m.indexOf(n.replace(/config\.json$/, "")) === 0 && /cards\.json$/.test(m); }); })[0];
+      if (!cfgName) throw new Error("No report found in that zip (it needs config.json with cards.json, comparisons.json and screenshots.json).");
+      var root = cfgName.replace(/config\.json$/, ""), cfg = JSON.parse(await zip.file(cfgName).async("string"));
+      // casinos become operators (matched by name); the subject becomes your own website if none is set
+      var opFor = {};
+      (cfg.casinos || []).forEach(function (c) {
+        var op = state.operators.filter(function (o) { return squash(o.name) === squash(c.name) || squash(o.name) === squash(c.id); })[0];
+        if (!op) { op = { id: uid(), name: c.name, website: "", market: "", notes: "", addedAt: new Date().toISOString() }; state.operators.push(op); }
+        if (c.color && !op.color) op.color = c.color;
+        opFor[c.id] = op;
+      });
+      var subj = opFor[cfg.subject];
+      if (subj && !ownOp()) setOwn(subj, true);
+      var r = rv(); commit();
+      r.title = cfg.title || r.title; if (subj) r.subject = subj.id;
+      if (Array.isArray(cfg.sections) && cfg.sections.length) {
+        cfg.sections.forEach(function (s) { if (!r.sections.some(function (x) { return x.id === s.id; })) r.sections.push({ id: s.id, name: s.name }); });
+        r.sections.sort(function (a, b) { var ia = cfg.sections.map(function (x) { return x.id; }).indexOf(a.id), ib = cfg.sections.map(function (x) { return x.id; }).indexOf(b.id); return (ia < 0 ? 99 : ia) - (ib < 0 ? 99 : ib); });
+      }
+      var todo = [];
+      for (var vi = 0; vi < (cfg.versions || []).length; vi++) {
+        var ver = cfg.versions[vi], base = root + (ver.folder || ver.id) + "/";
+        var read = async function (n) { var f = zip.file(base + n); return f ? JSON.parse(await f.async("string")) : {}; };
+        var shots = await read("screenshots.json"), cards = await read("cards.json"), comps = await read("comparisons.json");
+        var vv = r.versions.filter(function (x) { return x.id === ver.id; })[0];
+        if (!vv) { vv = { id: ver.id }; r.versions.push(vv); }
+        vv.label = ver.label || ver.id; vv.device = ver.device || (ver.id === "mobile" ? "mobile" : "desktop"); vv.footer = ver.footer || "";
+        // replace this version's content with the imported one
+        r.shots = r.shots.filter(function (s) { return s.v !== ver.id; });
+        var idOf = {};
+        Object.keys(shots).forEach(function (cid) {
+          (shots[cid] || []).forEach(function (s) {
+            var op = opFor[cid]; if (!op) return;
+            var rec = { id: uid(), v: ver.id, op: op.id, file: s.file, title: s.title || "", sections: s.sections || [], src: "import" };
+            idOf[cid + "/" + s.file] = rec.id; r.shots.push(rec);
+            todo.push({ rec: rec, zipPath: base + "screenshots/" + cid + "/" + s.file });
+          });
+        });
+        r.cards[ver.id] = cards;
+        r.comps[ver.id] = {};
+        Object.keys(comps).forEach(function (sk) {
+          r.comps[ver.id][sk] = (comps[sk] || []).map(function (p) {
+            return { title: p.title || "", text: p.text || "", shots: (p.shots || []).map(function (sh) { return { shot: idOf[sh.casino + "/" + sh.file] || "", kind: sh.kind || "good", boxes: sh.boxes || [] }; }).filter(function (x) { return x.shot; }) };
+          });
+        });
+      }
+      r.versions = r.versions.filter(function (x) { return r.shots.some(function (s) { return s.v === x.id; }) || (cfg.versions || []).some(function (c) { return c.id === x.id; }); });
+      if (!r.versions.length) r.versions = [{ id: "desktop", label: "Desktop", device: "desktop", footer: "" }];
+      ui.rvV = r.versions[0].id; ui.rvSec = r.sections[0].id;
+      save();
+      // the screenshots go to storage one by one
+      for (var i = 0; i < todo.length; i++) {
+        rvBusy("Importing the report", i, todo.length, "Storing screenshot " + (i + 1) + " of " + todo.length);
+        var f = zip.file(todo[i].zipPath); if (!f) continue;
+        var blob = await f.async("blob"); blob = new Blob([blob], { type: /\.png$/i.test(todo[i].zipPath) ? "image/png" : "image/jpeg" });
+        var size = await rvImgSize(blob), stored = await rvStore(blob, todo[i].rec.v + "/" + todo[i].rec.op);
+        Object.assign(todo[i].rec, size, stored);
+        if (i % 10 === 9) save();
+      }
+      rvBusy(null); save(); renderCompetitors();
+      toast("Imported " + (cfg.title || "the report") + ": " + plural(todo.length, "screenshot", "screenshots") + ".");
+    } catch (err) { rvBusy(null); toast(err.message || "Couldn't import that zip."); }
+  }
+
+  // ---- export: the report page (same as the template) and the data folder ----
+  function rvCasinoId(op) { return String(op.name).replace(/[^A-Za-z0-9]+/g, "_").replace(/^_|_$/g, "") || "casino"; }
+  function rvData() {
+    var r = rv(), subj = rvSubject(), cas = rvCasinos(), cid = {};
+    cas.forEach(function (o) { cid[o.id] = rvCasinoId(o); });
+    var files = {}, versions = r.versions.map(function (v) {
+      var shots = {}, n = {};
+      r.shots.filter(function (s) { return s.v === v.id && cid[s.op]; }).forEach(function (s) {
+        var c = cid[s.op]; n[c] = (n[c] || 0) + 1;
+        var ext = s.path && /\.png$/i.test(s.path) ? ".png" : ".jpg", file = String(n[c]).padStart(2, "0") + ext;
+        files[s.id] = { c: c, file: file, v: v.id };
+        (shots[c] = shots[c] || []).push({ file: file, sections: s.sections || [], title: s.title || "" });
+      });
+      var comps = {};
+      Object.keys(r.comps[v.id] || {}).forEach(function (sk) {
+        comps[sk] = (r.comps[v.id][sk] || []).map(function (p) {
+          return { title: p.title, text: p.text, shots: (p.shots || []).filter(function (sh) { return files[sh.shot]; }).map(function (sh) { return { casino: files[sh.shot].c, file: files[sh.shot].file, kind: sh.kind, boxes: sh.boxes || [] }; }) };
+        });
+      });
+      return { v: v, shots: shots, cards: r.cards[v.id] || {}, comps: comps };
+    });
+    var config = { title: rvTitle(), subject: subj ? cid[subj.id] : "", casinos: cas.map(function (o) { return { id: cid[o.id], name: o.name, color: rvColor(o) }; }),
+      sections: r.sections.map(function (s) { return { id: s.id, name: s.name }; }),
+      versions: r.versions.map(function (v) { return { id: v.id, label: v.label, device: v.device, folder: v.id, footer: v.footer || "" }; }) };
+    return { config: config, versions: versions, files: files };
+  }
+  async function rvBlob(s) {
+    if (s.path) { var d = await sb.storage.from(BUCKET).download(s.path); if (d.error) throw new Error("Couldn't load a screenshot: " + d.error.message); return d.data; }
+    return b64ToBlob(s.data || "", "image/jpeg");
+  }
+  function rvDownload(name, blob) { var a = document.createElement("a"); a.href = URL.createObjectURL(blob); a.download = name; document.body.appendChild(a); a.click(); setTimeout(function () { URL.revokeObjectURL(a.href); a.remove(); }, 2000); }
+  async function rvExportZip() {
+    if (!window.JSZip) { toast("The zip writer didn't load. Check your connection and try again."); return; }
+    try {
+      var d = rvData(), zip = new JSZip(), root = zip.folder("project"), r = rv(), ids = Object.keys(d.files);
+      root.file("config.json", JSON.stringify(d.config, null, 2));
+      d.versions.forEach(function (x) { var f = root.folder(x.v.id); f.file("screenshots.json", JSON.stringify(x.shots, null, 2)); f.file("cards.json", JSON.stringify(x.cards, null, 2)); f.file("comparisons.json", JSON.stringify(x.comps, null, 2)); });
+      for (var i = 0; i < ids.length; i++) {
+        rvBusy("Exporting the data folder", i, ids.length, "Adding screenshot " + (i + 1) + " of " + ids.length);
+        var fi = d.files[ids[i]]; root.folder(fi.v).folder("screenshots").folder(fi.c).file(fi.file, await rvBlob(rvShot(ids[i])));
+      }
+      rvBusy("Exporting the data folder", ids.length, ids.length, "Packing…");
+      rvDownload(rvCasinoId({ name: rvTitle() }) + ".zip", await zip.generateAsync({ type: "blob" }));
+      rvBusy(null);
+    } catch (err) { rvBusy(null); toast(err.message); }
+  }
+  async function rvExportHtml() {
+    try {
+      var d = rvData(), r = rv(), ids = Object.keys(d.files), IMG = {}, SZ = {};
+      var css = await (await fetch("report/style.css")).text(), js = await (await fetch("report/app.js")).text();
+      for (var i = 0; i < ids.length; i++) {
+        rvBusy("Exporting the report page", i, ids.length, "Adding screenshot " + (i + 1) + " of " + ids.length);
+        var s = rvShot(ids[i]), fi = d.files[ids[i]], key = fi.v + "/" + fi.c + "/" + fi.file, blob = await rvBlob(s);
+        IMG[key] = "data:" + (blob.type || "image/jpeg") + ";base64," + await blobToB64(blob); SZ[key] = [s.w || 1, s.h || 1];
+      }
+      var E = esc, NAMES = {}, COLORS = {};
+      d.config.casinos.forEach(function (c) { NAMES[c.id] = c.name; COLORS[c.id] = c.color; });
+      var SUBJ = d.config.subject, icon = function (k) { return rvIcon(k); };
+      var chip = function (c) { return '<span class="cchip"><i style="background:' + COLORS[c] + '"></i>' + E(NAMES[c]) + "</span>"; };
+      var KC = { works: "k-works", gap: "k-gap", check: "k-check", mixed: "k-check", good: "k-good", avoid: "k-gap", note: "k-check" };
+      var SL = { works: ": works", gap: ": potential gap", check: ": to check", mixed: ": mixed", good: "" }, CL = RV_COMP;
+      var titleOf = function (x, c, f) { var s = (x.shots[c] || []).filter(function (y) { return y.file === f; })[0]; return s ? s.title : ""; };
+      var annotated = function (x, sh) {
+        var key = x.v.id + "/" + sh.casino + "/" + sh.file, W = SZ[key][0], H = SZ[key][1], cls = KC[sh.kind] || "k-good", t = titleOf(x, sh.casino, sh.file);
+        var boxes = (sh.boxes || []).map(function (b, i) { return '<span class="bx" style="left:' + (b[0] / W * 100).toFixed(2) + "%;top:" + (b[1] / H * 100).toFixed(2) + "%;width:" + (b[2] / W * 100).toFixed(2) + "%;height:" + (b[3] / H * 100).toFixed(2) + '%"><i>' + (i + 1) + "</i></span>"; }).join("");
+        var legend = (sh.boxes || []).map(function (b, i) { return "<li><i>" + (i + 1) + "</i>" + E(b[4]) + "</li>"; }).join("");
+        var label = sh.casino === SUBJ ? NAMES[sh.casino] + (SL[sh.kind] || "") : (CL[sh.kind] || "Example");
+        return '<figure class="vshot ' + cls + '"><div class="vh">' + chip(sh.casino) + '<span class="ktag ' + cls + '">' + E(label) + '</span></div><div class="frame" tabindex="0" data-casino="' + E(NAMES[sh.casino]) + '" data-title="' + E(t) + '"><img loading="lazy" data-img="' + key + '" alt="' + E(NAMES[sh.casino]) + ": " + E(t) + '">' + boxes + '<span class="zoom">⤢</span></div><ol class="lg">' + legend + "</ol></figure>";
+      };
+      var bullets = function (items, cls) { return (items && items.length) ? '<ul class="ml ' + cls + '">' + items.map(function (t) { return "<li>" + E(t) + "</li>"; }).join("") + "</ul>" : '<p class="none">Not offered</p>'; };
+      var section = function (x, k) {
+        var c = x.cards[k] || { works: [], gaps: [], ideas: [] }, mode = x.v.device === "mobile" ? "m" : "d";
+        var comps = (x.comps[k] || []).map(function (p, n) { return '<div class="card vpoint"><div class="vp-h"><span class="vp-n">' + (n + 1) + "</span><div><h3>" + E(p.title) + '</h3><p class="muted">' + E(p.text) + '</p></div></div><div class="vgrid c' + p.shots.length + '">' + p.shots.map(function (sh) { return annotated(x, sh); }).join("") + "</div></div>"; }).join("");
+        var present = [], items = [];
+        d.config.casinos.forEach(function (cc) {
+          var imgs = (x.shots[cc.id] || []).filter(function (s) { return (s.sections || []).indexOf(k) >= 0; });
+          if (imgs.length) present.push(cc.id);
+          imgs.forEach(function (s) { var key = x.v.id + "/" + cc.id + "/" + s.file; items.push('<figure class="shot" tabindex="0" data-c="' + cc.id + '" data-casino="' + E(cc.name) + '" data-title="' + E(s.title) + '"><img loading="lazy" data-img="' + key + '" alt="' + E(cc.name) + ": " + E(s.title) + '"><figcaption>' + chip(cc.id) + "<b>" + E(s.title) + "</b></figcaption></figure>"); });
+        });
+        var pills = '<button class="fp on" data-f="all">All</button>' + present.map(function (cc) { return '<button class="fp" data-f="' + cc + '"><i style="background:' + COLORS[cc] + '"></i>' + E(NAMES[cc]) + "</button>"; }).join("");
+        return '<section class="tab mode-' + mode + '" data-mode="' + x.v.id + '" data-tab="' + k + '" hidden><div class="tri"><div class="card q good"><h3><span class="qi">✓</span>Works</h3>' + bullets(c.works, "g") + '</div><div class="card q bad"><h3><span class="qi">!</span>Potential gaps</h3>' + bullets(c.gaps, "b") + '</div><div class="card q do"><h3><span class="qi">→</span>Ideas to consider</h3><ol class="ml dn">' + (c.ideas || []).map(function (t) { return "<li>" + E(t) + "</li>"; }).join("") + '</ol></div></div><h2 class="vtitle">How it compares</h2>' + comps + '<details class="card more allshots"><summary>All screenshots for this section</summary><div class="fpills" style="margin-top:16px">' + pills + '</div><div class="gal">' + items.join("") + "</div></details></section>";
+      };
+      var tabbar = d.config.sections.map(function (s) { return '<button class="tb-btn" data-go="' + s.id + '">' + icon(s.id) + "<span>" + E(s.name) + "</span></button>"; }).join("");
+      var sw = d.versions.length > 1 ? '<div class="modes" role="tablist" aria-label="Version">' + d.versions.map(function (x) { return '<button class="md-btn" data-mode="' + x.v.id + '">' + icon(x.v.device) + "<span>" + E(x.v.label) + "</span></button>"; }).join("") + "</div>" : "";
+      var body = d.versions.map(function (x) { return d.config.sections.map(function (s) { return section(x, s.id); }).join(""); }).join("");
+      var footers = d.versions.map(function (x) { return '<span class="vfoot" data-mode="' + x.v.id + '">' + E(x.v.footer || "") + "</span>"; }).join("");
+      var doc = '<!doctype html>\n<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>' + E(d.config.title) + '</title><link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Nunito:wght@500;600;700;800;900&display=swap" rel="stylesheet"><style>' + css + '</style></head><body><div class="page"><header class="banner"><div class="logo">' + icon("tournaments") + '</div><div class="bt"><h1>' + E(d.config.title) + "</h1></div>" + sw + '</header><nav class="tabbar">' + tabbar + "</nav>" + body + '<p class="foot">' + footers + '</p></div><div id="lb" class="lb" hidden><button class="lb-x" aria-label="Close">×</button><button class="lb-prev" aria-label="Previous">‹</button><button class="lb-next" aria-label="Next">›</button><div class="lb-body"><div class="lb-frame"><img alt=""></div><div class="lb-cap"><div><span class="lb-c"></span><b></b></div><p></p></div></div></div><script>var IMG=' + JSON.stringify(IMG).replace(/</g, "\\u003c") + ";document.querySelectorAll('img[data-img]').forEach(function(i){i.src=IMG[i.dataset.img]});<\/script><script>var FIRST_MODE=" + JSON.stringify(d.versions[0].v.id) + ", FIRST_TAB=" + JSON.stringify(d.config.sections[0].id) + ";<\/script><script>" + js + "<\/script></body></html>";
+      rvBusy(null);
+      rvDownload(rvCasinoId({ name: rvTitle() }) + ".html", new Blob([doc], { type: "text/html" }));
+    } catch (err) { rvBusy(null); toast(err.message || "Couldn't export the report."); }
+  }
 
   // ---------- competitor emails ----------
   var INBOX_STORE = "ccp2_inbox";
@@ -2725,6 +3375,7 @@ footer { color: var(--muted); font-size: 12px; margin-top: 24px; text-align: cen
     d.research = Array.isArray(d.research) ? d.research : [];
     d.research.forEach(function (x) { if (x.status === "reading") { x.status = "error"; x.error = "The review was interrupted. Try again."; } });
     d.trackers = Array.isArray(d.trackers) ? d.trackers : [];
+    d.review = d.review && typeof d.review === "object" ? d.review : {};
     d.emailOwner = d.emailOwner && typeof d.emailOwner === "object" ? d.emailOwner : {};
     d.notCasino = d.notCasino && typeof d.notCasino === "object" ? d.notCasino : {};
     d.emails = [];
@@ -2853,7 +3504,8 @@ footer { color: var(--muted); font-size: 12px; margin-top: 24px; text-align: cen
     var wsId = curWs.id;
     var payload = { cycles: state.cycles, activeId: state.activeId, competitors: state.competitors, operators: state.operators, research: state.research,
       trackers: state.trackers.map(function (t) { var c = Object.assign({}, t); delete c.summarizing; delete c.sumError; return c; }),
-      emailOwner: state.emailOwner || {}, notCasino: state.notCasino || {}, autoSortOff: !!state.autoSortOff };
+      emailOwner: state.emailOwner || {}, notCasino: state.notCasino || {}, autoSortOff: !!state.autoSortOff,
+      review: state.review ? JSON.parse(JSON.stringify(state.review, function (k, v) { return k === "data" ? undefined : v; })) : {} };
     var r = await sb.rpc("save_state", { ws: wsId, new_data: payload, expected_version: wsVersion });
     saving = false;
     if (!curWs || curWs.id !== wsId) return;
