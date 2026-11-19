@@ -399,6 +399,11 @@ textarea.inp { resize: vertical; min-height: 70px; }
 .unas { display: flex; align-items: center; gap: 8px; font-size: 12px; padding: 6px 0; border-top: 1px solid var(--line); }
 .unas span { flex: 1; min-width: 0; overflow-wrap: anywhere; color: var(--muted); }
 .unas b { color: var(--ink); font-weight: 500; }
+.unas { flex-wrap: wrap; }
+.unas span { flex: 1 1 100%; }
+.unas .addsel { width: auto; padding: 6px 8px; font-size: 12px; }
+.trkedit { align-items: flex-start; }
+.trkedit .inp { margin-top: 6px; }
 .ecard { background: var(--surface); border-radius: 24px; box-shadow: var(--shadow); padding: 18px; display: flex; flex-direction: column; gap: 14px; min-width: 0; }
 .ehead { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; }
 .ehead .avatar { width: 40px; height: 40px; font-size: 16px; }
@@ -607,7 +612,7 @@ footer { color: var(--muted); font-size: 12px; margin-top: 24px; text-align: cen
           <div id="trkList" class="stack" style="gap:8px"></div>
           <form id="trkForm" class="stack" style="gap:10px">
             <label class="field"><span>Competitor name</span><input class="inp" id="tName" type="text" placeholder="LuckyNova" required></label>
-            <label class="field"><span>Match emails by</span><input class="inp" id="tMatch" type="text" placeholder="+tag or sender domain, e.g. luckynova" required></label>
+            <label class="field"><span>Match emails by (+tag, domain or name; commas for several)</span><input class="inp" id="tMatch" type="text" placeholder="vegasnova, vn-mail.com" required></label>
             <label class="field"><span>Registered on</span><input class="inp" id="tReg" type="date"></label>
             <button class="btn primary" type="submit">Follow competitor</button>
           </form>
@@ -2111,14 +2116,31 @@ footer { color: var(--muted); font-size: 12px; margin-top: 24px; text-align: cen
   function senderName(from) { var m = /^\s*"?([^"<]*?)"?\s*</.exec(from || ""); return (m && m[1].trim()) || (from || "").replace(/@.*/, ""); }
   function senderDomain(from) { var m = /@([A-Za-z0-9.-]+)/.exec(from || ""); if (!m) return ""; var parts = m[1].toLowerCase().split("."); return parts.slice(-2).join("."); }
   function plusTag(to) { var m = /\+([A-Za-z0-9._-]+)@/.exec(to || ""); return m ? m[1].toLowerCase() : ""; }
+  // A competitor can be matched by several terms ("vegasnova, vn-promo"): a +tag, a domain or a name.
+  // Spaces, dashes and dots don't count, so "Vegas Nova" <news@vegas-nova.io> matches "vegasnova".
+  function squash(x) { return String(x || "").toLowerCase().replace(/[^a-z0-9@+]/g, ""); }
+  function termsOf(t) { return String(t.match || "").split(",").map(function (k) { return k.trim().toLowerCase().replace(/^\+/, ""); }).filter(Boolean); }
   function trackerFor(em) {
-    var to = (em.to || "").toLowerCase(), from = (em.from || "").toLowerCase();
+    var to = (em.to || "").toLowerCase(), from = (em.from || "").toLowerCase(), fromS = squash(em.from);
     for (var i = 0; i < state.trackers.length; i++) {
-      var t = state.trackers[i], k = (t.match || "").toLowerCase().replace(/^\+/, "").trim(); if (!k) continue;
-      if (to.indexOf("+" + k + "@") >= 0 || from.indexOf(k) >= 0) return t;
+      var t = state.trackers[i], ks = termsOf(t);
+      for (var j = 0; j < ks.length; j++) {
+        var k = ks[j], kS = squash(k);
+        if (to.indexOf("+" + k + "@") >= 0 || from.indexOf(k) >= 0 || (kS.length >= 4 && fromS.indexOf(kS) >= 0)) return t;
+      }
     }
     return null;
   }
+  // The brand behind a sender: its name and domain without words like casino, news, vip or mail.
+  var NOISE = /^(the|casino|casinos|team|vip|support|bonus|bonuses|news|newsletter|info|mail|mailer|mailing|email|emails|promo|promos|promotions|offers?|official|noreply|no|reply|club|online|service|services|hello|hi|marketing|crm|notifications?|updates?|from|at|by|www|com|net|io|co|uk|de|eu|games?|rewards?)$/;
+  function brandWords(x) { return String(x || "").toLowerCase().replace(/[^a-z0-9]+/g, " ").trim().split(" ").filter(function (w) { return w && !NOISE.test(w) && !/^\d+$/.test(w); }).join(""); }
+  function brandOf(em) {
+    var name = brandWords(senderName(em.from));
+    var m = /@([a-z0-9.-]+)/i.exec(em.from || ""), labels = m ? m[1].toLowerCase().split(".") : [];
+    var dom = brandWords(labels.length > 1 ? labels[labels.length - 2] : labels[0] || "");
+    return { name: name, dom: dom };
+  }
+  function sameBrand(a, b) { if (!a || !b || a.length < 4 || b.length < 4) return false; return a === b || a.indexOf(b) === 0 || b.indexOf(a) === 0; }
   function localDate(iso) { var d = new Date(iso); return d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0"); }
   function dayOf(em, t) {
     if (!t.registered) return 0;
@@ -2218,29 +2240,51 @@ footer { color: var(--muted); font-size: 12px; margin-top: 24px; text-align: cen
     }
   }
 
+  // Senders no competitor matches yet. Addresses of the same brand (news@vegasnova.com, vip@vegasnova-mail.com,
+  // "Vegas Nova Casino") form one group, and a group that looks like a competitor you follow says so.
   function unassignedGroups() {
-    var groups = {};
+    var groups = [];
     state.emails.forEach(function (em) {
       if (trackerFor(em)) return;
-      var tag = plusTag(em.to), key = tag || senderDomain(em.from) || "unknown";
-      var g = groups[key] || (groups[key] = { key: key, byTag: !!tag, name: senderName(em.from), count: 0, first: em.date });
+      var tag = plusTag(em.to), b = brandOf(em), dom = senderDomain(em.from);
+      var g = groups.filter(function (x) { return tag ? x.tag === tag : !x.tag && (x.domains.indexOf(dom) >= 0 || sameBrand(x.brand, b.dom) || sameBrand(x.brand, b.name) || x.names.some(function (n) { return sameBrand(brandWords(n), b.name); })); })[0];
+      if (!g) { g = { tag: tag, brand: b.dom || b.name, domains: [], names: [], count: 0, first: em.date }; groups.push(g); }
+      if (dom && g.domains.indexOf(dom) < 0) g.domains.push(dom);
+      var nm = senderName(em.from); if (nm && g.names.indexOf(nm) < 0) g.names.push(nm);
       g.count++; if (em.date < g.first) g.first = em.date;
     });
-    return Object.keys(groups).map(function (k) { return groups[k]; }).sort(function (a, b) { return b.count - a.count; });
+    groups.forEach(function (g) {
+      // the match term: the +tag, or the brand (which also catches its other domains and names)
+      g.key = g.tag || (g.brand.length >= 4 ? g.brand : g.domains[0] || "unknown");
+      g.name = g.names[0] || g.key;
+      g.like = g.tag ? null : state.trackers.filter(function (t) { return sameBrand(brandWords(t.name), g.brand) || termsOf(t).some(function (k) { return sameBrand(brandWords(k), g.brand); }); })[0] || null;
+    });
+    return groups.sort(function (a, b) { return b.count - a.count; });
   }
+  function addTerm(t, term) { var ks = termsOf(t); term = String(term || "").trim().toLowerCase(); if (term && ks.indexOf(term) < 0) ks.push(term); t.match = ks.join(", "); }
 
+  var lastGroups = [];
   function renderEmails() {
     document.getElementById("trkCount").textContent = state.trackers.length;
     renderInboxPanel();
     var AVC = ["var(--accent-2)", "var(--coral-bg)", "var(--mint-bg)", "var(--sky-bg)", "var(--c-call)"];
     document.getElementById("trkList").innerHTML = state.trackers.map(function (t, i) {
-      return '<div class="trk"><span class="avatar" style="background:' + AVC[i % AVC.length] + '">' + esc(t.name.charAt(0).toUpperCase()) + '</span><div class="meta2"><b>' + esc(t.name) + "</b><small>matches “" + esc(t.match) + "” · " + emailsOf(t).length + " emails</small></div>" +
+      if (ui.trkEdit === t.id) return '<form class="trk trkedit" data-trkform="' + t.id + '"><div class="meta2"><b>' + esc(t.name) + '</b><input class="inp" name="m" type="text" value="' + esc(termsOf(t).join(", ")) + '" aria-label="Match emails by"><small>Separate several with commas: a +tag, a domain or a name, e.g. vegasnova, vn-promo.com</small><div class="row" style="margin-top:6px"><button class="btn primary" type="submit">Save</button><button class="btn" type="button" data-trkcancel="1">Cancel</button></div></div></form>';
+      return '<div class="trk"><span class="avatar" style="background:' + AVC[i % AVC.length] + '">' + esc(t.name.charAt(0).toUpperCase()) + '</span><div class="meta2"><b>' + esc(t.name) + "</b><small>matches " + termsOf(t).map(function (k) { return "“" + esc(k) + "”"; }).join(", ") + " · " + plural(emailsOf(t).length, "email", "emails") + "</small></div>" +
+        '<button class="iconbtn" type="button" data-trkedit="' + t.id + '" aria-label="Change how ' + esc(t.name) + ' is matched" title="Change addresses">' + svg('<path d="M4 14l9-9 2 2-9 9H4z"/>') + "</button>" +
         '<button class="iconbtn" type="button" data-trkdel="' + t.id + '" aria-label="Stop following ' + esc(t.name) + '" title="Stop following">' + svg('<path d="M5 5l10 10M15 5L5 15"/>') + "</button></div>";
-    }).join("") || '<p class="small">Add the competitors you registered with. Their emails are matched by the +tag in the address or by the sender\'s domain.</p>';
+    }).join("") || '<p class="small">Add the competitors you registered with. Their emails are matched by the +tag in the address, or the sender\'s domain or name. Similar senders of one brand are grouped.</p>';
     var un = unassignedGroups();
-    document.getElementById("unassigned").innerHTML = un.length ? '<p class="small" style="margin-bottom:4px"><b>Senders not matched yet</b></p>' + un.slice(0, 8).map(function (g) {
-      return '<div class="unas"><span><b>' + esc(g.byTag ? "+" + g.key : g.name) + "</b> · " + esc(g.byTag ? g.name : g.key) + " · " + g.count + '</span><button class="btn" type="button" data-follow="' + esc(g.key) + '" data-fname="' + esc(g.name) + '" data-ffirst="' + esc(g.first) + '">Follow</button></div>';
+    document.getElementById("unassigned").innerHTML = un.length ? '<p class="small" style="margin-bottom:4px"><b>Senders not matched yet</b></p>' + un.slice(0, 10).map(function (g, gi) {
+      var who = g.tag ? "+" + g.tag : g.name, from = g.domains.length ? g.domains.join(", ") : "";
+      var also = g.names.length > 1 ? " · also “" + g.names.slice(1, 3).join("”, “") + "”" : "";
+      var opts = state.trackers.map(function (t) { return '<option value="' + t.id + '">' + esc(t.name) + "</option>"; }).join("");
+      return '<div class="unas"><span><b>' + esc(who) + "</b> · " + esc(from) + esc(also) + " · " + plural(g.count, "email", "emails") + "</span>" +
+        (g.like ? '<button class="btn primary" type="button" data-addto="' + g.like.id + '" data-gi="' + gi + '">Add to ' + esc(g.like.name) + "</button>"
+          : '<button class="btn" type="button" data-follow="' + gi + '">Follow</button>') +
+        (opts ? '<select class="inp addsel" data-addsel="' + gi + '" aria-label="Add to a competitor"><option value="">Add to…</option>' + opts + "</select>" : "") + "</div>";
     }).join("") : "";
+    lastGroups = un;
 
     var wrap = document.getElementById("ecards");
     if (!state.trackers.length) {
@@ -2332,7 +2376,7 @@ footer { color: var(--muted); font-size: 12px; margin-top: 24px; text-align: cen
   });
   document.getElementById("trkForm").addEventListener("submit", function (e) {
     e.preventDefault();
-    var name = document.getElementById("tName").value.trim(), match = document.getElementById("tMatch").value.trim().replace(/^\+/, "");
+    var name = document.getElementById("tName").value.trim(), match = document.getElementById("tMatch").value.split(",").map(function (k) { return k.trim().replace(/^\+/, ""); }).filter(Boolean).join(", ");
     if (!name || !match) return;
     commit();
     var t = { id: uid(), name: name, match: match, registered: document.getElementById("tReg").value || "" };
@@ -2340,13 +2384,34 @@ footer { color: var(--muted); font-size: 12px; margin-top: 24px; text-align: cen
     if (!t.registered) { var f = emailsOf(t)[0]; if (f) t.registered = localDate(f.date); }
     e.target.reset(); save(); renderEmails(); toast("Following " + name);
   });
+  function addGroupTo(t, g) { commit(); addTerm(t, g.key); save(); renderEmails(); toast(plural(g.count, "email", "emails") + " from " + (g.tag ? "+" + g.tag : g.name) + " added to " + t.name); }
   document.getElementById("unassigned").addEventListener("click", function (e) {
-    var b = e.target.closest("[data-follow]"); if (!b) return;
-    commit();
-    state.trackers.push({ id: uid(), name: b.getAttribute("data-fname") || b.getAttribute("data-follow"), match: b.getAttribute("data-follow"), registered: localDate(b.getAttribute("data-ffirst")) });
-    save(); renderEmails();
+    var b = e.target.closest("[data-follow]");
+    if (b) {
+      var g = lastGroups[+b.getAttribute("data-follow")]; if (!g) return;
+      commit();
+      state.trackers.push({ id: uid(), name: g.tag ? g.tag : g.name, match: g.key, registered: localDate(g.first) });
+      save(); renderEmails(); return;
+    }
+    b = e.target.closest("[data-addto]");
+    if (b) { var t = state.trackers.filter(function (x) { return x.id === b.getAttribute("data-addto"); })[0], g2 = lastGroups[+b.getAttribute("data-gi")]; if (t && g2) addGroupTo(t, g2); }
+  });
+  document.getElementById("unassigned").addEventListener("change", function (e) {
+    var sel = e.target.closest("[data-addsel]"); if (!sel || !sel.value) return;
+    var t = state.trackers.filter(function (x) { return x.id === sel.value; })[0], g = lastGroups[+sel.getAttribute("data-addsel")];
+    if (t && g) addGroupTo(t, g);
+  });
+  document.getElementById("trkList").addEventListener("submit", function (e) {
+    var f = e.target.closest("[data-trkform]"); if (!f) return; e.preventDefault();
+    var t = state.trackers.filter(function (x) { return x.id === f.getAttribute("data-trkform"); })[0]; if (!t) return;
+    var v = f.querySelector('[name="m"]').value.split(",").map(function (k) { return k.trim().replace(/^\+/, ""); }).filter(Boolean).join(", ");
+    if (!v) { toast("Add at least one address, domain or name."); return; }
+    commit(); t.match = v; ui.trkEdit = null; save(); renderEmails();
   });
   document.getElementById("trkList").addEventListener("click", function (e) {
+    var ed = e.target.closest("[data-trkedit]");
+    if (ed) { ui.trkEdit = ed.getAttribute("data-trkedit"); renderEmails(); var inp = document.querySelector('[data-trkform] input'); if (inp) inp.focus(); return; }
+    if (e.target.closest("[data-trkcancel]")) { ui.trkEdit = null; renderEmails(); return; }
     var b = e.target.closest("[data-trkdel]"); if (!b) return;
     commit(); var id = b.getAttribute("data-trkdel"); state.trackers = state.trackers.filter(function (t) { return t.id !== id; });
     save(); renderEmails(); toast("Stopped following. Undo to bring it back.");
