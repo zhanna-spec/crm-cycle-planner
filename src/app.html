@@ -444,6 +444,7 @@ textarea.inp { resize: vertical; min-height: 70px; }
 .pbtn:hover { box-shadow: 0 4px 14px rgba(106,90,224,.16); }
 .pbtn:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 .pthumb { flex: none; width: 120px; height: 72px; border-radius: 10px; object-fit: cover; object-position: top; background: var(--sunk); }
+.pthumb.pnone { display: grid; place-items: center; text-align: center; font-size: 11px; font-weight: 600; color: var(--muted); padding: 6px; box-sizing: border-box; }
 .pgo { flex: none; font-size: 26px; color: var(--muted); }
 .pnav { align-items: center; flex-wrap: wrap; }
 .pmnav { font: inherit; text-align: left; border: 0; background: var(--sunk); color: var(--ink); border-radius: 12px; padding: 6px; display: flex; gap: 10px; align-items: center; cursor: pointer; width: 100%; }
@@ -1737,7 +1738,7 @@ footer { color: var(--muted); font-size: 12px; margin-top: 24px; text-align: cen
   }
   function bannerSrc(x) {
     if (x.banner) { if (signed[x.banner]) return signed[x.banner]; if (cloud) requestSign([x.banner]); return ""; }
-    return x.bannerThumb || offerPics(x).filter(Boolean)[0] || "";
+    return x.bannerThumb || ""; // never a terms or pop-up screenshot
   }
   function renderPromosPage() {
     var all = state.promos || [], ops = state.operators.filter(function (o) { return all.some(function (x) { return x.opId === o.id; }); });
@@ -1761,7 +1762,7 @@ footer { color: var(--muted); font-size: 12px; margin-top: 24px; text-align: cen
         return '<section class="pgroup"><h3 class="pgh">' + esc(promoKind(g.k)) + ' <span class="small">' + g.items.length + '</span></h3><div class="plist2">' + g.items.map(function (p) {
           var o = findOp(p.opId) || { name: "?" }, t = p.terms || {}, src = bannerSrc(p), open = ui.pmOpen === p.id;
           var chips = PROMO_TERMS.filter(function (k) { return t[k[0]]; }).slice(0, 5).map(function (k) { return '<span class="pchip"><small>' + k[1] + "</small>" + esc(t[k[0]]) + "</span>"; }).join("");
-          return '<div class="prow' + (open ? " open" : "") + '"><button type="button" class="pbtn" data-pmopen="' + p.id + '" aria-expanded="' + open + '">' + (src ? '<img class="pthumb" src="' + src + '" alt="">' : '<span class="pthumb"></span>') +
+          return '<div class="prow' + (open ? " open" : "") + '"><button type="button" class="pbtn" data-pmopen="' + p.id + '" aria-expanded="' + open + '">' + (src ? '<img class="pthumb" src="' + src + '" alt="">' : '<span class="pthumb pnone">' + esc(promoKind(p.kind)) + "</span>") +
             '<span class="pmain"><span><span class="kindpill">' + esc(promoKind(p.kind)) + "</span>" + (op ? "" : ' <span class="small">' + esc(o.name) + "</span>") + "</span><b>" + esc(p.title || "Promotion") + "</b>" +
             (p.status === "reading" ? "<small>Claude is reading this promotion…</small>" : p.status === "error" ? '<small style="color:var(--bad)">' + esc(p.error || "Couldn't read it.") + "</small>" : "<small>" + esc(p.summary || "") + "</small>") +
             (chips && !open ? '<span class="pchips">' + chips + "</span>" : "") + '</span><span class="pgo" aria-hidden="true">' + (open ? "⌃" : "⌄") + "</span></button>" +
@@ -1783,7 +1784,7 @@ footer { color: var(--muted); font-size: 12px; margin-top: 24px; text-align: cen
       (unsure.length ? '<p class="small" style="color:var(--warn)">Couldn\'t read for sure: ' + esc(unsure.join(", ")) + ". Check the screenshots, and use Edit to correct it.</p>" : "") +
       (x.text ? '<details class="ptextbox"><summary>Full text of the promotion and its terms</summary><pre class="ptext">' + esc(x.text) + "</pre></details>" : "") +
       (x.url ? '<p class="small">Found on <a href="' + esc(x.url) + '" target="_blank" rel="noopener">' + esc(x.url) + "</a></p>" : "") +
-      '</div><div class="pshots">' + (pics.length ? pics.map(function (src, k) { return '<button type="button" class="pshot" data-lb="' + x.id + '" data-lbi="' + k + '" aria-label="Enlarge screenshot ' + (k + 1) + '">' + (src ? '<img src="' + src + '" alt="">' : '<span class="loadimg"></span>') + "</button>"; }).join("") : '<p class="small">No screenshots.</p>') + "</div></div>";
+      '</div><div class="pshots">' + (x.kind === "terms" ? "" : pics.length ? pics.map(function (src, k) { return '<button type="button" class="pshot" data-lb="' + x.id + '" data-lbi="' + k + '" aria-label="Enlarge screenshot ' + (k + 1) + '">' + (src ? '<img src="' + src + '" alt="">' : '<span class="loadimg"></span>') + "</button>"; }).join("") : '<p class="small">No screenshots.</p>') + "</div></div>";
   }
   function promoEditor(x) {
     var t = x.terms || {};
@@ -1839,7 +1840,8 @@ footer { color: var(--muted); font-size: 12px; margin-top: 24px; text-align: cen
       x.status = "reading"; x.error = ""; x.at = new Date().toISOString(); x.url = pg.url; x.text = String(pg.text || "").slice(0, 30000); x.order = i;
       try {
         var images = [], imgs = [];
-        for (var k = 0; k < pg.shots.length && k < 8; k++) { var im = await loadSrc(pg.shots[k]); images.push({ media_type: "image/jpeg", data: scaled(im, 1568, 0, 0.85).split(",")[1] }); }
+        for (var k = 0; k < pg.shots.length && k < 8 && !isTerms; k++) { var im = await loadSrc(pg.shots[k]); images.push({ media_type: "image/jpeg", data: scaled(im, 1568, 0, 0.85).split(",")[1] }); }
+        if (isTerms) { x.images = []; delete x.thumbs; x.summary = "The general bonus terms most promotions refer to (text only)."; x.status = "done"; save(); continue; }
         var paths = await uploadPaths(images, "promos"); x.images = paths || []; if (!paths) x.thumbs = images.slice(0, 4).map(function (m) { return "data:image/jpeg;base64," + m.data; });
         // the promotion's own banner, as its card looks on the promotions page
         if (pg.banner) { var bp = await uploadPaths([{ media_type: "image/jpeg", data: String(pg.banner).split(",")[1] }], "promos"); if (bp && bp[0]) { x.banner = bp[0]; delete x.bannerThumb; } else x.bannerThumb = pg.banner; }

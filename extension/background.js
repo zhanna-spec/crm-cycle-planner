@@ -689,10 +689,13 @@ async function scanPage(tabId, windowId, url, opts) {
   return dedupe({ title: info.title, text: text.slice(0, 40000), shots, shotLabels: labels });
 }
 
-// Runs inside the scanned page: brings card i into view and says where it is, in screenshot pixels.
-function cardRect(i) {
+// Runs inside the scanned page: brings card i into view, waits for its pictures, and says where it is, in screenshot pixels.
+async function cardRect(i) {
   const c = document.querySelector('[data-ccp-card="' + i + '"]'); if (!c) return null;
   c.scrollIntoView({ block: "center" });
+  const imgs = Array.from(c.querySelectorAll("img"));
+  await Promise.all(imgs.map((im) => im.complete && im.naturalWidth ? 0 : new Promise((r) => { im.addEventListener("load", r, { once: true }); im.addEventListener("error", r, { once: true }); setTimeout(r, 2500); })));
+  await new Promise((r) => setTimeout(r, 300));
   const r = c.getBoundingClientRect(), dpr = window.devicePixelRatio || 1;
   const x = Math.max(0, r.left), y = Math.max(0, r.top), w = Math.min(window.innerWidth, r.right) - x, h = Math.min(window.innerHeight, r.bottom) - y;
   return w > 20 && h > 20 ? [x, y, w, h].map((v) => Math.round(v * dpr)) : null;

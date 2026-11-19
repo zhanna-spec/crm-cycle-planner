@@ -174,7 +174,7 @@ function blurField() {
 function renderPromos() {
   main.innerHTML = modeSwitch() + runSwitch() +
     '<p class="note">Finds the promotions page and opens every promotion one by one (up to 30): its pop-up or page, More info or the ⓘ icon, and the terms inside. The planner then writes up each one: what it does, how it works and its terms, as a list.</p>' +
-    '<label class="opt"><input type="checkbox" id="promoTerms"' + (prefs.promoTerms !== false ? " checked" : "") + '><span><b>Also read the general bonus terms</b><small>The page most promotions refer to.</small></span></label>' +
+    '<label class="opt"><input type="checkbox" id="promoTerms"' + (prefs.promoTerms === true ? " checked" : "") + '><span><b>Also read the general bonus terms</b><small>The page most promotions refer to. Its text is kept, not its screenshots.</small></span></label>' +
     blurField() +
     '<button class="primary" id="go">Scan promotions</button>' +
     '<p class="note">About 10 seconds per promotion. Don\'t switch tabs until the planner opens.</p>';
@@ -253,7 +253,7 @@ main.addEventListener("click", async (e) => {
   if (t.id === "go" && prefs.mode === "promos") {
     const home = base[0].url, P = DEFAULT_SECTIONS.find((x) => x.key === "promotions"), T = DEFAULT_SECTIONS.find((x) => x.key === "terms");
     const list = [{ type: "find", url: home, label: "Promotions", cat: "promotions", words: P.words, not: P.not || "", cards: true, cardLabel: "Offer", cardLimit: 30, details: false }];
-    if (prefs.promoTerms !== false) list.push({ type: "find", url: home, label: "Bonus terms", cat: "terms", words: T.words, not: T.not || "", details: true, help: true });
+    if (prefs.promoTerms === true) list.push({ type: "find", url: home, label: "Bonus terms", cat: "terms", words: T.words, not: T.not || "", details: true, help: true });
     const run = document.querySelector('input[name="run"]:checked').value;
     await chrome.runtime.sendMessage({ type: "scan", kind: "promos", tabId: target.id, pages: list, run, skip: [], blur: String(prefs.blur || "").split(",").map((w) => w.trim()).filter((w) => w.length >= 3), site: { host: target.info.host, title: target.info.title, url: target.info.url } });
     showProgress();
