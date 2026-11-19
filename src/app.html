@@ -440,7 +440,7 @@ textarea.inp { resize: vertical; min-height: 70px; }
 .chip.on i { background: rgba(255,255,255,.25); color: #FFFFFF; }
 .chip:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 .plist2 { display: flex; flex-direction: column; gap: 8px; margin-bottom: 18px; }
-.pbtn { font: inherit; text-align: left; border: 0; width: 100%; color: var(--ink); cursor: pointer; display: flex; gap: 14px; align-items: center; padding: 12px 14px; }
+.pbtn { font: inherit; text-align: left; border: 0; width: 100%; background: none; border-radius: 16px; color: var(--ink); cursor: pointer; display: flex; gap: 14px; align-items: center; padding: 12px 14px; }
 .pbtn:hover { box-shadow: 0 4px 14px rgba(106,90,224,.16); }
 .pbtn:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 .pthumb { flex: none; width: 120px; height: 72px; border-radius: 10px; object-fit: cover; object-position: top; background: var(--sunk); }
@@ -454,6 +454,11 @@ textarea.inp { resize: vertical; min-height: 70px; }
 .pmnav b { display: block; font-size: 13px; font-weight: 600; line-height: 1.3; }
 .pmnav small { color: var(--muted); font-size: 11px; }
 .pmnav:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.pgroup { display: flex; flex-direction: column; gap: 8px; margin-bottom: 6px; }
+.pgh { margin: 6px 2px 0; font-size: 16px; }
+.prow.open { box-shadow: 0 0 0 2px var(--accent-soft), var(--shadow-sm); }
+.pfull { padding: 4px 16px 16px; display: flex; flex-direction: column; gap: 14px; border-top: 1px solid var(--line); padding-top: 14px; --gr: #2FBF8A; --co: #F26D7D; }
+.pfull h3 { margin: 0 0 8px; font-size: 15px; }
 .pbanner { display: block; max-width: 320px; max-height: 240px; border-radius: 14px; object-fit: cover; margin-top: 6px; }
 .ppage { --gr: #2FBF8A; --co: #F26D7D; background: var(--surface); border-radius: 20px; padding: 20px 22px; box-shadow: var(--shadow-sm); display: flex; flex-direction: column; gap: 16px; }
 .ppage h2 { margin: 6px 0 0; font-size: 22px; }
@@ -787,10 +792,7 @@ footer { color: var(--muted); font-size: 12px; margin-top: 24px; text-align: cen
           <div id="pmCasinos" class="stack" style="gap:8px"></div>
           <p class="scanhint">To add promotions, choose <b>Promotions &amp; terms</b> in the <a href="https://github.com/zhanna-spec/crm-cycle-planner/blob/main/extension/README.md" target="_blank" rel="noopener">site scanner extension</a> and scan a casino.</p>
         </section>
-        <section class="panel stack" aria-labelledby="pmListH" id="pmListPanel">
-          <h2 class="ptitle" id="pmListH">Promotions</h2>
-          <div id="pmNav" class="stack" style="gap:6px"></div>
-        </section>
+        <div id="pmNav"></div>
       </div>
       <div class="stack" id="pmMain" style="gap:16px;min-width:0"></div>
     </div>
@@ -1745,32 +1747,34 @@ footer { color: var(--muted); font-size: 12px; margin-top: 24px; text-align: cen
     var main = document.getElementById("pmMain"), op = ui.pmOp ? findOp(ui.pmOp) : null;
     var kinds = []; promosOf(op).forEach(function (p) { if (p.kind !== "terms" && kinds.indexOf(p.kind) < 0) kinds.push(p.kind); });
     if (ui.pmKind && kinds.indexOf(ui.pmKind) < 0) ui.pmKind = null;
-    var list = promoList();
-    // the menu: one entry per promotion, with its banner
-    document.getElementById("pmListPanel").hidden = !list.length;
-    document.getElementById("pmNav").innerHTML = (kinds.length > 1 ? '<select class="inp" data-pmkind-sel aria-label="Type of promotion"><option value="">All types (' + promosOf(op).filter(function (p) { return p.kind !== "terms"; }).length + ")</option>" + kinds.map(function (k) { return '<option value="' + k + '"' + (ui.pmKind === k ? " selected" : "") + ">" + esc(promoKind(k)) + "</option>"; }).join("") + "</select>" : "") +
-      list.map(function (p) {
-        var o = findOp(p.opId) || { name: "?" }, src = bannerSrc(p);
-        return '<button type="button" class="pmnav' + (ui.pmOpen === p.id ? " on" : "") + '" data-pmopen="' + p.id + '">' + (src ? '<img src="' + src + '" alt="">' : '<span class="pmimg"></span>') + '<span class="meta2"><b>' + esc(p.title || "Promotion") + "</b><small>" + esc(promoKind(p.kind)) + (op ? "" : " · " + esc(o.name)) + (p.status === "reading" ? " · reading…" : p.status === "error" ? " · couldn't read" : "") + "</small></span></button>";
-      }).join("") + (list.length ? '<button class="btn" type="button" data-promocsv="1" style="margin-top:6px">Download list (CSV)</button>' : "");
+    var list = promosOf(op).slice(), order = state.operators.map(function (o) { return o.id; });
+    list.sort(function (a, b) { return order.indexOf(a.opId) - order.indexOf(b.opId) || (a.order || 0) - (b.order || 0); });
+    document.getElementById("pmNav").innerHTML = list.length ? '<button class="btn" type="button" data-promocsv="1" style="width:100%;justify-content:center">Download list (CSV)</button>' : "";
     var busy = promoBusy ? '<div class="rvprog"><b>' + esc(promoBusy.title) + '</b><div class="scanbar" style="margin:8px 0"><i style="width:' + Math.round(100 * promoBusy.done / Math.max(1, promoBusy.total)) + '%"></i></div><p class="small" style="margin:0">' + esc(promoBusy.text) + "</p></div>" : "";
-    if (!list.length) { main.innerHTML = busy + '<div class="panel empty-c">No promotions yet. In the extension choose <b>Promotions &amp; terms</b> and scan ' + (op ? esc(op.name) : "a casino") + ": every promotion is opened and written up here, each on its own page, with its terms.</div>"; return; }
-    // one promotion at a time: the chosen one, or the first
-    var x = list.filter(function (p) { return p.id === ui.pmOpen; })[0] || list[0]; ui.pmOpen = x.id;
-    document.querySelectorAll("#pmNav .pmnav").forEach(function (n) { n.classList.toggle("on", n.getAttribute("data-pmopen") === x.id); });
-    main.innerHTML = busy + promoPage(x, list);
+    if (!list.length) { main.innerHTML = busy + '<div class="panel empty-c">No promotions yet. In the extension choose <b>Promotions &amp; terms</b> and scan ' + (op ? esc(op.name) : "a casino") + ": every promotion is opened and written up here with its terms.</div>"; return; }
+    // grouped under what each one is: welcome offer, 2nd deposit offer…
+    var KORDER = OFFER_KINDS.map(function (k) { return k[0]; }).concat(["tournament", "terms"]);
+    var groups = KORDER.map(function (k) { return { k: k, items: list.filter(function (p) { return p.kind === k; }) }; }).filter(function (g) { return g.items.length; });
+    list.filter(function (p) { return KORDER.indexOf(p.kind) < 0; }).forEach(function (p) { var g = groups.filter(function (x) { return x.k === "other_offer"; })[0]; if (!g) { g = { k: "other_offer", items: [] }; groups.push(g); } g.items.push(p); });
+    main.innerHTML = busy + '<div class="sechead"><h3>' + (op ? "Promotions at " + esc(op.name) : "All promotions") + ' <span class="small" style="font-weight:400">' + plural(list.filter(function (p) { return p.kind !== "terms"; }).length, "promotion", "promotions") + "</span></h3></div>" +
+      groups.map(function (g) {
+        return '<section class="pgroup"><h3 class="pgh">' + esc(promoKind(g.k)) + ' <span class="small">' + g.items.length + '</span></h3><div class="plist2">' + g.items.map(function (p) {
+          var o = findOp(p.opId) || { name: "?" }, t = p.terms || {}, src = bannerSrc(p), open = ui.pmOpen === p.id;
+          var chips = PROMO_TERMS.filter(function (k) { return t[k[0]]; }).slice(0, 5).map(function (k) { return '<span class="pchip"><small>' + k[1] + "</small>" + esc(t[k[0]]) + "</span>"; }).join("");
+          return '<div class="prow' + (open ? " open" : "") + '"><button type="button" class="pbtn" data-pmopen="' + p.id + '" aria-expanded="' + open + '">' + (src ? '<img class="pthumb" src="' + src + '" alt="">' : '<span class="pthumb"></span>') +
+            '<span class="pmain"><span><span class="kindpill">' + esc(promoKind(p.kind)) + "</span>" + (op ? "" : ' <span class="small">' + esc(o.name) + "</span>") + "</span><b>" + esc(p.title || "Promotion") + "</b>" +
+            (p.status === "reading" ? "<small>Claude is reading this promotion…</small>" : p.status === "error" ? '<small style="color:var(--bad)">' + esc(p.error || "Couldn't read it.") + "</small>" : "<small>" + esc(p.summary || "") + "</small>") +
+            (chips && !open ? '<span class="pchips">' + chips + "</span>" : "") + '</span><span class="pgo" aria-hidden="true">' + (open ? "⌃" : "⌄") + "</span></button>" +
+            (open ? '<div class="pfull">' + (ui.pmEdit === p.id ? promoEditor(p) : promoBody(p)) + "</div>" : "") + "</div>";
+        }).join("") + "</div></section>";
+      }).join("");
   }
-  // one promotion on its own page
-  function promoPage(x, list) {
-    var o = findOp(x.opId) || { name: "?" }, t = x.terms || {}, i = list.indexOf(x), pics = offerPics(x);
-    var nav = '<div class="row pnav"><span class="small">' + esc(o.name) + '</span><span class="grow" style="flex:1"></span>' +
-      (list.length > 1 && i >= 0 ? '<button class="btn" type="button" data-pmopen="' + list[(i - 1 + list.length) % list.length].id + '">‹ Previous</button><span class="small">' + (i + 1) + " of " + list.length + '</span><button class="btn" type="button" data-pmopen="' + list[(i + 1) % list.length].id + '">Next ›</button>' : "") + "</div>";
-    if (ui.pmEdit === x.id) return nav + promoEditor(x);
+  // the full version of one promotion, opened inside its preview
+  function promoBody(x) {
+    var o = findOp(x.opId) || { name: "?" }, t = x.terms || {}, pics = offerPics(x);
     var terms = PROMO_TERMS.map(function (k) { return '<div><small>' + k[1] + "</small>" + (t[k[0]] ? esc(t[k[0]]) : '<span class="muted">Not stated</span>') + "</div>"; }).join("");
     var unsure = (x.uncertain || []).map(function (u) { var k = PROMO_TERMS.filter(function (q) { return q[0] === u || "terms." + q[0] === u; })[0]; return k ? k[1] : String(u).replace(/_/g, " "); });
-    return nav + '<article class="ppage"><header><div class="row" style="gap:8px;flex-wrap:wrap"><span class="kindpill">' + esc(promoKind(x.kind)) + '</span><span class="small">' + esc(o.name) + " · " + (x.run === "logged-in" ? "logged in" : "logged out") + " · scanned " + esc(new Date(x.at || Date.now()).toLocaleDateString()) + '</span><span class="grow" style="flex:1"></span><button class="ebtn" type="button" data-pmedit="' + x.id + '">Edit</button><button class="ebtn" type="button" data-promodel="' + x.id + '">Delete</button></div>' +
-      (bannerSrc(x) && x.banner || x.bannerThumb ? '<img class="pbanner" src="' + bannerSrc(x) + '" alt="' + esc(x.title || "") + ' banner">' : "") +
-      "<h2>" + esc(x.title || "Promotion") + "</h2>" + (x.status === "reading" ? '<p class="small">Claude is reading this promotion…</p>' : x.status === "error" ? '<div class="errbox">' + esc(x.error || "Couldn't read it.") + "</div>" : '<p class="psum2">' + esc(x.summary || "") + "</p>") + "</header>" +
+    return '<div class="row" style="gap:8px;flex-wrap:wrap"><span class="small">' + esc(o.name) + " · " + (x.run === "logged-in" ? "logged in" : "logged out") + " · scanned " + esc(new Date(x.at || Date.now()).toLocaleDateString()) + '</span><span style="flex:1"></span><button class="ebtn" type="button" data-pmedit="' + x.id + '">Edit</button><button class="ebtn" type="button" data-promodel="' + x.id + '">Delete</button></div>' +
       (x.kind === "terms" ? "" : '<div class="pterms">' + terms + "</div>") +
       '<div class="pcols2"><div class="stack" style="gap:14px">' +
       (x.how_it_works && x.how_it_works.length ? '<section><h3>How it works</h3><ol class="ml dn">' + x.how_it_works.map(function (h) { return "<li>" + esc(h) + "</li>"; }).join("") + "</ol></section>" : "") +
@@ -1779,12 +1783,12 @@ footer { color: var(--muted); font-size: 12px; margin-top: 24px; text-align: cen
       (unsure.length ? '<p class="small" style="color:var(--warn)">Couldn\'t read for sure: ' + esc(unsure.join(", ")) + ". Check the screenshots, and use Edit to correct it.</p>" : "") +
       (x.text ? '<details class="ptextbox"><summary>Full text of the promotion and its terms</summary><pre class="ptext">' + esc(x.text) + "</pre></details>" : "") +
       (x.url ? '<p class="small">Found on <a href="' + esc(x.url) + '" target="_blank" rel="noopener">' + esc(x.url) + "</a></p>" : "") +
-      '</div><div class="pshots">' + (pics.length ? pics.map(function (src, k) { return '<button type="button" class="pshot" data-lb="' + x.id + '" data-lbi="' + k + '" aria-label="Enlarge screenshot ' + (k + 1) + '">' + (src ? '<img src="' + src + '" alt="">' : '<span class="loadimg"></span>') + "</button>"; }).join("") : '<p class="small">No screenshots.</p>') + "</div></div></article>";
+      '</div><div class="pshots">' + (pics.length ? pics.map(function (src, k) { return '<button type="button" class="pshot" data-lb="' + x.id + '" data-lbi="' + k + '" aria-label="Enlarge screenshot ' + (k + 1) + '">' + (src ? '<img src="' + src + '" alt="">' : '<span class="loadimg"></span>') + "</button>"; }).join("") : '<p class="small">No screenshots.</p>') + "</div></div>";
   }
   function promoEditor(x) {
     var t = x.terms || {};
     var opts = OFFER_KINDS.concat([["tournament", "Tournament"], ["terms", "General terms"]]).map(function (k) { return '<option value="' + k[0] + '"' + (x.kind === k[0] ? " selected" : "") + ">" + esc(k[1]) + "</option>"; }).join("");
-    return '<form class="ppage rvedit" data-pmform="' + x.id + '"><label class="small">Name<input type="text" name="title" value="' + esc(x.title || "") + '"></label><label class="small">Type<select name="kind">' + opts + "</select></label>" +
+    return '<form class="rvedit" data-pmform="' + x.id + '"><label class="small">Name<input type="text" name="title" value="' + esc(x.title || "") + '"></label><label class="small">Type<select name="kind">' + opts + "</select></label>" +
       '<label class="small">What it does<textarea name="summary" rows="2">' + esc(x.summary || "") + "</textarea></label>" +
       '<div class="pterms">' + PROMO_TERMS.map(function (k) { return '<label class="small">' + k[1] + '<input type="text" name="t_' + k[0] + '" value="' + esc(t[k[0]] || "") + '"></label>'; }).join("") + "</div>" +
       '<label class="small">How it works (one step per line)<textarea name="how" rows="4">' + esc((x.how_it_works || []).join("\n")) + "</textarea></label>" +
@@ -1795,8 +1799,9 @@ footer { color: var(--muted); font-size: 12px; margin-top: 24px; text-align: cen
   document.getElementById("promosApp").addEventListener("click", function (e) {
     var b;
     if ((b = e.target.closest("[data-pmop]"))) { ui.pmOp = b.getAttribute("data-pmop") || null; ui.pmOpen = null; ui.pmEdit = null; renderPromosPage(); return; }
+    if ((b = e.target.closest("[data-pmedit]"))) { ui.pmEdit = b.getAttribute("data-pmedit") || null; renderPromosPage(); return; }
     if ((b = e.target.closest("[data-pmkind]"))) { ui.pmKind = b.getAttribute("data-pmkind") || null; renderPromosPage(); return; }
-    if ((b = e.target.closest("[data-pmopen]"))) { ui.pmOpen = b.getAttribute("data-pmopen") || null; ui.pmEdit = null; renderPromosPage(); document.getElementById("pmMain").scrollIntoView({ behavior: "smooth", block: "start" }); return; }
+    if ((b = e.target.closest("[data-pmopen]"))) { var pid = b.getAttribute("data-pmopen"); ui.pmOpen = ui.pmOpen === pid ? null : pid; ui.pmEdit = null; renderPromosPage(); if (ui.pmOpen) { var el = document.querySelector('[data-pmopen="' + pid + '"]'); if (el) el.scrollIntoView({ behavior: "smooth", block: "start" }); } return; }
     if ((b = e.target.closest("[data-pmedit]"))) { ui.pmEdit = b.getAttribute("data-pmedit") || null; renderPromosPage(); return; }
     if ((b = e.target.closest("[data-promocsv]"))) { promosCsv(); return; }
     if ((b = e.target.closest("[data-lb]"))) { var x = findItem(b.getAttribute("data-lb")); if (x) { lb = { pics: offerPics(x).filter(Boolean), i: +(b.getAttribute("data-lbi") || 0) }; if (lb.pics.length) showLightbox(); } return; }
