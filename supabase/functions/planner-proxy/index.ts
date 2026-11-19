@@ -296,7 +296,7 @@ function sortReviewShots(apiKey: string, body: Record<string, unknown>) {
   const sections = (Array.isArray(body.sections) ? body.sections : []).map((x: { id?: string; name?: string }) => `${String(x.id).slice(0, 40)} (${String(x.name).slice(0, 60)})`).join(", ");
   const content: Anthropic.Beta.BetaContentBlockParam[] = [{ type: "text", text: `Casino: ${String(body.casino ?? "").slice(0, 80)}\nSections: ${sections}` }];
   images.forEach((im) => {
-    content.push({ type: "text", text: `Screenshot id: ${String(im.id).slice(0, 64)}` });
+    content.push({ type: "text", text: `Screenshot id: ${String(im.id).slice(0, 64)}${im.title ? " | the scanner took it as: " + String(im.title).slice(0, 160) : ""}` });
     content.push({ type: "image", source: { type: "base64", media_type: im.media_type as "image/jpeg", data: im.data as string } });
   });
   content.push({ type: "text", text: "Sort every screenshot." });

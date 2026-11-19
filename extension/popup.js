@@ -3,35 +3,33 @@
 // The standard checklist. "words" match the text (or address) of a link, button or menu entry.
 // popup: the section usually opens as a pop-up from a button. details: open rules, levels, cards on that page.
 const DEFAULT_SECTIONS = [
-  // Getting players in
-  { key: "register", label: "Sign-up", words: "^(register|registrieren|sign[\\s_-]*up|signup|join( now)?|open account|create[\\s_-]*(an[\\s_-]*)?account|konto[\\s_-]*erstellen|registrati|inscri.*|regístrate|registrarse)$", popup: true, loggedOut: true },
+  // the sections of the competitor review (on by default)
   { key: "promotions", label: "Promotions", words: "promo|promotion|bonus(es)?\\b|offers?\\b|campaigns?\\b|angebot|aktion|promociones|ofertas|promozioni|offres|aanbieding|kampanj|kampanya", not: "^my\\b|terms|conditions|rules|requirement|shop|welcome", details: true, cards: "Offer" },
-  { key: "welcome", label: "Welcome offer", words: "welcome|new[\\s_-]*player|first[\\s_-]*deposit|1st[\\s_-]*deposit|willkommen|bienvenid|benvenut|bienvenue", not: "terms|conditions|rules|requirement", details: true, content: true },
-  { key: "terms", label: "Bonus terms", words: "bonus[\\s_-]*(t&cs?|terms|rules|conditions|policy|requirement)|promotion[\\s_-]*(terms|rules|requirement)|wagering[\\s_-]*requirement|bonusbedingungen|bonus[\\s_-]*regeln|bonusvoorwaarden|terms[\\s_-]*(and|&)[\\s_-]*conditions", details: true, help: true },
-  // Keeping players
-  { key: "tournaments", label: "Tournaments / races", words: "tourn|turnier|torneo|tournoi|leaderboard|rangliste|\\brace\\b|races\\b|drops?[\\s_&-]*(and|&)?[\\s_-]*wins|prize[\\s_-]*drop|wettbewerb", details: true },
-  { key: "vip", label: "VIP / loyalty", words: "\\bvip\\b|loyal|club\\b|rewards?\\b|levels?\\b|rakeback|cashback|treue|fidelidad|fedelt|fidélité", not: "shop|store", details: true },
-  { key: "missions", label: "Missions / achievements", words: "mission|quest|achievement|badges?\\b|challenges?\\b", details: true },
-  { key: "shop", label: "Bonus shop", words: "\\bshop\\b|\\bstore\\b|bonus[\\s_-]*shop|rewards?[\\s_-]*shop|exchange|marketplace|prämien|tienda", not: "app[\\s_-]*store|play[\\s_-]*store|google[\\s_-]*play", details: true },
-  { key: "wheel", label: "Wheel / mini-games", words: "wheel|lucky[\\s_-]*spin|daily[\\s_-]*(spin|reward|bonus|drop)|mystery[\\s_-]*(box|chest|bonus)|scratch|mini[\\s_-]*games?|treasure|\\bchests?\\b", details: true },
-  { key: "referral", label: "Refer a friend", words: "refer|referral|invite[\\s_-]*(a[\\s_-]*)?friends?|bring[\\s_-]*a[\\s_-]*friend|freunde[\\s_-]*werben|invita", details: true },
-  { key: "jackpots", label: "Jackpots", words: "jackpot", details: true },
-  { key: "sports", label: "Sports promos", words: "free[\\s_-]*bets?|acca|odds[\\s_-]*boost|price[\\s_-]*boost|bet[\\s_-]*insurance|bet[\\s_-]*builder|sports?[\\s_-]*(promo|promotions|bonus|offers?)", details: true, off: true, content: true },
-  // Logged in only
   { key: "deposit", label: "Deposit / cashier", words: "^(deposit|deposit now|wallet|cashier|einzahlen|einzahlung|kasse|depositar|depósito|deposita|dépôt|déposer)$", popup: true, loggedIn: true },
-  { key: "bonuses", label: "My bonuses", words: "my[\\s_-]*(bonus(es)?|rewards|offers|free[\\s_-]*spins)|bonus[\\s_-]*(wallet|balance|history)|active[\\s_-]*bonus|free[\\s_-]*spins\\b|freespins", details: true, loggedIn: true },
-  { key: "inbox", label: "Inbox / messages", words: "inbox|messages?\\b|notifications?\\b|mailbox|postfach|nachrichten", loggedIn: true },
-  { key: "account", label: "Account / profile", words: "my[\\s_-]*account|my[\\s_-]*profile|^profile$|account[\\s_-]*settings|communication|marketing[\\s_-]*preferences|preferences|mein[\\s_-]*konto|mi[\\s_-]*cuenta", loggedIn: true },
-  { key: "withdrawal", label: "Withdrawal", words: "^(withdraw|withdrawal|withdraw funds|auszahlen|auszahlung|retirar|retiro|prelevare|prelievo|retrait)$", popup: true, loggedIn: true },
-  // Compliance and extras
-  { key: "rg", label: "Responsible gambling", words: "responsible|safer[\\s_-]*gambling|player[\\s_-]*protection|verantwort|juego[\\s_-]*responsable|gioco[\\s_-]*responsabile|jeu[\\s_-]*responsable", help: true },
-  { key: "app", label: "App", words: "\\bapp\\b|download[\\s_-]*(the[\\s_-]*)?app|mobile[\\s_-]*app" },
+  { key: "vip", label: "Loyalty / VIP", words: "\\bvip\\b|loyal|club\\b|rewards?\\b|levels?\\b|rakeback|cashback|treue|fidelidad|fedelt|fidélité", not: "shop|store", details: true },
+  { key: "tournaments", label: "Tournaments", words: "tourn|turnier|torneo|tournoi|leaderboard|rangliste|\\brace\\b|races\\b|drops?[\\s_&-]*(and|&)?[\\s_-]*wins|prize[\\s_-]*drop|wettbewerb", details: true },
+  { key: "missions", label: "Missions", words: "mission|quest|achievement|badges?\\b|challenges?\\b", details: true },
+  { key: "shop", label: "Store", words: "\\bshop\\b|\\bstore\\b|bonus[\\s_-]*shop|rewards?[\\s_-]*shop|exchange|marketplace|prämien|tienda", not: "app[\\s_-]*store|play[\\s_-]*store|google[\\s_-]*play", details: true },
+  // more sections, off unless you tick them
+  { key: "register", label: "Sign-up", words: "^(register|registrieren|sign[\\s_-]*up|signup|join( now)?|open account|create[\\s_-]*(an[\\s_-]*)?account|konto[\\s_-]*erstellen|registrati|inscri.*|regístrate|registrarse)$", popup: true, loggedOut: true, off: true },
+  { key: "welcome", label: "Welcome offer", words: "welcome|new[\\s_-]*player|first[\\s_-]*deposit|1st[\\s_-]*deposit|willkommen|bienvenid|benvenut|bienvenue", not: "terms|conditions|rules|requirement", details: true, content: true, off: true },
+  { key: "terms", label: "Bonus terms", words: "bonus[\\s_-]*(t&cs?|terms|rules|conditions|policy|requirement)|promotion[\\s_-]*(terms|rules|requirement)|wagering[\\s_-]*requirement|bonusbedingungen|bonus[\\s_-]*regeln|bonusvoorwaarden|terms[\\s_-]*(and|&)[\\s_-]*conditions", details: true, help: true, off: true },
+  { key: "wheel", label: "Wheel / mini-games", words: "wheel|lucky[\\s_-]*spin|daily[\\s_-]*(spin|reward|bonus|drop)|mystery[\\s_-]*(box|chest|bonus)|scratch|mini[\\s_-]*games?|treasure|\\bchests?\\b", details: true, off: true },
+  { key: "referral", label: "Refer a friend", words: "refer|referral|invite[\\s_-]*(a[\\s_-]*)?friends?|bring[\\s_-]*a[\\s_-]*friend|freunde[\\s_-]*werben|invita", details: true, off: true },
+  { key: "jackpots", label: "Jackpots", words: "jackpot", details: true, off: true },
+  { key: "sports", label: "Sports promos", words: "free[\\s_-]*bets?|acca|odds[\\s_-]*boost|price[\\s_-]*boost|bet[\\s_-]*insurance|bet[\\s_-]*builder|sports?[\\s_-]*(promo|promotions|bonus|offers?)", details: true, off: true, content: true },
+  { key: "bonuses", label: "My bonuses", words: "my[\\s_-]*(bonus(es)?|rewards|offers|free[\\s_-]*spins)|bonus[\\s_-]*(wallet|balance|history)|active[\\s_-]*bonus|free[\\s_-]*spins\\b|freespins", details: true, loggedIn: true, off: true },
+  { key: "inbox", label: "Inbox / messages", words: "inbox|messages?\\b|notifications?\\b|mailbox|postfach|nachrichten", loggedIn: true, off: true },
+  { key: "account", label: "Account / profile", words: "my[\\s_-]*account|my[\\s_-]*profile|^profile$|account[\\s_-]*settings|communication|marketing[\\s_-]*preferences|preferences|mein[\\s_-]*konto|mi[\\s_-]*cuenta", loggedIn: true, off: true },
+  { key: "withdrawal", label: "Withdrawal", words: "^(withdraw|withdrawal|withdraw funds|auszahlen|auszahlung|retirar|retiro|prelevare|prelievo|retrait)$", popup: true, loggedIn: true, off: true },
+  { key: "rg", label: "Responsible gambling", words: "responsible|safer[\\s_-]*gambling|player[\\s_-]*protection|verantwort|juego[\\s_-]*responsable|gioco[\\s_-]*responsabile|jeu[\\s_-]*responsable", help: true, off: true },
+  { key: "app", label: "App", words: "\\bapp\\b|download[\\s_-]*(the[\\s_-]*)?app|mobile[\\s_-]*app", off: true },
   { key: "help", label: "Help / FAQ", words: "^(help|help cent(er|re)|support|faq|faqs)$", help: true, off: true }
 ];
 const PROMO = DEFAULT_SECTIONS.find((x) => x.key === "promotions");
 // the planner's website sections for each checklist entry: unticked ones are left out of the import too
 const KINDS = { homepage: ["homepage"], menu: ["navigation"], register: ["registration"], deposit: ["deposit"], promotions: ["promotions"], tournaments: ["tournament"], vip: ["loyalty"], missions: ["missions"], shop: ["shop"], wheel: ["wheel"], referral: ["referral"], bonuses: ["account"], inbox: ["inbox"], account: ["account"], withdrawal: ["withdrawal"], app: ["app"], rg: ["rg"] };
-const GROUPS = { register: "Getting players in", tournaments: "Keeping players", deposit: "Your account", rg: "Compliance and extras" };
+const GROUPS = { promotions: "Review sections", register: "More (optional)" };
 // Which sections belong to which run: logged-in only ones are hidden on a logged-out run and the other way round.
 const fits = (s) => !(runMode === "logged-out" && s.loggedIn) && !(runMode === "logged-in" && s.loggedOut);
 // Menu entries that are game categories or account basics; not worth suggesting.
@@ -167,7 +165,8 @@ function render() {
     "<h2>This run is</h2>" +
     '<div class="seg"><label><input type="radio" name="run" value="logged-out"' + (runMode === "logged-out" ? " checked" : "") + '><span>Logged out</span></label><label><input type="radio" name="run" value="logged-in"' + (runMode === "logged-in" ? " checked" : "") + "><span>Logged in</span></label></div>" +
     (guessed ? '<p class="note">' + esc(guessed) + "</p>" : "") +
-    '<label class="opt"><input type="checkbox" id="openCards"' + (prefs.cards !== false ? " checked" : "") + '><span><b>Open every promotion</b><small>Opens each offer on the promotions page and reads its terms. About 10 seconds more per offer. Untick to photograph the promotions page as it is.</small></span></label>' +
+    '<label class="opt"><input type="checkbox" id="openCards"' + (prefs.cards === true ? " checked" : "") + '><span><b>Open every promotion</b><small>Only needed for offer terms: the review compares how pages are set up. About 10 seconds more per offer.</small></span></label>' +
+    '<label class="opt" style="display:block"><span><b>Blur on screenshots</b><small>Email addresses are blurred automatically. Add your username or name here, separated by commas.</small></span><input type="text" id="blurWords" value="' + esc(prefs.blur || "") + '" placeholder="your username, your name" style="width:100%;margin-top:6px"></label>' +
     "<h2>Always</h2>" +
     '<div class="list">' + base.map((p, i) => row(p, "b", i)).join("") + "</div>" +
     "<h2>Sections to find</h2>" +
@@ -188,6 +187,7 @@ function listOf(l) { return l === "b" ? base : l === "s" ? sections : l === "p" 
 main.addEventListener("change", async (e) => {
   if (e.target.name === "run") { runMode = e.target.value; guessed = false; render(); return; }
   if (e.target.id === "openCards") { prefs.cards = e.target.checked; await savePrefs(); return; }
+  if (e.target.id === "blurWords") { prefs.blur = e.target.value.trim(); await savePrefs(); return; }
   const i = e.target.getAttribute("data-i"); if (i === null) return;
   const l = e.target.getAttribute("data-list"), item = listOf(l)[+i];
   item.checked = e.target.checked;
@@ -229,7 +229,7 @@ main.addEventListener("click", async (e) => {
   if (t.id === "go") {
     const home = base[0].url;
     const list = chosen().map((p) => p.type ? { type: p.type, url: p.url, label: p.label + (p.sub && p.type === "page" ? " (" + p.sub + ")" : ""), cat: p.cat, menu: p.menu || null, details: p.cat === "current" || p.cat === "custom" }
-      : { type: "find", url: home, label: p.label, cat: p.key, words: p.words, not: p.not || "", content: !!p.content, cards: !!p.cards && prefs.cards !== false, cardLabel: p.cards || "", promo: p.content ? { words: PROMO.words, not: PROMO.not } : null, popup: !!p.popup, details: !!p.details, help: !!p.help });
+      : { type: "find", url: home, label: p.label, cat: p.key, words: p.words, not: p.not || "", content: !!p.content, cards: !!p.cards && prefs.cards === true, cardLabel: p.cards || "", promo: p.content ? { words: PROMO.words, not: PROMO.not } : null, popup: !!p.popup, details: !!p.details, help: !!p.help });
     const run = document.querySelector('input[name="run"]:checked').value;
     // sections you left unticked: the planner won't make cards for them, even if another page shows them
     const used = new Set(), skip = new Set();
@@ -237,14 +237,14 @@ main.addEventListener("click", async (e) => {
     base.concat(sections.filter(fits)).filter((p) => !p.checked).forEach((p) => (KINDS[p.key || p.cat] || []).forEach((k) => { if (!used.has(k)) skip.add(k); }));
     const picked = chosen(), has = (key) => picked.some((p) => p.key === key);
     // "Open every promotion" off: no offer cards from the promotions page, only offers you ticked yourself
-    if (prefs.cards === false) {
+    if (prefs.cards !== true) {
       ["second", "third", "reload", "cashback", "freespins", "vip", "other_offer"].forEach((k) => skip.add(k));
       if (!has("welcome")) skip.add("welcome");
       if (!has("sports")) skip.add("sports");
     }
     // "Other page" only when you asked for something it would hold (bonus terms, your own sections, pasted links, this page, suggestions)
     if (!picked.some((p) => p.key === "terms" || p.custom || /^s_/.test(p.key || "") || p.cat === "custom" || p.cat === "current")) skip.add("other_page");
-    await chrome.runtime.sendMessage({ type: "scan", tabId: target.id, pages: list, run, skip: Array.from(skip), site: { host: target.info.host, title: target.info.title, url: target.info.url } });
+    await chrome.runtime.sendMessage({ type: "scan", tabId: target.id, pages: list, run, skip: Array.from(skip), blur: String(prefs.blur || "").split(",").map((w) => w.trim()).filter((w) => w.length >= 3), site: { host: target.info.host, title: target.info.title, url: target.info.url } });
     showProgress();
   }
 });
@@ -276,7 +276,7 @@ function showProgress() {
   const { scanStatus } = await chrome.storage.local.get("scanStatus");
   if (scanStatus && scanStatus.state === "running") { document.getElementById("site").textContent = "A scan is running"; showProgress(); return; }
   const stored = (await chrome.storage.sync.get("sectionPrefs")).sectionPrefs;
-  if (stored) prefs = { off: stored.off || [], on: stored.on || [], custom: stored.custom || [], cards: stored.cards };
+  if (stored) prefs = { off: stored.off || [], on: stored.on || [], custom: stored.custom || [], cards: stored.cards, blur: stored.blur || "" };
   // ?tab=<id> lets the popup be opened as a normal page for testing.
   const q = new URLSearchParams(location.search).get("tab");
   const tab = q ? await chrome.tabs.get(+q) : (await chrome.tabs.query({ active: true, currentWindow: true }))[0];

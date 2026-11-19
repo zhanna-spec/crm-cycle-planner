@@ -526,12 +526,50 @@ function clickTab(i) {
   return location.href;
 }
 
+// What the current scan needs at every screenshot: the tab, words to blur, and where elements were.
+const scanCtx = { tabId: null, blur: [], els: new Map() };
+// Runs inside the scanned page: blurs personal data (emails, and the words you gave) and lists the visible
+// elements with their positions in screenshot pixels, so highlight boxes can sit exactly on them.
+function prepCapture(words) {
+  const email = /[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}/i;
+  const wordRe = words && words.length ? new RegExp(words.map((w) => w.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")).join("|"), "i") : null;
+  const blur = (el) => { if (el && el.style && !el.hasAttribute("data-ccp-blurred")) { el.setAttribute("data-ccp-blurred", "1"); el.style.filter = (el.style.filter ? el.style.filter + " " : "") + "blur(6px)"; } };
+  const walker = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT);
+  for (let n = walker.nextNode(); n; n = walker.nextNode()) {
+    const t = n.nodeValue || ""; if (t.length < 3) continue;
+    if (email.test(t) || (wordRe && wordRe.test(t))) blur(n.parentElement);
+  }
+  document.querySelectorAll("input").forEach((i) => { if (email.test(i.value || "") || (wordRe && wordRe.test(i.value || "")) || i.type === "email") blur(i); });
+  const dpr = window.devicePixelRatio || 1, vw = window.innerWidth, vh = window.innerHeight, out = [];
+  const seen = new Set();
+  document.querySelectorAll("h1, h2, h3, h4, nav, header, aside, button, a, [role=button], [role=tab], [role=dialog], input, select, label, img, [class*=banner], [class*=card], [class*=tab]").forEach((el) => {
+    if (out.length >= 80) return;
+    const r = el.getBoundingClientRect();
+    if (r.width < 16 || r.height < 10 || r.right < 0 || r.bottom < 0 || r.left > vw || r.top > vh) return;
+    const cs = getComputedStyle(el); if (cs.visibility === "hidden" || +cs.opacity < 0.1) return;
+    let t = (el.tagName === "IMG" ? (el.alt || "image") : el.tagName === "INPUT" ? (el.placeholder || el.type || "input") : (el.innerText || el.getAttribute("aria-label") || "")).trim().replace(/\s+/g, " ").slice(0, 300);
+    // personal data never leaves the page, not even as text
+    t = t.replace(new RegExp(email.source, "gi"), "•••"); if (wordRe) t = t.replace(new RegExp(wordRe.source, "gi"), "•••");
+    t = t.slice(0, 40);
+    if (el.hasAttribute("data-ccp-blurred")) t = "(blurred)";
+    if (!t && !/^(NAV|HEADER|ASIDE|IMG)$/.test(el.tagName)) return;
+    const box = [Math.max(0, r.left), Math.max(0, r.top), Math.min(vw, r.right) - Math.max(0, r.left), Math.min(vh, r.bottom) - Math.max(0, r.top)].map((x) => Math.round(x * dpr));
+    const k = box.join(","); if (seen.has(k)) return; seen.add(k);
+    out.push(box.concat([(el.tagName.toLowerCase() + ": " + t).slice(0, 48)]));
+  });
+  return out;
+}
+
 async function capture(windowId) {
   checkStop();
+  let els = [];
+  if (scanCtx.tabId) els = await run(scanCtx.tabId, prepCapture, [scanCtx.blur]).catch(() => []) || [];
   // Chrome allows about two captures per second.
   await sleep(650);
   checkStop();
-  return chrome.tabs.captureVisibleTab(windowId, { format: "jpeg", quality: 72 });
+  const shot = await chrome.tabs.captureVisibleTab(windowId, { format: "jpeg", quality: 72 });
+  scanCtx.els.set(shot, els);
+  return shot;
 }
 
 // A small grey version of a screenshot, to tell near-identical screenshots apart.
@@ -706,7 +744,7 @@ async function scanCards(tabId, windowId, url, pg) {
 }
 
 // The pop-up that's open now, scrolled through.
-async function scanDialog(tabId, windowId, what) {
+async function scanDialog(tabId, windowId, what, cashier) {
   const shots = [await capture(windowId)], labels = ["pop-up after clicking " + what];
   for (let k = 1; k < MAX_SCROLL_SHOTS; k++) {
     const moved = await run(tabId, scrollDialog).catch(() => false);
@@ -714,7 +752,53 @@ async function scanDialog(tabId, windowId, what) {
     await sleep(600);
     shots.push(await capture(windowId)); labels.push("pop-up scrolled " + k);
   }
-  return dedupe({ title: "", text: await run(tabId, dialogText).catch(() => ""), shots, shotLabels: labels });
+  let text = await run(tabId, dialogText).catch(() => "");
+  if (cashier) {
+    // the next step after choosing a payment method (amount, quick picks, bonus choice), then each cashier tab
+    const m = await run(tabId, cashierStep, ["method"]).catch(() => null);
+    if (m) { await sleep(1500); shots.push(await capture(windowId)); labels.push("cashier after choosing " + m); text += "\n\n--- After choosing " + m + " ---\n" + String(await run(tabId, dialogText).catch(() => "")).slice(0, 5000); }
+    for (let k = 0; k < 3; k++) {
+      const tab = await run(tabId, cashierStep, ["tab"]).catch(() => null);
+      if (!tab) break;
+      await sleep(1300); shots.push(await capture(windowId)); labels.push("cashier tab: " + tab);
+      text += "\n\n--- Cashier tab: " + tab + " ---\n" + String(await run(tabId, dialogText).catch(() => "")).slice(0, 4000);
+    }
+  }
+  return dedupe({ title: "", text, shots, shotLabels: labels });
+}
+
+// Runs inside the scanned page: one safe step in an open cashier. "method" picks a payment method (only selects it);
+// "tab" opens the next tab not seen yet (Withdraw, History, Transactions, Bonuses). Never Deposit, Pay or Confirm.
+function cashierStep(what) {
+  const d = Array.from(document.querySelectorAll("[role=dialog], [aria-modal=true], dialog[open], [class*=modal], [class*=Modal], [class*=drawer], [class*=Drawer], [class*=cashier], [class*=Cashier]"))
+    .filter((el) => { const r = el.getBoundingClientRect(); return r.width > 200 && r.height > 150; })
+    .sort((a, b) => { const ra = a.getBoundingClientRect(), rb = b.getBoundingClientRect(); return rb.width * rb.height - ra.width * ra.height; })[0] || document.body;
+  const textOf = (el) => (el.innerText || el.getAttribute("aria-label") || el.getAttribute("alt") || "").trim().replace(/\s+/g, " ");
+  const vis = (el) => { const r = el.getBoundingClientRect(); return r.width > 8 && r.height > 8; };
+  const NEVER = /deposit now|^deposit$|pay|confirm|continue|submit|withdraw now|request|proceed|next|place|buy|cancel|close|log ?out/i;
+  const press = (el) => { ["pointerdown", "mousedown", "pointerup", "mouseup", "click"].forEach((t) => el.dispatchEvent(new MouseEvent(t, { bubbles: true, cancelable: true, view: window }))); };
+  if (what === "method") {
+    if (d.hasAttribute("data-ccp-method")) return null;
+    const re = /visa|mastercard|credit card|debit card|card|apple ?pay|google ?pay|skrill|neteller|paysafe|trustly|revolut|klarna|sofort|bank|crypto|bitcoin|btc|usdt|ethereum|mifinity|jeton|ecopayz|interac|muchbetter/i;
+    const opt = Array.from(d.querySelectorAll("button, [role=button], [role=radio], li, a, label, div[class*=method], div[class*=Method], div[class*=option]")).find((el) => {
+      if (!vis(el) || el.querySelectorAll("button, [role=button]").length > 1) return false;
+      const t = textOf(el) || Array.from(el.querySelectorAll("img")).map((i) => i.alt).join(" ");
+      return t && t.length <= 60 && re.test(t) && !NEVER.test(t);
+    });
+    if (!opt) return null;
+    d.setAttribute("data-ccp-method", "1"); press(opt);
+    return textOf(opt).split(" ").slice(0, 4).join(" ") || "a payment method";
+  }
+  const done = (d.getAttribute("data-ccp-tabs") || "").split("|");
+  const tab = Array.from(d.querySelectorAll("[role=tab], button, a, li")).find((el) => {
+    const t = textOf(el);
+    return vis(el) && t && t.length <= 24 && /^(withdraw(al)?|history|transactions?|bonus(es)?|my bonuses|auszahlung|historie|retiro|historial|retrait|historique|prelievo|storico)$/i.test(t) && done.indexOf(t.toLowerCase()) < 0 && el.getAttribute("aria-selected") !== "true";
+  });
+  if (!tab) return null;
+  d.setAttribute("data-ccp-tabs", done.concat([textOf(tab).toLowerCase()]).join("|"));
+  if (tab.tagName === "A" && tab.getAttribute("href") && !/^#|^javascript/i.test(tab.getAttribute("href"))) return null;
+  press(tab);
+  return textOf(tab);
 }
 
 // The site's menu, opened and photographed, with its entries as text.
@@ -816,12 +900,13 @@ async function scanFind(tabId, windowId, pg, results, scanned) {
     if (sameAs(now)) return { merged: true };
     return Object.assign({ url: now, found }, await scanPage(tabId, windowId, now, { details: pg.details, stay: true }));
   }
-  if (await run(tabId, hasDialog).catch(() => false)) return Object.assign({ url: now, found, type: "popup" }, await scanDialog(tabId, windowId, hit.text));
+  if (await run(tabId, hasDialog).catch(() => false)) return Object.assign({ url: now, found, type: "popup" }, await scanDialog(tabId, windowId, hit.text, pg.cat === "deposit"));
   // the page changed without a new address (single-page sites): photograph what's showing
   return Object.assign({ url: now, found }, await scanPage(tabId, windowId, now, { details: pg.details, stay: true }));
 }
 
-async function runScan({ tabId, pages, run: runLabel, site, skip }) {
+async function runScan({ tabId, pages, run: runLabel, site, skip, blur }) {
+  scanCtx.tabId = tabId; scanCtx.blur = Array.isArray(blur) ? blur : []; scanCtx.els = new Map();
   const tab = await chrome.tabs.get(tabId);
   const startUrl = tab.url;
   const total = pages.length;
@@ -862,6 +947,9 @@ async function runScan({ tabId, pages, run: runLabel, site, skip }) {
   } finally { scanning = false; }
   const mode = stopMode; stopMode = null;
   try { await navigate(tabId, startUrl); } catch (e) { /* ignore */ }
+  // where elements were on each screenshot (for highlight boxes in the review)
+  results.forEach((r) => { r.shotEls = (r.shots || []).map((sh) => scanCtx.els.get(sh) || []); });
+  scanCtx.tabId = null; scanCtx.els = new Map();
   const done = results.filter((r) => r.shots && r.shots.length);
   if (mode === "discard" || (mode && !done.length)) {
     await chrome.storage.local.set({ scanStatus: { state: "stopped", message: mode === "discard" ? "" : "Nothing was finished yet, so there's nothing to import." } });

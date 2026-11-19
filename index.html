@@ -1752,14 +1752,14 @@ footer { color: var(--muted); font-size: 12px; margin-top: 24px; text-align: cen
         var has = pg.shots && pg.shots.length;
         return '<label class="scanrow"><input type="checkbox" data-scanpg="' + i + '"' + (has ? " checked" : " disabled") + ">" + (has ? '<img src="' + pg.shots[0] + '" alt="">' : "") + '<span class="meta2"><b>' + esc(pg.label || pg.title || pg.url) + "</b><small>" + (has ? plural(pg.shots.length, "screenshot", "screenshots") + " · " + esc(pg.url) : esc(pg.error || "Couldn't open")) + "</small></span></label>";
       }).join("") + "</div></div>" +
-      (aiReady() ? "" : '<div class="errbox">AI isn\'t on, so pages can\'t be sorted automatically. Turn on AI first (see AI screenshot reading), then import.</div>') +
-      '<div class="row" style="justify-content:space-between"><button class="btn danger" type="button" id="scanDiscard">Discard scan</button><span class="row"><button class="btn" type="button" id="scanLater">Not now</button><button class="btn primary" type="submit"' + (aiReady() && ok.length ? "" : " disabled") + ">Import " + plural(ok.length, "page", "pages") + "</button></span></div>";
+      (aiReady() ? "" : '<p class="small">AI is off: screenshots go into the review sections they were found for, and you can sort and title them yourself.</p>') +
+      '<div class="row" style="justify-content:space-between"><button class="btn danger" type="button" id="scanDiscard">Discard scan</button><span class="row"><button class="btn" type="button" id="scanLater">Not now</button><button class="btn primary" type="submit"' + (ok.length ? "" : " disabled") + ">Import " + plural(ok.length, "page", "pages") + "</button></span></div>";
     document.getElementById("scanModal").hidden = false;
   }
   var scanModal = document.getElementById("scanModal");
   scanModal.addEventListener("change", function (e) {
     if (e.target.id === "scanOp") document.getElementById("scanNewWrap").hidden = e.target.value !== "__new";
-    if (e.target.hasAttribute("data-scanpg")) { var n = scanModal.querySelectorAll("[data-scanpg]:checked").length; var b = scanModal.querySelector('button[type="submit"]'); b.textContent = "Import " + plural(n, "page", "pages"); b.disabled = !n || !aiReady(); }
+    if (e.target.hasAttribute("data-scanpg")) { var n = scanModal.querySelectorAll("[data-scanpg]:checked").length; var b = scanModal.querySelector('button[type="submit"]'); b.textContent = "Import " + plural(n, "page", "pages"); b.disabled = !n; }
   });
   scanModal.addEventListener("click", function (e) {
     if (e.target.id === "scanLater") { scanModal.hidden = true; toast("The scan is kept in the extension. Open the planner again to import it."); }
@@ -1780,7 +1780,9 @@ footer { color: var(--muted); font-size: 12px; margin-top: 24px; text-align: cen
     var pages = Array.prototype.map.call(scanModal.querySelectorAll("[data-scanpg]:checked"), function (cb) { return scan.pages[+cb.getAttribute("data-scanpg")]; });
     window.postMessage({ type: "ccp-scan-received", id: scan.id }, "*");
     incomingScan = null; scanModal.hidden = true; save();
-    processScan(scan.id, op, pages, run, scan.skip || []);
+    // every screenshot goes into the review; opened offers also become offer-term cards
+    var offerPages = pages.filter(function (pg) { return /^Offer: /.test(pg.label || ""); });
+    rvFromScan(op, pages, run).then(function () { if (offerPages.length && aiReady()) processScan(scan.id, op, offerPages, run, scan.skip || []); });
   });
   function loadSrc(src) { return new Promise(function (res, rej) { var img = new Image(); img.onload = function () { res(img); }; img.onerror = function () { rej(new Error("A screenshot couldn't be read.")); }; img.src = src; }); }
   async function uploadPaths(images, folder) {
@@ -2732,8 +2734,8 @@ footer { color: var(--muted); font-size: 12px; margin-top: 24px; text-align: cen
       Object.assign(s, await rvStore(out, s.v + "/" + s.op)); s.blurred = true;
     } finally { URL.revokeObjectURL(url); }
   }
-  async function rvSortShots() {
-    var r = rv(), v = rvVersion(), todo = rvShotsFor(v, null), ops = {};
+  async function rvSortShots(only) {
+    var r = rv(), v = rvVersion(), todo = only || rvShotsFor(v, null), ops = {};
     todo.forEach(function (s) { (ops[s.op] = ops[s.op] || []).push(s); });
     ui.rvSorting = true; renderReview();
     try {
@@ -2743,12 +2745,12 @@ footer { color: var(--muted); font-size: 12px; margin-top: 24px; text-align: cen
         for (var i = 0; i < list.length; i += 10) {
           var batch = list.slice(i, i + 10), images = [];
           rvBusy("Sorting screenshots with Claude", done, todo.length, (op ? op.name : "") + ": " + (i + 1) + "–" + (i + batch.length) + " of " + list.length);
-          for (var j = 0; j < batch.length; j++) images.push({ id: batch[j].id, media_type: "image/jpeg", data: await rvPrep(batch[j], 1000) });
+          for (var j = 0; j < batch.length; j++) images.push({ id: batch[j].id, title: batch[j].src === "scan" ? batch[j].title + " [found for: " + (batch[j].sections || []).join(", ") + "]" : "", media_type: "image/jpeg", data: await rvPrep(batch[j], 1000) });
           var d = await backend("sort_review_shots", { casino: op ? op.name : "", sections: r.sections, images: images });
           for (var n = 0; n < (d.shots || []).length; n++) {
             var res = d.shots[n], s = rvShot(res.id); if (!s) continue;
             s.sections = (res.sections || []).filter(function (id) { return r.sections.some(function (x) { return x.id === id; }); });
-            if (res.title) s.title = res.title;
+            if (res.title) s.title = res.title + (s.run === "logged-in" ? " (logged in)" : "");
             if (res.unusual) s.flag = res.unusual;
             if ((res.personal || []).length) await rvBlur(s, res.personal);
             if (!s.sections.length) s.sections = ["_none"]; // looked at, belongs to no section
@@ -2758,6 +2760,35 @@ footer { color: var(--muted); font-size: 12px; margin-top: 24px; text-align: cen
       }
       ui.rvSorting = false; rvBusy(null); save(); renderReview(); toast("Screenshots sorted into sections. Ones that fit no section are kept under “Not in any section”.");
     } catch (err) { ui.rvSorting = false; rvBusy(null); toast(err.message); }
+  }
+
+  // ---- a scan from the extension: its screenshots go into the review ----
+  var HINT_SEC = { homepage: "homepage", menu: "homepage", promotions: "promotions", deposit: "deposit", vip: "loyalty", tournaments: "tournaments", missions: "missions", shop: "store" };
+  async function rvFromScan(op, pages, run) {
+    var r = rv(), v = r.versions.filter(function (x) { return x.device !== "mobile"; })[0] || r.versions[0], added = [];
+    if (!r.subject && ownOp()) r.subject = ownOp().id;
+    ui.compMode = "review"; ui.rvV = v.id;
+    try {
+      var total = pages.reduce(function (n, pg) { return n + (pg.shots || []).length; }, 0), n = 0;
+      for (var i = 0; i < pages.length; i++) {
+        var pg = pages[i], secs = [];
+        String(pg.hint || "").split(",").forEach(function (h) { if (HINT_SEC[h] && secs.indexOf(HINT_SEC[h]) < 0) secs.push(HINT_SEC[h]); });
+        if (/^Offer: /.test(pg.label || "")) secs = ["promotions"];
+        var base = String(pg.label || pg.title || "").replace(/\s*\(found .*\)\s*$/, "").replace(/\s*\+.*$/, "");
+        for (var k = 0; k < (pg.shots || []).length; k++) {
+          n++; rvBusy("Adding the scan of " + op.name + " to the review", n - 1, total, "Storing screenshot " + n + " of " + total);
+          var blob = b64ToBlob(String(pg.shots[k]).split(",")[1] || "", "image/jpeg"), size = await rvImgSize(blob);
+          if (!size.w) continue;
+          var stored = await rvStore(blob, v.id + "/" + op.id), lbl = (pg.shotLabels || [])[k] || "";
+          var rec = Object.assign({ id: uid(), v: v.id, op: op.id, title: base + (lbl && !/^top of page$/i.test(lbl) ? " · " + lbl : "") + (run === "logged-in" ? " (logged in)" : ""), sections: secs.slice(), src: "scan", run: run, els: (pg.shotEls || [])[k] || [] }, size, stored);
+          r.shots.push(rec); added.push(rec);
+        }
+        save();
+      }
+      rvBusy(null); save(); renderCompetitors();
+      if (added.length && aiReady()) { toast(plural(added.length, "screenshot", "screenshots") + " added to the review. Claude is checking their sections and titles."); await rvSortShots(added); }
+      else toast(plural(added.length, "screenshot", "screenshots") + " added to the review of " + op.name + ".");
+    } catch (err) { rvBusy(null); toast(err.message); }
   }
 
   // ---- screenshots in: storage ----
