@@ -406,6 +406,9 @@ textarea.inp { resize: vertical; min-height: 70px; }
 .unas b { color: var(--ink); font-weight: 500; }
 .unas { flex-wrap: wrap; }
 .unas span { flex: 1 1 100%; }
+.emove { padding: 8px 12px 12px; }
+.emove select { width: auto; display: inline-block; margin-left: 6px; padding: 5px 8px; font-size: 12px; }
+.linkbtn { font: inherit; background: none; border: 0; color: var(--accent); font-weight: 600; cursor: pointer; padding: 0; }
 .unas .addsel { width: auto; padding: 6px 8px; font-size: 12px; }
 .trkedit { align-items: flex-start; }
 .trkedit .inp { margin-top: 6px; }
@@ -624,6 +627,7 @@ footer { color: var(--muted); font-size: 12px; margin-top: 24px; text-align: cen
             <label class="field"><span>Registered on</span><input class="inp" id="tReg" type="date"></label>
             <button class="btn primary" type="submit">Follow competitor</button>
           </form>
+          <div id="autoSortBox"></div>
           <div id="unassigned"></div>
         </section>
       </div>
@@ -794,6 +798,8 @@ footer { color: var(--muted); font-size: 12px; margin-top: 24px; text-align: cen
   if (!Array.isArray(state.research)) state.research = [];
   if (!Array.isArray(state.trackers)) state.trackers = [];
   if (!Array.isArray(state.emails)) state.emails = [];
+  if (!state.emailOwner || typeof state.emailOwner !== "object") state.emailOwner = {};
+  if (!state.notCasino || typeof state.notCasino !== "object") state.notCasino = {};
   state.trackers.forEach(function (t) { t.summarizing = false; });
   state.competitors.forEach(function (x) { if (x.status === "reading") { x.status = "error"; x.error = "Reading was interrupted. Upload the screenshots again."; } });
   function save() {
@@ -2129,6 +2135,9 @@ footer { color: var(--muted); font-size: 12px; margin-top: 24px; text-align: cen
   function squash(x) { return String(x || "").toLowerCase().replace(/[^a-z0-9@+]/g, ""); }
   function termsOf(t) { return String(t.match || "").split(",").map(function (k) { return k.trim().toLowerCase().replace(/^\+/, ""); }).filter(Boolean); }
   function trackerFor(em) {
+    // an email you moved by hand stays where you put it ("none" = not a casino)
+    var own = state.emailOwner && state.emailOwner[em.id];
+    if (own) return own === "none" ? null : state.trackers.filter(function (t) { return t.id === own; })[0] || null;
     var to = (em.to || "").toLowerCase(), from = (em.from || "").toLowerCase(), fromS = squash(em.from);
     for (var i = 0; i < state.trackers.length; i++) {
       var t = state.trackers[i], ks = termsOf(t);
@@ -2253,10 +2262,12 @@ footer { color: var(--muted); font-size: 12px; margin-top: 24px; text-align: cen
   function unassignedGroups() {
     var groups = [];
     state.emails.forEach(function (em) {
-      if (trackerFor(em)) return;
+      if (trackerFor(em) || (state.emailOwner || {})[em.id] === "none") return;
       var tag = plusTag(em.to), b = brandOf(em), dom = senderDomain(em.from);
       var g = groups.filter(function (x) { return tag ? x.tag === tag : !x.tag && (x.domains.indexOf(dom) >= 0 || sameBrand(x.brand, b.dom) || sameBrand(x.brand, b.name) || x.names.some(function (n) { return sameBrand(brandWords(n), b.name); })); })[0];
-      if (!g) { g = { tag: tag, brand: b.dom || b.name, domains: [], names: [], count: 0, first: em.date }; groups.push(g); }
+      if (!g) { g = { tag: tag, brand: b.name.length >= 4 ? b.name : b.dom || b.name, domains: [], names: [], subjects: [], snippet: "", count: 0, first: em.date }; groups.push(g); }
+      if (g.subjects.length < 4) g.subjects.push(em.subject || "");
+      if (!g.snippet) g.snippet = String(em.text || "").replace(/\s+/g, " ").slice(0, 400);
       if (dom && g.domains.indexOf(dom) < 0) g.domains.push(dom);
       var nm = senderName(em.from); if (nm && g.names.indexOf(nm) < 0) g.names.push(nm);
       g.count++; if (em.date < g.first) g.first = em.date;
@@ -2267,18 +2278,77 @@ footer { color: var(--muted); font-size: 12px; margin-top: 24px; text-align: cen
       g.name = g.names[0] || g.key;
       g.like = g.tag ? null : state.trackers.filter(function (t) { return sameBrand(brandWords(t.name), g.brand) || termsOf(t).some(function (k) { return sameBrand(brandWords(k), g.brand); }); })[0] || null;
     });
-    return groups.sort(function (a, b) { return b.count - a.count; });
+    return groups.filter(function (g) { return !state.notCasino[g.key]; }).sort(function (a, b) { return b.count - a.count; });
+  }
+  function notCasinoGroups() {
+    var n = 0; state.emails.forEach(function (em) { if ((state.emailOwner || {})[em.id] === "none") n++; });
+    return n + Object.keys(state.notCasino).length;
+  }
+
+  // ---- automatic sorting: which casino sent which email ----
+  var autoBusy = false;
+  function niceName(x) { x = String(x || "").replace(/\b(casino|team|vip|news|newsletter|support|rewards?|promotions?|offers?|mail|no-?reply)\b/gi, "").replace(/\s+/g, " ").trim(); return x || "Unknown casino"; }
+  function newTracker(name, key, first, why) {
+    var t = state.trackers.filter(function (x) { return x.name.toLowerCase() === name.toLowerCase(); })[0];
+    if (t) { addTerm(t, key); return t; }
+    t = { id: uid(), name: name, match: key, registered: first ? localDate(first) : "", auto: why || "automatically" };
+    state.trackers.push(t); return t;
+  }
+  async function autoSort() {
+    if (autoBusy || state.autoSortOff || !state.emails.length) return;
+    // wait until we know whether AI is on, so unclear senders go to Claude rather than being guessed
+    if (cloud && (!proxy.checked || proxy.loading)) { clearTimeout(autoSort.t); autoSort.t = setTimeout(autoSort, 800); return; }
+    var groups = unassignedGroups(); if (!groups.length) return;
+    autoBusy = true;
+    var changed = 0, ask = [], before = JSON.stringify(state); // for Undo
+    try {
+      groups.forEach(function (g) {
+        // 1. looks like a casino you follow, 2. matches an operator from competitor research, 3. a +tag you chose
+        var op = !g.tag && (state.operators || []).filter(function (o) { return sameBrand(brandWords(o.name), g.brand); })[0];
+        if (g.like) { addTerm(g.like, g.key); changed++; }
+        else if (op) { newTracker(op.name, g.key, g.first, "from competitor research"); changed++; }
+        else if (g.tag) { newTracker(g.tag.charAt(0).toUpperCase() + g.tag.slice(1), g.key, g.first, "from the +" + g.tag + " address"); changed++; }
+        else ask.push(g);
+      });
+      if (ask.length) {
+        if (aiReady()) {
+          // 4. Claude reads names, subjects and a snippet and says which casino it is (or that it isn't one)
+          var known = state.trackers.map(function (t) { return t.name; }).concat((state.operators || []).map(function (o) { return o.name; }));
+          var d = await backend("sort_senders", { known: known, groups: ask.slice(0, 40).map(function (g) { return { key: g.key, names: g.names, domains: g.domains, subjects: g.subjects, snippet: g.snippet }; }) });
+          (d.senders || []).forEach(function (r) {
+            var g = ask.filter(function (x) { return x.key === r.key; })[0]; if (!g) return;
+            if (!r.is_casino) { state.notCasino[g.key] = { name: g.name, domains: g.domains, count: g.count }; changed++; return; }
+            var t = r.known ? state.trackers.filter(function (x) { return x.name.toLowerCase() === r.known.toLowerCase(); })[0] : null;
+            if (!t && r.known) { var op2 = (state.operators || []).filter(function (o) { return o.name.toLowerCase() === r.known.toLowerCase(); })[0]; if (op2) t = newTracker(op2.name, g.key, g.first, "by Claude"); }
+            if (t) addTerm(t, g.key); else newTracker(niceName(r.casino || g.name), g.key, g.first, "by Claude");
+            changed++;
+          });
+        } else ask.forEach(function (g) {
+          // without AI: obvious non-casinos are set aside, clear brand names become casinos, unclear ones wait for you
+          if (/google|apple|microsoft|outlook|yahoo|paypal|amazon|facebook|meta|linkedin|instagram|twitter|icloud|dropbox|zoom|slack/i.test(g.names.join(" ") + " " + g.domains.join(" "))) { state.notCasino[g.key] = { name: g.name, domains: g.domains, count: g.count }; changed++; return; }
+          var nm = niceName(g.name);
+          if (nm !== "Unknown casino" && brandWords(g.name).length >= 4) { newTracker(nm, g.key, g.first, "from the sender name"); changed++; }
+        });
+      }
+    } catch (err) { toast("Couldn't sort the new emails automatically: " + err.message); }
+    autoBusy = false;
+    if (changed) { history.push(before); if (history.length > 80) history.shift(); save(); renderEmails(); toast("New emails sorted by casino. You can change anything on the left or on each email."); }
   }
   function addTerm(t, term) { var ks = termsOf(t); term = String(term || "").trim().toLowerCase(); if (term && ks.indexOf(term) < 0) ks.push(term); t.match = ks.join(", "); }
 
   var lastGroups = [];
+  function notCasinoHtml() {
+    var keys = Object.keys(state.notCasino), ems = state.emails.filter(function (em) { return (state.emailOwner || {})[em.id] === "none"; });
+    return keys.map(function (k) { var g = state.notCasino[k]; return '<div class="unas"><span><b>' + esc(g.name || k) + "</b> · " + esc((g.domains || []).join(", ")) + '</span><button class="btn" type="button" data-unnc="' + esc(k) + '">It is a casino</button></div>'; }).join("") +
+      ems.map(function (em) { return '<div class="unas"><span><b>' + esc(em.subject) + "</b> · " + esc(senderName(em.from)) + '</span><button class="btn" type="button" data-unem="' + esc(em.id) + '">Put back</button></div>'; }).join("");
+  }
   function renderEmails() {
     document.getElementById("trkCount").textContent = state.trackers.length;
     renderInboxPanel();
     var AVC = ["var(--accent-2)", "var(--coral-bg)", "var(--mint-bg)", "var(--sky-bg)", "var(--c-call)"];
     document.getElementById("trkList").innerHTML = state.trackers.map(function (t, i) {
-      if (ui.trkEdit === t.id) return '<form class="trk trkedit" data-trkform="' + t.id + '"><div class="meta2"><b>' + esc(t.name) + '</b><input class="inp" name="m" type="text" value="' + esc(termsOf(t).join(", ")) + '" aria-label="Match emails by"><small>Separate several with commas: a +tag, a domain or a name, e.g. vegasnova, vn-promo.com</small><div class="row" style="margin-top:6px"><button class="btn primary" type="submit">Save</button><button class="btn" type="button" data-trkcancel="1">Cancel</button></div></div></form>';
-      return '<div class="trk"><span class="avatar" style="background:' + AVC[i % AVC.length] + '">' + esc(t.name.charAt(0).toUpperCase()) + '</span><div class="meta2"><b>' + esc(t.name) + "</b><small>matches " + termsOf(t).map(function (k) { return "“" + esc(k) + "”"; }).join(", ") + " · " + plural(emailsOf(t).length, "email", "emails") + "</small></div>" +
+      if (ui.trkEdit === t.id) return '<form class="trk trkedit" data-trkform="' + t.id + '"><div class="meta2"><input class="inp" name="n" type="text" value="' + esc(t.name) + '" aria-label="Casino name" style="font-weight:600"><input class="inp" name="m" type="text" value="' + esc(termsOf(t).join(", ")) + '" aria-label="Match emails by"><small>Separate several with commas: a +tag, a domain or a name, e.g. vegasnova, vn-promo.com</small><div class="row" style="margin-top:6px"><button class="btn primary" type="submit">Save</button><button class="btn" type="button" data-trkcancel="1">Cancel</button></div></div></form>';
+      return '<div class="trk"><span class="avatar" style="background:' + AVC[i % AVC.length] + '">' + esc(t.name.charAt(0).toUpperCase()) + '</span><div class="meta2"><b>' + esc(t.name) + "</b><small>matches " + termsOf(t).map(function (k) { return "“" + esc(k) + "”"; }).join(", ") + " · " + plural(emailsOf(t).length, "email", "emails") + (t.auto ? " · sorted " + esc(t.auto) : "") + "</small></div>" +
         '<button class="iconbtn" type="button" data-trkedit="' + t.id + '" aria-label="Change how ' + esc(t.name) + ' is matched" title="Change addresses">' + svg('<path d="M4 14l9-9 2 2-9 9H4z"/>') + "</button>" +
         '<button class="iconbtn" type="button" data-trkdel="' + t.id + '" aria-label="Stop following ' + esc(t.name) + '" title="Stop following">' + svg('<path d="M5 5l10 10M15 5L5 15"/>') + "</button></div>";
     }).join("") || '<p class="small">Add the competitors you registered with. Their emails are matched by the +tag in the address, or the sender\'s domain or name. Similar senders of one brand are grouped.</p>';
@@ -2293,6 +2363,10 @@ footer { color: var(--muted); font-size: 12px; margin-top: 24px; text-align: cen
         (opts ? '<select class="inp addsel" data-addsel="' + gi + '" aria-label="Add to a competitor"><option value="">Add to…</option>' + opts + "</select>" : "") + "</div>";
     }).join("") : "";
     lastGroups = un;
+    var nc = notCasinoGroups();
+    document.getElementById("autoSortBox").innerHTML = '<label class="row" style="gap:8px;align-items:flex-start;margin-top:4px"><input type="checkbox" id="autoSortOn"' + (state.autoSortOff ? "" : " checked") + '><span class="small"><b style="color:var(--ink)">Sort emails automatically</b><br>New emails go to the casino that sent them. ' + (aiReady() ? "Claude checks unclear senders." : "Turn on AI for unclear senders.") + "</span></label>" +
+      (nc ? '<p class="small" style="margin:6px 0 0">' + plural(nc, "sender or email", "senders or emails") + ' set aside as not a casino. <button class="linkbtn" type="button" id="showNotCasino">' + (ui.showNC ? "Hide" : "Show") + "</button></p>" + (ui.showNC ? notCasinoHtml() : "") : "");
+    if (!state.autoSortOff && un.length) setTimeout(autoSort, 0);
 
     var wrap = document.getElementById("ecards");
     if (!state.trackers.length) {
@@ -2312,15 +2386,16 @@ footer { color: var(--muted); font-size: 12px; margin-top: 24px; text-align: cen
       var rows = list.map(function (em, k) {
         var it = items[em.id], d = new Date(em.date);
         var chips = it ? '<span class="purpose">' + esc(PURPOSE[it.purpose] || "Other") + "</span>" + (it.offer_summary ? '<span class="bdg offer">' + esc(it.offer_summary) + "</span>" : "") : "";
-        return '<details class="erow"><summary><span class="dd">Day ' + days[k] + '</span><span class="subj"><b>' + esc(em.subject) + "</b><small>" + d.toLocaleDateString(undefined, { weekday: "short", day: "numeric", month: "short" }) + " · " + d.toLocaleTimeString(undefined, { hour: "2-digit", minute: "2-digit" }) + " · " + esc(senderName(em.from)) + '</small></span><span class="chips2">' + chips + '</span></summary><div class="body">' + esc(em.text || "(no text in this email)") + "</div></details>";
+        return '<details class="erow"><summary><span class="dd">Day ' + days[k] + '</span><span class="subj"><b>' + esc(em.subject) + "</b><small>" + d.toLocaleDateString(undefined, { weekday: "short", day: "numeric", month: "short" }) + " · " + d.toLocaleTimeString(undefined, { hour: "2-digit", minute: "2-digit" }) + " · " + esc(senderName(em.from)) + '</small></span><span class="chips2">' + chips + '</span></summary><div class="body">' + esc(em.text || "(no text in this email)") + "</div>" +
+          '<div class="emove"><label class="small">This email is from <select class="inp" data-emove="' + esc(em.id) + '">' + state.trackers.map(function (x) { return '<option value="' + x.id + '"' + (x.id === t.id ? " selected" : "") + ">" + esc(x.name) + "</option>"; }).join("") + '<option value="none">Not a casino</option><option value="new">Another casino…</option></select></label></div></details>';
       }).join("");
       var sumHtml = t.summarizing ? '<div class="sumbox reading"><h4>Claude is reading ' + list.length + ' emails…</h4><div class="bar"></div><div class="bar" style="width:70%"></div></div>'
         : sum ? '<div class="sumbox"><h4>Summary · ' + esc(new Date(sum.at).toLocaleDateString()) + "</h4><p>" + esc(sum.overview) + "</p>" + (sum.patterns && sum.patterns.length ? "<ul>" + sum.patterns.map(function (x) { return "<li>" + esc(x) + "</li>"; }).join("") + "</ul>" : "") + "</div>"
         : (t.sumError ? '<div class="errbox">' + esc(t.sumError) + "</div>" : "");
-      return '<article class="ecard" data-trk="' + t.id + '"><div class="ehead"><span class="avatar" style="background:' + AVC[i % AVC.length] + '">' + esc(t.name.charAt(0).toUpperCase()) + '</span><div class="grow"><h3>' + esc(t.name) + '</h3><div class="sub2">' + list.length + " emails in " + (maxD + 1) + " days · about " + perDay + ' a day</div></div>' +
+      return '<article class="ecard" data-trk="' + t.id + '"><div class="ehead"><span class="avatar" style="background:' + AVC[i % AVC.length] + '">' + esc(t.name.charAt(0).toUpperCase()) + '</span><div class="grow"><h3>' + esc(t.name) + '</h3><div class="sub2">' + plural(list.length, "email", "emails") + " in " + (maxD + 1) + " days · about " + perDay + ' a day</div></div>' +
         '<label class="reg">Registered <input class="inp" type="date" data-reg="' + t.id + '" value="' + esc(t.registered || "") + '"></label></div>' +
         (list.length ? '<div class="estrip" aria-hidden="true">' + strip + '</div><div class="eaxis"><span>Day 0</span><span>Day ' + maxD + "</span></div>" : "") +
-        '<div class="estats"><span><b>' + list.length + "</b> emails</span>" + (sum ? "<span><b>" + offers + "</b> with an offer</span>" : "") + (list.length ? "<span>first on <b>day " + days[0] + "</b></span><span>last on <b>day " + days[days.length - 1] + "</b></span>" : "") + "</div>" +
+        '<div class="estats"><span><b>' + list.length + "</b> " + (list.length === 1 ? "email" : "emails") + "</span>" + (sum ? "<span><b>" + offers + "</b> with an offer</span>" : "") + (list.length ? "<span>first on <b>day " + days[0] + "</b></span><span>last on <b>day " + days[days.length - 1] + "</b></span>" : "") + "</div>" +
         sumHtml +
         (list.length ? '<div class="elist">' + rows + "</div>" : '<p class="small">No emails matched yet. Sync the inbox, or check the match text.</p>') +
         '<div class="row"><button class="btn primary" type="button" data-summ="' + t.id + '"' + (list.length && !t.summarizing ? "" : " disabled") + ">" + (sum ? "Summarise again" : "Summarise with Claude") + '</button><button class="btn" type="button" data-tocycle="' + t.id + '"' + (list.length ? "" : " disabled") + ">Add to builder as a cycle</button>" + (sum ? '<button class="btn" type="button" data-copysum="' + t.id + '">Copy summary</button>' : "") + "</div></article>";
@@ -2413,8 +2488,31 @@ footer { color: var(--muted); font-size: 12px; margin-top: 24px; text-align: cen
     var f = e.target.closest("[data-trkform]"); if (!f) return; e.preventDefault();
     var t = state.trackers.filter(function (x) { return x.id === f.getAttribute("data-trkform"); })[0]; if (!t) return;
     var v = f.querySelector('[name="m"]').value.split(",").map(function (k) { return k.trim().replace(/^\+/, ""); }).filter(Boolean).join(", ");
+    var nm = f.querySelector('[name="n"]').value.trim();
     if (!v) { toast("Add at least one address, domain or name."); return; }
-    commit(); t.match = v; ui.trkEdit = null; save(); renderEmails();
+    commit(); t.match = v; if (nm) t.name = nm; delete t.auto; ui.trkEdit = null; save(); renderEmails();
+  });
+  document.getElementById("autoSortBox").addEventListener("change", function (e) {
+    if (e.target.id !== "autoSortOn") return;
+    commit(); state.autoSortOff = !e.target.checked; save(); renderEmails();
+  });
+  document.getElementById("autoSortBox").addEventListener("click", function (e) {
+    var b;
+    if (e.target.id === "showNotCasino") { ui.showNC = !ui.showNC; renderEmails(); return; }
+    if ((b = e.target.closest("[data-unnc]"))) { commit(); delete state.notCasino[b.getAttribute("data-unnc")]; state.autoSortOff = true; save(); renderEmails(); toast("Back under Senders not matched yet. Automatic sorting is paused so you can add it; switch it on again after."); return; }
+    if ((b = e.target.closest("[data-unem]"))) { commit(); delete state.emailOwner[b.getAttribute("data-unem")]; save(); renderEmails(); }
+  });
+  // move one email to another casino (or set it aside); your choice always wins over automatic sorting
+  document.getElementById("ecards").addEventListener("change", function (e) {
+    var sel = e.target.closest("[data-emove]"); if (!sel) return;
+    var id = sel.getAttribute("data-emove"), v = sel.value;
+    if (v === "new") {
+      var name = (prompt("Which casino sent this email?") || "").trim(); if (!name) { renderEmails(); return; }
+      commit(); var t = state.trackers.filter(function (x) { return x.name.toLowerCase() === name.toLowerCase(); })[0];
+      if (!t) { t = { id: uid(), name: name, match: brandWords(name) || name.toLowerCase(), registered: "" }; state.trackers.push(t); }
+      state.emailOwner[id] = t.id;
+    } else { commit(); state.emailOwner[id] = v; }
+    save(); renderEmails(); toast(v === "none" ? "Set aside as not a casino" : "Email moved");
   });
   document.getElementById("trkList").addEventListener("click", function (e) {
     var ed = e.target.closest("[data-trkedit]");
@@ -2524,6 +2622,8 @@ footer { color: var(--muted); font-size: 12px; margin-top: 24px; text-align: cen
     d.research = Array.isArray(d.research) ? d.research : [];
     d.research.forEach(function (x) { if (x.status === "reading") { x.status = "error"; x.error = "The review was interrupted. Try again."; } });
     d.trackers = Array.isArray(d.trackers) ? d.trackers : [];
+    d.emailOwner = d.emailOwner && typeof d.emailOwner === "object" ? d.emailOwner : {};
+    d.notCasino = d.notCasino && typeof d.notCasino === "object" ? d.notCasino : {};
     d.emails = [];
     d.trackers.forEach(function (t) { t.summarizing = false; });
     d.competitors.forEach(function (x) { if (x.status === "reading") { x.status = "error"; x.error = "Reading was interrupted. Upload the screenshots again."; } });
@@ -2649,7 +2749,8 @@ footer { color: var(--muted); font-size: 12px; margin-top: 24px; text-align: cen
     saving = true; dirty = false;
     var wsId = curWs.id;
     var payload = { cycles: state.cycles, activeId: state.activeId, competitors: state.competitors, operators: state.operators, research: state.research,
-      trackers: state.trackers.map(function (t) { var c = Object.assign({}, t); delete c.summarizing; delete c.sumError; return c; }) };
+      trackers: state.trackers.map(function (t) { var c = Object.assign({}, t); delete c.summarizing; delete c.sumError; return c; }),
+      emailOwner: state.emailOwner || {}, notCasino: state.notCasino || {}, autoSortOff: !!state.autoSortOff };
     var r = await sb.rpc("save_state", { ws: wsId, new_data: payload, expected_version: wsVersion });
     saving = false;
     if (!curWs || curWs.id !== wsId) return;

@@ -161,6 +161,44 @@ function summariseEmails(apiKey: string, body: Record<string, unknown>) {
   return askClaude(apiKey, EMAIL_SYSTEM, [{ type: "text", text: input }], EMAIL_SCHEMA);
 }
 
+// ---------- which casino sent which emails ----------
+
+const SENDERS_SCHEMA = {
+  type: "object", additionalProperties: false, required: ["senders"],
+  properties: {
+    senders: {
+      type: "array", items: {
+        type: "object", additionalProperties: false, required: ["key", "is_casino", "casino", "known"],
+        properties: {
+          key: { type: "string" },
+          is_casino: { type: "boolean" },
+          casino: { type: "string" },
+          known: { type: "string" },
+        },
+      },
+    },
+  },
+};
+const SENDERS_SYSTEM = [
+  "You sort emails in a research inbox by the online casino or sportsbook that sent them.",
+  "You get groups of senders (display names, domains, a few subjects and a short snippet) and the casinos already followed.",
+  "For each group: is_casino is true when a gambling brand (casino, sportsbook, lottery, bingo, poker) sent it, false for anything else (Google, banks, newsletters of other businesses, spam).",
+  "casino is the brand's usual name, written the way the brand writes it (for example \"VegasNova\", \"Housebets\"). Use the brand in the email content when the sender is a mailing service.",
+  "known is the exact name from the followed list when it's the same brand (even if written differently), otherwise an empty string. Two groups can be the same brand.",
+  "Return one entry for every key, in the same order. Use an empty casino when is_casino is false.",
+].join("\n");
+
+function sortSenders(apiKey: string, body: Record<string, unknown>) {
+  const groups = (Array.isArray(body.groups) ? body.groups : []).slice(0, 40) as Record<string, unknown>[];
+  if (!groups.length) throw new UserFacingError("bad_request", "No senders were received.");
+  const known = (Array.isArray(body.known) ? body.known : []).map((k) => String(k).slice(0, 80)).slice(0, 100);
+  const list = (x: unknown, n: number, len: number) => (Array.isArray(x) ? x : []).slice(0, n).map((v) => String(v).slice(0, len));
+  const input = `Casinos already followed: ${known.length ? known.join(", ") : "none"}\n\n` + groups.map((g) =>
+    `=== key: ${String(g.key).slice(0, 80)}\nSender names: ${list(g.names, 5, 80).join(" | ")}\nDomains: ${list(g.domains, 5, 80).join(", ")}\n` +
+    `Subjects: ${list(g.subjects, 4, 160).join(" | ")}\nSnippet: ${String(g.snippet ?? "").slice(0, 400)}`).join("\n\n");
+  return askClaude(apiKey, SENDERS_SYSTEM, [{ type: "text", text: input }], SENDERS_SCHEMA);
+}
+
 // ---------- pages and journeys (registration, deposit, homepage...) ----------
 
 const PAGE_SCHEMA = {
@@ -316,11 +354,12 @@ Deno.serve(async (req) => {
       return reply(await callScript(`${scriptUrl}${sep}${tokenParam}&days=${days}`));
     }
 
-    if (action === "read_offer" || action === "summarise_emails" || action === "analyse_page" || action === "sort_page") {
+    if (action === "read_offer" || action === "summarise_emails" || action === "analyse_page" || action === "sort_page" || action === "sort_senders") {
       if (!anthropicKey) return reply({ error: "no_ai_key", message: "AI isn't set up yet. Add the ANTHROPIC_API_KEY secret in Supabase." });
       const result = action === "read_offer" ? await readOffer(anthropicKey, body)
         : action === "analyse_page" ? await analysePage(anthropicKey, body)
         : action === "sort_page" ? await sortPage(anthropicKey, body)
+        : action === "sort_senders" ? await sortSenders(anthropicKey, body)
         : await summariseEmails(anthropicKey, body);
       return reply({ result });
     }
