@@ -716,6 +716,7 @@ footer { color: var(--muted); font-size: 12px; margin-top: 24px; text-align: cen
           <div id="rvCasinos" class="stack" style="gap:8px"></div>
           <input type="file" id="rvFile" accept="image/png,image/jpeg,image/webp,.zip,application/zip" multiple hidden>
           <p class="scanhint">Scan a casino with the <a href="https://github.com/zhanna-spec/crm-cycle-planner/blob/main/extension/README.md" target="_blank" rel="noopener">site scanner extension</a>, or add its screenshots here (images or a zip).</p>
+          <div id="rvCreate"></div>
         </section>
         <section class="panel stack" aria-labelledby="rvAiH">
           <h2 class="ptitle" id="rvAiH">AI screenshot reading</h2>
@@ -2492,6 +2493,11 @@ footer { color: var(--muted); font-size: 12px; margin-top: 24px; text-align: cen
       return '<div class="rvcas"><span class="cdot" style="background:' + esc(rvColor(o)) + '"></span><span class="meta2"><b>' + esc(o.name) + (subj && o.id === subj.id ? ' <span class="ownpill">Reviewed</span>' : "") + "</b><small>" + plural(n, "screenshot", "screenshots") + "</small></span>" +
         '<button class="ebtn" type="button" data-rvadd="' + o.id + '">+ Screenshots</button></div>';
     }).join("") || '<p class="small">Add operators on the Offer terms side, or import a report.</p>';
+    var made = r.sections.some(function (x) { var c = (r.cards[v.id] || {})[x.id]; return (c && ((c.works || []).length || (c.gaps || []).length || (c.ideas || []).length)) || ((r.comps[v.id] || {})[x.id] || []).length; });
+    var withShots = r.sections.filter(function (x) { return rvShotsFor(v, x).length; });
+    document.getElementById("rvCreate").innerHTML = ui.rvCreating ? '<p class="small"><b>Claude is writing the report…</b> ' + esc(ui.rvCreating) + "</p>"
+      : '<button class="btn primary" type="button" data-rvact="createreport" style="width:100%;justify-content:center"' + (aiReady() && withShots.length && subj ? "" : " disabled") + ">" + (made ? "Update the report" : "Create the report") + "</button>" +
+        '<p class="small" style="margin:6px 0 0">' + (!subj ? "Mark your own website first: it's the casino being reviewed." : !aiReady() ? "Turn on AI to create the report." : !withShots.length ? "Scan the casinos first; their screenshots go into the sections." : made ? "Rewrites every section from the screenshots, including your edits." : "Claude writes " + plural(withShots.length, "section", "sections") + " from the screenshots of " + plural(rvCasinos().length, "casino", "casinos") + ".") + "</p>";
     var kp = document.getElementById("keyPanel"), rk = document.getElementById("rvKeyPanel");
     if (kp && rk) rk.innerHTML = kp.innerHTML;
   }
@@ -2587,6 +2593,7 @@ footer { color: var(--muted); font-size: 12px; margin-top: 24px; text-align: cen
     var a = t.getAttribute("data-rvact"), pi = +t.getAttribute("data-pi"), pts = rvPointsFor(v, sec);
     if (a === "import") { rvImportPick(); return; }
     if (a === "draft") { rvDraft(v, sec, ""); return; }
+    if (a === "createreport") { rvCreateReport(); return; }
     if (a === "applynotes") {
       var nt = (document.getElementById("rvNotes").value || "").trim(); if (!nt) { toast("Write your notes first."); return; }
       commit(); r.notes[v.id] = r.notes[v.id] || {}; r.notes[v.id][sec.id] = nt;
@@ -2712,8 +2719,21 @@ footer { color: var(--muted); font-size: 12px; margin-top: 24px; text-align: cen
         return { title: p.title, text: p.text, shots: shots };
       });
       r.questions[v.id] = r.questions[v.id] || {}; r.questions[v.id][sec.id] = d.questions || [];
-      ui.rvDrafting = null; save(); renderReview(); if (!ui.rvBusy) toast(sec.name + (notes ? ": notes applied" : " drafted") + ". Check the highlights and edit anything.");
+      ui.rvDrafting = null; save(); renderReview(); if (!ui.rvBusy && !ui.rvCreating) toast(sec.name + (notes ? ": notes applied" : " drafted") + ". Check the highlights and edit anything.");
     } catch (err) { ui.rvDrafting = null; renderReview(); toast(err.message); }
+  }
+  // the whole report: every section that has screenshots, one after another
+  async function rvCreateReport() {
+    var r = rv(), v = rvVersion();
+    var made = r.sections.some(function (x) { var c = (r.cards[v.id] || {})[x.id]; return (c && ((c.works || []).length || (c.gaps || []).length)) || ((r.comps[v.id] || {})[x.id] || []).length; });
+    if (made && !confirm("Update the report? Every section is written again from the screenshots, which replaces your own edits.")) return;
+    var order = r.sections.filter(function (x) { return rvShotsFor(v, x).length; });
+    for (var q = 0; q < order.length; q++) {
+      ui.rvCreating = order[q].name + " (" + (q + 1) + " of " + order.length + ")"; ui.rvSec = order[q].id; renderReview();
+      await rvDraft(v, order[q], "");
+    }
+    ui.rvCreating = null; ui.rvSec = order.length ? order[0].id : ui.rvSec; renderReview();
+    if (order.length) toast("The report is ready. Check the highlights and edit anything; Export it when you're happy.");
   }
   async function rvBlur(s, boxes) {
     // blur personal data in the picture itself, then store the blurred copy in its place
@@ -2783,14 +2803,9 @@ footer { color: var(--muted); font-size: 12px; margin-top: 24px; text-align: cen
       }
       rvBusy(null); save(); renderCompetitors();
       if (added.length && aiReady()) {
-        toast(plural(added.length, "screenshot", "screenshots") + " added to the review. Claude is sorting them, then drafting the sections.");
+        toast(plural(added.length, "screenshot", "screenshots") + " added to the review. Claude is sorting them into sections.");
         await rvSortShots(added);
-        var secs = [];
-        added.forEach(function (x) { (x.sections || []).forEach(function (id) { if (id !== "_none" && secs.indexOf(id) < 0) secs.push(id); }); });
-        var order = r.sections.filter(function (x) { return secs.indexOf(x.id) >= 0; });
-        for (var q = 0; q < order.length; q++) { rvBusy("Claude is drafting the review", q, order.length, order[q].name + " (" + (q + 1) + " of " + order.length + ")"); await rvDraft(v, order[q], ""); }
-        rvBusy(null);
-        if (order.length) toast("The review is drafted: " + order.map(function (x) { return x.name; }).join(", ") + ". Check the highlights and edit anything.");
+        toast(op.name + "'s screenshots are in their sections. Scan the next casino, or click Create the report when you have them all.");
       }
       else toast(plural(added.length, "screenshot", "screenshots") + " added to the review of " + op.name + ".");
     } catch (err) { rvBusy(null); toast(err.message); }
