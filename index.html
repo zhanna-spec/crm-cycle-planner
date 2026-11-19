@@ -394,6 +394,12 @@ textarea.inp { resize: vertical; min-height: 70px; }
 .rvai textarea { font: inherit; font-size: 14px; border: 1px solid var(--line); background: var(--surface); color: var(--ink); border-radius: 10px; padding: 8px 10px; width: 100%; box-sizing: border-box; margin-top: 4px; }
 .rvq { background: var(--ye-soft); border-radius: 12px; padding: 10px 14px; margin-top: 10px; font-size: 13px; }
 .rvq ul { margin: 6px 0; padding-left: 18px; } .rvq li { margin: 3px 0; }
+.frame.ed { cursor: crosshair; touch-action: none; user-select: none; }
+.frame.ed img { pointer-events: none; }
+.bx.ed { pointer-events: auto; cursor: move; }
+.bx.ed .rs { position: absolute; right: -7px; bottom: -7px; width: 14px; height: 14px; border-radius: 4px; background: #FFFFFF; border: 2px solid #1E1B3A; cursor: nwse-resize; }
+.bx.ed .bxx { position: absolute; right: -10px; top: -10px; width: 20px; height: 20px; border-radius: 50%; border: 0; background: #1E1B3A; color: #FFFFFF; font-size: 13px; line-height: 1; cursor: pointer; padding: 0; }
+.lg input { font: inherit; font-size: 13px; border: 1px solid var(--line); background: var(--surface); color: var(--ink); border-radius: 8px; padding: 4px 8px; flex: 1; min-width: 0; }
 .rvempty { background: var(--surface); border-radius: 20px; padding: 28px; text-align: center; color: var(--muted); box-shadow: var(--shadow-sm); }
 .rvfoot { text-align: center; color: var(--muted); font-size: 13px; }
 .rvprog { background: var(--surface); border-radius: 16px; padding: 14px 18px; box-shadow: var(--shadow-sm); }
@@ -2453,22 +2459,30 @@ footer { color: var(--muted); font-size: 12px; margin-top: 24px; text-align: cen
       '<div class="small">Sections</div><div class="row" style="flex-wrap:wrap;gap:4px 10px">' + r.sections.map(function (x) { return '<label class="small"><input type="checkbox" data-se-sec="' + esc(x.id) + '"' + ((s.sections || []).indexOf(x.id) >= 0 ? " checked" : "") + "> " + esc(x.name) + "</label>"; }).join("") + "</div>" +
       '<div class="row"><button class="btn primary" type="button" data-rvact="saveshot" data-id="' + esc(s.id) + '">Save</button><button class="btn" type="button" data-rvact="canceledit">Cancel</button><button class="btn danger" type="button" data-rvact="delshot" data-id="' + esc(s.id) + '">Delete</button></div></div></figure>';
   }
-  function rvPointEditor(v, sec, p, pi, subj) {
-    var pool = rvShotsFor(v, sec);
+  function rvEditFrame(shot, boxes, si) {
+    var src = rvSrc(shot), W = shot && shot.w || 1, H = shot && shot.h || 1;
+    var bx = (boxes || []).map(function (b, i) {
+      return '<span class="bx ed" data-bi="' + i + '" style="left:' + (b[0] / W * 100).toFixed(2) + "%;top:" + (b[1] / H * 100).toFixed(2) + "%;width:" + (b[2] / W * 100).toFixed(2) + "%;height:" + (b[3] / H * 100).toFixed(2) + '%"><i>' + (i + 1) + '</i><b class="rs" aria-hidden="true"></b><button type="button" class="bxx" data-bxx="' + i + '" aria-label="Delete highlight ' + (i + 1) + '">×</button></span>';
+    }).join("");
+    return '<div class="frame ed" data-pdi="' + si + '" title="Drag on the screenshot to add a highlight">' + (src ? '<img src="' + src + '" alt="" draggable="false">' : '<span class="noimg"></span>') + bx + "</div>";
+  }
+  function rvPointEditor(v, sec, p0, pi, subj) {
+    var pool = rvShotsFor(v, sec), p = ui.rvPD || p0;
     var kinds = function (op, k) {
       var isS = op && subj && op.id === subj.id, list = isS ? [["works", "Works"], ["gap", "Potential gap"], ["check", "To check"], ["mixed", "Mixed"]] : [["good", "Example"], ["mixed", "Mixed"], ["avoid", "Avoid"], ["note", "For reference"]];
       return list.map(function (x) { return '<option value="' + x[0] + '"' + (x[0] === k ? " selected" : "") + ">" + x[1] + "</option>"; }).join("");
     };
     var shots = (p.shots || []).map(function (sh, si) {
       var shot = rvShot(sh.shot), op = shot ? findOp(shot.op) : null;
-      return '<div class="vshot"><div class="vh">' + rvChip(op) + '<select data-pk="' + si + '" aria-label="Tag">' + kinds(op, sh.kind) + "</select></div>" + rvFrame(shot, sh.boxes, "") +
-        '<label class="small">Highlights, one per line: x, y, width, height, label<textarea data-pb="' + si + '" rows="' + Math.max(2, (sh.boxes || []).length + 1) + '">' + esc((sh.boxes || []).map(function (b) { return [b[0], b[1], b[2], b[3], b[4] || ""].join(", "); }).join("\n")) + "</textarea></label>" +
+      return '<div class="vshot ' + (RV_KCLASS[sh.kind] || "k-good") + '"><div class="vh">' + rvChip(op) + '<select data-pk="' + si + '" aria-label="Tag">' + kinds(op, sh.kind) + "</select></div>" + rvEditFrame(shot, sh.boxes, si) +
+        '<div class="small" style="color:var(--muted)">Drag a box to move it, its corner to resize, or drag on the picture to add one.</div>' +
+        ((sh.boxes || []).length ? '<ol class="lg">' + sh.boxes.map(function (b, i) { return '<li><i>' + (i + 1) + '</i><input type="text" data-bl="' + si + ":" + i + '" value="' + esc(b[4] || "") + '" placeholder="Short label" aria-label="Label of highlight ' + (i + 1) + '"></li>'; }).join("") + "</ol>" : "") +
         '<div class="row"><button class="ebtn" type="button" data-rvact="shotup" data-si="' + si + '">↑</button><button class="ebtn" type="button" data-rvact="shotdown" data-si="' + si + '">↓</button><button class="ebtn" type="button" data-rvact="shotrm" data-si="' + si + '">Remove</button></div></div>';
     }).join("");
     var add = pool.filter(function (s) { return !(p.shots || []).some(function (x) { return x.shot === s.id; }); });
     return '<div class="vpoint rvedit" data-pedit="' + pi + '"><label class="small">Title<input type="text" data-pe="title" value="' + esc(p.title || "") + '"></label>' +
       '<label class="small">One or two sentences: what ' + esc(subj ? subj.name : "the subject") + ' does and what competitors do<textarea data-pe="text" rows="3">' + esc(p.text || "") + "</textarea></label>" +
-      '<div class="vgrid c' + Math.min(4, (p.shots || []).length || 1) + '">' + shots + "</div>" +
+      '<div class="vgrid c' + Math.min(2, (p.shots || []).length || 1) + '">' + shots + "</div>" +
       (add.length ? '<label class="small">Add a screenshot<select data-pe="add"><option value="">Choose…</option>' + add.map(function (s) { var o = findOp(s.op); return '<option value="' + esc(s.id) + '">' + esc((o ? o.name : "?") + ": " + (s.title || "Untitled")) + "</option>"; }).join("") + "</select></label>" : "") +
       '<div class="row"><button class="btn primary" type="button" data-rvact="savepoint" data-pi="' + pi + '">Save</button><button class="btn" type="button" data-rvact="canceledit">Cancel</button><button class="ebtn" type="button" data-rvact="pointup" data-pi="' + pi + '">Move up</button><button class="ebtn" type="button" data-rvact="pointdown" data-pi="' + pi + '">Move down</button><span class="grow" style="flex:1"></span><button class="btn danger" type="button" data-rvact="delpoint" data-pi="' + pi + '">Delete point</button></div></div>';
   }
@@ -2483,6 +2497,52 @@ footer { color: var(--muted); font-size: 12px; margin-top: 24px; text-align: cen
     var kp = document.getElementById("keyPanel"), rk = document.getElementById("rvKeyPanel");
     if (kp && rk) rk.innerHTML = kp.innerHTML;
   }
+
+  // ---- editing a point: typed fields and highlight boxes (drag to move, corner to resize, drag on the picture to add) ----
+  function rvKeepTyped(box) {
+    var p = ui.rvPD; if (!p || !box) return;
+    var ti = box.querySelector('[data-pe="title"]'), tx = box.querySelector('[data-pe="text"]');
+    if (ti) p.title = ti.value.trim(); if (tx) p.text = tx.value.trim();
+    box.querySelectorAll("[data-pk]").forEach(function (s2) { var x = p.shots[+s2.getAttribute("data-pk")]; if (x) x.kind = s2.value; });
+    box.querySelectorAll("[data-bl]").forEach(function (inp) { var k = inp.getAttribute("data-bl").split(":"), x = p.shots[+k[0]]; if (x && x.boxes[+k[1]]) x.boxes[+k[1]][4] = inp.value.trim(); });
+  }
+  var rvDrag = null;
+  document.getElementById("reviewApp").addEventListener("pointerdown", function (e) {
+    var fr = e.target.closest(".frame.ed"); if (!fr || !ui.rvPD || e.button !== 0) return;
+    var si = +fr.getAttribute("data-pdi"), sh = ui.rvPD.shots[si], shot = sh && rvShot(sh.shot); if (!shot) return;
+    var del = e.target.closest("[data-bxx]");
+    if (del) { e.preventDefault(); rvKeepTyped(fr.closest("[data-pedit]")); sh.boxes.splice(+del.getAttribute("data-bxx"), 1); renderReview(); return; }
+    e.preventDefault();
+    rvKeepTyped(fr.closest("[data-pedit]"));
+    var rect = fr.getBoundingClientRect(), W = shot.w || 1, H = shot.h || 1, kx = W / rect.width, ky = H / rect.height;
+    var px = (e.clientX - rect.left) * kx, py = (e.clientY - rect.top) * ky, bEl = e.target.closest(".bx.ed");
+    if (bEl) {
+      var bi = +bEl.getAttribute("data-bi"), b = sh.boxes[bi];
+      rvDrag = { fr: fr, el: bEl, sh: sh, bi: bi, mode: e.target.closest(".rs") ? "size" : "move", x0: px, y0: py, b0: b.slice(), W: W, H: H, kx: kx, ky: ky, rect: rect };
+    } else {
+      sh.boxes = sh.boxes || []; sh.boxes.push([Math.round(px), Math.round(py), 1, 1, ""]);
+      var nb = document.createElement("span"); nb.className = "bx ed"; nb.innerHTML = "<i>" + sh.boxes.length + "</i>"; fr.appendChild(nb);
+      rvDrag = { fr: fr, el: nb, sh: sh, bi: sh.boxes.length - 1, mode: "draw", x0: px, y0: py, b0: [px, py, 1, 1], W: W, H: H, kx: kx, ky: ky, rect: rect };
+    }
+    fr.setPointerCapture(e.pointerId);
+  });
+  document.getElementById("reviewApp").addEventListener("pointermove", function (e) {
+    var d = rvDrag; if (!d) return;
+    var px = Math.max(0, Math.min(d.W, (e.clientX - d.rect.left) * d.kx)), py = Math.max(0, Math.min(d.H, (e.clientY - d.rect.top) * d.ky)), b = d.sh.boxes[d.bi];
+    if (d.mode === "move") { b[0] = Math.round(Math.max(0, Math.min(d.W - d.b0[2], d.b0[0] + px - d.x0))); b[1] = Math.round(Math.max(0, Math.min(d.H - d.b0[3], d.b0[1] + py - d.y0))); }
+    else if (d.mode === "size") { b[2] = Math.round(Math.max(12, px - d.b0[0])); b[3] = Math.round(Math.max(12, py - d.b0[1])); }
+    else { b[0] = Math.round(Math.min(px, d.x0)); b[1] = Math.round(Math.min(py, d.y0)); b[2] = Math.round(Math.abs(px - d.x0)); b[3] = Math.round(Math.abs(py - d.y0)); }
+    d.el.style.left = (b[0] / d.W * 100) + "%"; d.el.style.top = (b[1] / d.H * 100) + "%"; d.el.style.width = (b[2] / d.W * 100) + "%"; d.el.style.height = (b[3] / d.H * 100) + "%";
+  });
+  function rvDragEnd() {
+    var d = rvDrag; if (!d) return; rvDrag = null;
+    var b = d.sh.boxes[d.bi];
+    if (d.mode === "draw" && (b[2] < 12 || b[3] < 12)) d.sh.boxes.splice(d.bi, 1); // a click, not a drag
+    renderReview();
+    if (d.mode === "draw" && d.sh.boxes[d.bi]) { var inp = document.querySelector('[data-bl="' + ui.rvPD.shots.indexOf(d.sh) + ":" + d.bi + '"]'); if (inp) inp.focus(); }
+  }
+  document.getElementById("reviewApp").addEventListener("pointerup", rvDragEnd);
+  document.getElementById("reviewApp").addEventListener("pointercancel", rvDragEnd);
 
   // ---- lightbox with highlights ----
   var rvLbList = [], rvLbI = 0;
@@ -2509,13 +2569,6 @@ footer { color: var(--muted); font-size: 12px; margin-top: 24px; text-align: cen
 
   // ---- clicks in the review ----
   function rvSaveState() { save(); renderReview(); }
-  function rvParseBoxes(txt) {
-    return String(txt || "").split("\n").map(function (l) {
-      var m = l.split(","); if (m.length < 4) return null;
-      var n = m.slice(0, 4).map(function (x) { return Math.round(parseFloat(x)); }); if (n.some(isNaN)) return null;
-      return n.concat([m.slice(4).join(",").trim()]);
-    }).filter(Boolean);
-  }
   document.getElementById("reviewApp").addEventListener("click", function (e) {
     var t, r = rv(), v = rvVersion(), sec = rvSection();
     if ((t = e.target.closest("[data-rvsec]"))) { ui.rvSec = t.getAttribute("data-rvsec"); ui.rvEdit = null; ui.rvShotEdit = null; renderReview(); return; }
@@ -2551,34 +2604,28 @@ footer { color: var(--muted); font-size: 12px; margin-top: 24px; text-align: cen
     if (a === "exporthtml") { rvExportHtml(); return; }
     if (a === "exportzip") { rvExportZip(); return; }
     if (a === "editcards") { ui.rvEdit = "cards"; renderReview(); return; }
-    if (a === "canceledit") { ui.rvEdit = null; ui.rvShotEdit = null; renderReview(); return; }
+    if (a === "canceledit") { ui.rvEdit = null; ui.rvShotEdit = null; ui.rvPD = null; renderReview(); return; }
     if (a === "savecards") {
       commit(); var c = rvCardsFor(v, sec);
       document.querySelectorAll("[data-rvcard]").forEach(function (ta) { c[ta.getAttribute("data-rvcard")] = ta.value.split("\n").map(function (x) { return x.trim(); }).filter(Boolean); });
       ui.rvEdit = null; rvSaveState(); return;
     }
-    if (a === "addpoint") { commit(); pts.push({ title: "New point", text: "", shots: [] }); ui.rvEdit = "p" + (pts.length - 1); rvSaveState(); return; }
-    if (a === "editpoint") { ui.rvEdit = "p" + pi; renderReview(); return; }
+    if (a === "addpoint") { commit(); pts.push({ title: "New point", text: "", shots: [] }); ui.rvEdit = "p" + (pts.length - 1); ui.rvPD = JSON.parse(JSON.stringify(pts[pts.length - 1])); rvSaveState(); return; }
+    if (a === "editpoint") { ui.rvEdit = "p" + pi; ui.rvPD = JSON.parse(JSON.stringify(pts[pi])); renderReview(); return; }
     var box = t.closest("[data-pedit]");
-    if (box) {
-      var p2 = pts[+box.getAttribute("data-pedit")];
-      // keep what's typed while moving screenshots around
-      var keepTyped = function () {
-        p2.title = box.querySelector('[data-pe="title"]').value.trim(); p2.text = box.querySelector('[data-pe="text"]').value.trim();
-        box.querySelectorAll("[data-pk]").forEach(function (s2) { var x = p2.shots[+s2.getAttribute("data-pk")]; if (x) x.kind = s2.value; });
-        box.querySelectorAll("[data-pb]").forEach(function (ta) { var x = p2.shots[+ta.getAttribute("data-pb")]; if (x) x.boxes = rvParseBoxes(ta.value); });
-      };
+    if (box && ui.rvPD) {
+      var p2 = ui.rvPD;
+      rvKeepTyped(box);
       var si = +t.getAttribute("data-si");
       if (a === "shotup" || a === "shotdown" || a === "shotrm") {
-        commit(); keepTyped();
         if (a === "shotrm") p2.shots.splice(si, 1);
         else { var j = a === "shotup" ? si - 1 : si + 1; if (j >= 0 && j < p2.shots.length) { var tmp = p2.shots[si]; p2.shots[si] = p2.shots[j]; p2.shots[j] = tmp; } }
-        rvSaveState(); return;
+        renderReview(); return;
       }
-      if (a === "savepoint") { commit(); keepTyped(); if (!p2.title) p2.title = "Untitled point"; ui.rvEdit = null; rvSaveState(); return; }
+      if (a === "savepoint") { commit(); if (!p2.title) p2.title = "Untitled point"; pts[+box.getAttribute("data-pedit")] = p2; ui.rvPD = null; ui.rvEdit = null; rvSaveState(); return; }
     }
     if (a === "delpoint") { commit(); pts.splice(pi, 1); ui.rvEdit = null; rvSaveState(); return; }
-    if (a === "pointup" || a === "pointdown") { var k = a === "pointup" ? pi - 1 : pi + 1; if (k < 0 || k >= pts.length) return; commit(); var tp = pts[pi]; pts[pi] = pts[k]; pts[k] = tp; ui.rvEdit = "p" + k; rvSaveState(); return; }
+    if (a === "pointup" || a === "pointdown") { var k = a === "pointup" ? pi - 1 : pi + 1; if (k < 0 || k >= pts.length) return; commit(); if (ui.rvPD) { rvKeepTyped(t.closest("[data-pedit]")); pts[pi] = ui.rvPD; } var tp = pts[pi]; pts[pi] = pts[k]; pts[k] = tp; ui.rvEdit = "p" + k; ui.rvPD = JSON.parse(JSON.stringify(pts[k])); rvSaveState(); return; }
     if (a === "saveshot" || a === "delshot") {
       var s = rvShot(t.getAttribute("data-id")); if (!s) return;
       commit();
@@ -2595,13 +2642,14 @@ footer { color: var(--muted); font-size: 12px; margin-top: 24px; text-align: cen
   });
   document.getElementById("reviewApp").addEventListener("change", function (e) {
     var t = e.target;
-    if (t.getAttribute("data-pe") === "add" && t.value) {
-      var box = t.closest("[data-pedit]"), p = rvPointsFor(rvVersion(), rvSection())[+box.getAttribute("data-pedit")], s = rvShot(t.value), subj = rvSubject();
-      commit(); p.title = box.querySelector('[data-pe="title"]').value.trim(); p.text = box.querySelector('[data-pe="text"]').value.trim();
+    if (t.getAttribute("data-pe") === "add" && t.value && ui.rvPD) {
+      var box = t.closest("[data-pedit]"), p = ui.rvPD, s = rvShot(t.value), subj = rvSubject();
+      rvKeepTyped(box);
       var isS = s && subj && s.op === subj.id; p.shots.push({ shot: t.value, kind: isS ? "works" : "good", boxes: [] });
       if (isS && p.shots.length > 1) p.shots.unshift(p.shots.pop()); // the subject's screenshot goes first
-      rvSaveState();
+      renderReview();
     }
+    if (t.hasAttribute("data-pk") && ui.rvPD) { rvKeepTyped(t.closest("[data-pedit]")); renderReview(); }
   });
   document.getElementById("reviewApp").addEventListener("keydown", function (e) {
     if (e.target.id === "rvTitleInp") {
