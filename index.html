@@ -2320,19 +2320,39 @@ footer { color: var(--muted); font-size: 12px; margin-top: 24px; text-align: cen
             if (!r.is_casino) { state.notCasino[g.key] = { name: g.name, domains: g.domains, count: g.count }; changed++; return; }
             var t = r.known ? state.trackers.filter(function (x) { return x.name.toLowerCase() === r.known.toLowerCase(); })[0] : null;
             if (!t && r.known) { var op2 = (state.operators || []).filter(function (o) { return o.name.toLowerCase() === r.known.toLowerCase(); })[0]; if (op2) t = newTracker(op2.name, g.key, g.first, "by Claude"); }
-            if (t) addTerm(t, g.key); else newTracker(niceName(r.casino || g.name), g.key, g.first, "by Claude");
+            if (t) addTerm(t, g.key); else newTracker(r.casino ? r.casino.trim() : casinoName(g.name, g.domains), g.key, g.first, "by Claude");
             changed++;
           });
         } else ask.forEach(function (g) {
           // without AI: obvious non-casinos are set aside, clear brand names become casinos, unclear ones wait for you
           if (/google|apple|microsoft|outlook|yahoo|paypal|amazon|facebook|meta|linkedin|instagram|twitter|icloud|dropbox|zoom|slack/i.test(g.names.join(" ") + " " + g.domains.join(" "))) { state.notCasino[g.key] = { name: g.name, domains: g.domains, count: g.count }; changed++; return; }
-          var nm = niceName(g.name);
-          if (nm !== "Unknown casino" && brandWords(g.name).length >= 4) { newTracker(nm, g.key, g.first, "from the sender name"); changed++; }
+          var nm = casinoName(g.name, g.domains);
+          if (nm && nm !== "Unknown casino" && brandWords(g.name).length >= 4) { newTracker(nm, g.key, g.first, "from the sender name"); changed++; }
         });
       }
     } catch (err) { toast("Couldn't sort the new emails automatically: " + err.message); }
     autoBusy = false;
     if (changed) { history.push(before); if (history.length > 80) history.shift(); save(); renderEmails(); toast("New emails sorted by casino. You can change anything on the left or on each email."); }
+  }
+  // The casino's name, not the sender's tagline: "StayCasino With Love 💛" from staycasino.com is "StayCasino".
+  function casinoName(display, places) {
+    var clean = String(display || "").replace(/[\u{1F000}-\u{1FAFF}\u{2600}-\u{27BF}\u{FE0F}\u{200D}]/gu, "").replace(/["“”]/g, "").replace(/\s+/g, " ").trim();
+    var brands = (places || []).map(function (x) { var l = String(x).toLowerCase().replace(/^\+/, "").split("@").pop().split("."); return brandWords(l.length > 1 ? l[l.length - 2] : l[0]); }).filter(function (b) { return b.length >= 4; });
+    var words = clean.split(" ");
+    for (var b = 0; b < brands.length; b++) {
+      // the brand as the sender writes it: 1 to 3 words of the name that spell the domain
+      for (var n = 1; n <= 3; n++) for (var i = 0; i + n <= words.length; i++) {
+        var part = words.slice(i, i + n).join(" ");
+        if (squash(part) === brands[b] || squash(part) === brands[b] + "casino") return part;
+      }
+    }
+    if (brands.length) {
+      // the brand isn't in the name: the start of the name if it begins with it, otherwise the domain
+      var start = words.filter(function (w, i) { return squash(words.slice(0, i + 1).join("")).indexOf(brands[0]) === 0; })[0];
+      if (start && squash(start).length <= brands[0].length + 6) return start;
+      return brands[0].charAt(0).toUpperCase() + brands[0].slice(1);
+    }
+    return niceName(clean).split(" ").slice(0, 3).join(" ") || clean;
   }
   function addTerm(t, term) { var ks = termsOf(t); term = String(term || "").trim().toLowerCase(); if (term && ks.indexOf(term) < 0) ks.push(term); t.match = ks.join(", "); }
 
@@ -2342,7 +2362,17 @@ footer { color: var(--muted); font-size: 12px; margin-top: 24px; text-align: cen
     return keys.map(function (k) { var g = state.notCasino[k]; return '<div class="unas"><span><b>' + esc(g.name || k) + "</b> · " + esc((g.domains || []).join(", ")) + '</span><button class="btn" type="button" data-unnc="' + esc(k) + '">It is a casino</button></div>'; }).join("") +
       ems.map(function (em) { return '<div class="unas"><span><b>' + esc(em.subject) + "</b> · " + esc(senderName(em.from)) + '</span><button class="btn" type="button" data-unem="' + esc(em.id) + '">Put back</button></div>'; }).join("");
   }
+  function tidyNames() {
+    var changed = false;
+    state.trackers.forEach(function (t) {
+      if (t.renamed) return;
+      var c = casinoName(t.name, termsOf(t));
+      if (c && c !== t.name && c.length >= 3 && squash(t.name).indexOf(squash(c)) >= 0) { t.name = c; changed = true; }
+    });
+    if (changed) save();
+  }
   function renderEmails() {
+    tidyNames();
     document.getElementById("trkCount").textContent = state.trackers.length;
     renderInboxPanel();
     var AVC = ["var(--accent-2)", "var(--coral-bg)", "var(--mint-bg)", "var(--sky-bg)", "var(--c-call)"];
@@ -2473,7 +2503,7 @@ footer { color: var(--muted); font-size: 12px; margin-top: 24px; text-align: cen
     if (b) {
       var g = lastGroups[+b.getAttribute("data-follow")]; if (!g) return;
       commit();
-      state.trackers.push({ id: uid(), name: g.tag ? g.tag : g.name, match: g.key, registered: localDate(g.first) });
+      state.trackers.push({ id: uid(), name: g.tag ? g.tag.charAt(0).toUpperCase() + g.tag.slice(1) : casinoName(g.name, g.domains), match: g.key, registered: localDate(g.first) });
       save(); renderEmails(); return;
     }
     b = e.target.closest("[data-addto]");
@@ -2490,7 +2520,7 @@ footer { color: var(--muted); font-size: 12px; margin-top: 24px; text-align: cen
     var v = f.querySelector('[name="m"]').value.split(",").map(function (k) { return k.trim().replace(/^\+/, ""); }).filter(Boolean).join(", ");
     var nm = f.querySelector('[name="n"]').value.trim();
     if (!v) { toast("Add at least one address, domain or name."); return; }
-    commit(); t.match = v; if (nm) t.name = nm; delete t.auto; ui.trkEdit = null; save(); renderEmails();
+    commit(); t.match = v; if (nm && nm !== t.name) { t.name = nm; t.renamed = true; } delete t.auto; ui.trkEdit = null; save(); renderEmails();
   });
   document.getElementById("autoSortBox").addEventListener("change", function (e) {
     if (e.target.id !== "autoSortOn") return;
