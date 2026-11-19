@@ -395,6 +395,9 @@ textarea.inp { resize: vertical; min-height: 70px; }
 .bx.ed .rs { position: absolute; right: -7px; bottom: -7px; width: 14px; height: 14px; border-radius: 4px; background: #FFFFFF; border: 2px solid #1E1B3A; cursor: nwse-resize; }
 .bx.ed .bxx { position: absolute; right: -10px; top: -10px; width: 20px; height: 20px; border-radius: 50%; border: 0; background: #1E1B3A; color: #FFFFFF; font-size: 13px; line-height: 1; cursor: pointer; padding: 0; }
 .lg input { font: inherit; font-size: 13px; border: 1px solid var(--line); background: var(--surface); color: var(--ink); border-radius: 8px; padding: 4px 8px; flex: 1; min-width: 0; }
+.rvtabs .vbtn { padding: 8px 10px; } .rvtabs .vbtn .ic { width: 17px; height: 17px; }
+.rvtabs .exbtn { font: inherit; font-weight: 600; border: 0; background: var(--sunk); color: var(--accent); padding: 8px 14px; border-radius: 12px; cursor: pointer; }
+.rvtabs .exbtn:hover { background: var(--accent-soft); }
 .rvempty { background: var(--surface); border-radius: 20px; padding: 28px; text-align: center; color: var(--muted); box-shadow: var(--shadow-sm); }
 .rvfoot { text-align: center; color: var(--muted); font-size: 13px; }
 .rvprog { background: var(--surface); border-radius: 16px; padding: 14px 18px; box-shadow: var(--shadow-sm); }
@@ -2384,16 +2387,15 @@ footer { color: var(--muted); font-size: 12px; margin-top: 24px; text-align: cen
     var r = rv(), v = rvVersion(), sec = rvSection(), subj = rvSubject(), main = document.getElementById("rvMain");
     renderRvSide(v);
     var modes = r.versions.length > 1 ? '<div class="rvmodes">' + r.versions.map(function (x) { return '<button type="button" data-rvv="' + esc(x.id) + '"' + (x.id === v.id ? ' class="on"' : "") + ">" + rvIcon(x.device) + esc(x.label) + "</button>"; }).join("") + "</div>" : "";
-    var head = '<header class="rvhead"><div class="logo">' + rvIcon("tournaments") + "</div>" +
-      (ui.rvTitleEdit ? '<input class="tinp" id="rvTitleInp" value="' + esc(rvTitle()) + '" aria-label="Report title">' : '<h1 id="rvTitle" title="Click to rename">' + esc(rvTitle()) + "</h1>") +
-      modes + '<button type="button" class="hbtn2" data-rvact="import">Import report</button><button type="button" class="hbtn2" data-rvact="export">Export</button></header>';
+    var head = "";
     if (ui.rvExportOpen) head += '<div class="rvprog"><b>Export</b><p class="small" style="margin:6px 0 10px">The report page is the same as your template: one file with all screenshots, ready to share. The data folder is for <code>build.py</code>.</p><div class="row"><button class="btn primary" type="button" data-rvact="exporthtml">Report page (.html)</button><button class="btn" type="button" data-rvact="exportzip">Data folder (.zip)</button><button class="btn" type="button" data-rvact="exportclose">Close</button></div></div>';
     if (ui.rvBusy) head += '<div class="rvprog"><b>' + esc(ui.rvBusy.title) + '</b><div class="scanbar" style="margin:8px 0"><i style="width:' + Math.round(100 * (ui.rvBusy.done || 0) / Math.max(1, ui.rvBusy.total || 1)) + '%"></i></div><p class="small" style="margin:0">' + esc(ui.rvBusy.text || "") + "</p></div>";
+    var vsw = r.versions.length > 1 ? r.versions.map(function (x) { return '<button type="button" class="vbtn' + (x.id === v.id ? " on" : "") + '" data-rvv="' + esc(x.id) + '" title="' + esc(x.label) + '">' + rvIcon(x.device) + "</button>"; }).join("") : "";
     var tabs = '<nav class="rvtabs" aria-label="Sections">' + r.sections.map(function (x) {
       return '<button type="button" data-rvsec="' + esc(x.id) + '"' + (x.id === sec.id ? ' class="on"' : "") + ">" + rvIcon(x.id) + "<span>" + esc(x.name) + "</span></button>";
-    }).join("") + "</nav>";
+    }).join("") + (vsw ? '<span style="flex:1"></span>' + vsw : "") + "</nav>";
     if (!subj && !r.shots.length) {
-      main.innerHTML = head + '<div class="rvempty"><p><b>No review yet.</b></p><p class="small">Add your own website as an operator (it becomes the casino being reviewed), then scan it and its competitors with the extension or add their screenshots on the left. If you already have a report built from the hand-off, use <b>Import report</b>.</p></div>';
+      main.innerHTML = head + '<div class="rvempty"><p><b>No review yet.</b></p><p class="small">Add your own website as an operator on the Offer terms side (it becomes the casino being reviewed), then scan it and its competitors with the extension. Claude sorts the screenshots and drafts each section.</p></div>';
       return;
     }
     var mode = v.device === "mobile" ? "mode-m" : "mode-d";
@@ -2403,18 +2405,9 @@ footer { color: var(--muted); font-size: 12px; margin-top: 24px; text-align: cen
         : key === "ideas" ? ((c.ideas || []).length ? '<ol class="ml dn">' + c.ideas.map(function (t) { return "<li>" + esc(t) + "</li>"; }).join("") + "</ol>" : '<p class="none">Not offered</p>') : rvBullets(list, key === "works" ? "g" : "b");
       return '<div class="qcard ' + cls + '"><h3><span class="qi">' + icon + "</span>" + title + "</h3>" + body + "</div>";
     };
-    var qs = ((r.questions[v.id] || {})[sec.id] || []), busyHere = ui.rvDrafting === v.id + "/" + sec.id;
-    var ai = '<div class="rvai">' +
-      (busyHere ? '<div class="reading"><div class="bar"></div><div class="bar" style="width:70%"></div></div><p class="small" style="margin:6px 0 0">Claude is ' + (ui.rvDraftMode === "notes" ? "applying your notes to" : "writing") + " " + esc(sec.name) + ". This takes about a minute.</p>"
-        : '<div class="rvtools"><button class="btn primary" type="button" data-rvact="draft"' + (aiReady() && rvShotsFor(v, sec).length ? "" : " disabled") + ">" + (c.works.length || c.gaps.length || pts.length ? "Redraft with Claude" : "Draft with Claude") + "</button>" +
-          '<span class="small">' + (!aiReady() ? "Turn on AI to draft with Claude." : !rvShotsFor(v, sec).length ? "Add or sort screenshots into this section first." : "Claude follows your review rules; your notes below and earlier corrections are applied.") + "</span></div>" +
-          (qs.length ? '<div class="rvq"><b>To check with you</b><ul>' + qs.map(function (q) { return "<li>" + esc(q) + "</li>"; }).join("") + "</ul><small>Answer in the notes below; they'll be applied.</small></div>" : "") +
-          '<label class="small" style="display:block;margin-top:10px">Your notes on ' + esc(sec.name) + '<textarea id="rvNotes" rows="3" placeholder="e.g. Don\'t list the single filter as a gap. Show Oliver\'s menu instead of HertzBetz.">' + esc((r.notes[v.id] || {})[sec.id] || "") + "</textarea></label>" +
-          '<div class="rvtools" style="margin-top:6px"><button class="btn" type="button" data-rvact="applynotes"' + (aiReady() ? "" : " disabled") + '>Apply notes with Claude</button><label class="small row" style="gap:6px"><input type="checkbox" id="rvCarry" checked> Carry them forward to other sections and versions</label><span class="grow"></span>' +
-          (r.rules.length ? '<button class="ebtn" type="button" data-rvact="showrules">Corrections so far (' + r.rules.length + ")</button>" : "") + "</div>" +
-          (ui.rvShowRules ? '<div class="rvq"><b>Corrections carried forward</b><ul>' + r.rules.map(function (x, i) { return "<li>" + esc(x) + ' <button class="ebtn" type="button" data-rvact="delrule" data-i="' + i + '">Remove</button></li>'; }).join("") + "</ul></div>" : "")) + "</div>";
-    var tools = ai + '<div class="rvtools">' + (editC ? '<span class="small">One point per line. Add “(to check)” at the end of a line that still needs confirming.</span><span class="grow"></span><button class="btn primary" type="button" data-rvact="savecards">Save</button><button class="btn" type="button" data-rvact="canceledit">Cancel</button>'
-      : '<span class="grow"></span><button class="ebtn" type="button" data-rvact="editcards">Edit the three cards</button>') + "</div>";
+    var busyHere = ui.rvDrafting === v.id + "/" + sec.id;
+    var tools = '<div class="rvtools">' + (editC ? '<span class="small">One point per line. Add “(to check)” at the end of a line that still needs confirming.</span><span class="grow"></span><button class="btn primary" type="button" data-rvact="savecards">Save</button><button class="btn" type="button" data-rvact="canceledit">Cancel</button>'
+      : '<span class="grow"></span>' + (busyHere ? '<span class="small">Claude is writing ' + esc(sec.name) + "…</span>" : aiReady() && rvShotsFor(v, sec).length ? '<button class="ebtn" type="button" data-rvact="draft">' + (c.works.length || c.gaps.length || pts.length ? "Redraft" : "Draft") + " with Claude</button>" : "") + '<button class="ebtn" type="button" data-rvact="editcards">Edit the three cards</button><button class="ebtn" type="button" data-rvact="export">Export</button>') + "</div>";
     var tri = '<div class="tri">' + card("works", "good", "✓", "Works", c.works) + card("gaps", "bad", "!", "Potential gaps", c.gaps) + card("ideas", "do", "→", "Ideas to consider", c.ideas) + "</div>";
     var points = pts.map(function (p, pi) {
       if (ui.rvEdit === "p" + pi) return rvPointEditor(v, sec, p, pi, subj);
@@ -2711,7 +2704,7 @@ footer { color: var(--muted); font-size: 12px; margin-top: 24px; text-align: cen
         return { title: p.title, text: p.text, shots: shots };
       });
       r.questions[v.id] = r.questions[v.id] || {}; r.questions[v.id][sec.id] = d.questions || [];
-      ui.rvDrafting = null; save(); renderReview(); toast(sec.name + (notes ? ": notes applied" : " drafted") + ". Check the highlights and edit anything.");
+      ui.rvDrafting = null; save(); renderReview(); if (!ui.rvBusy) toast(sec.name + (notes ? ": notes applied" : " drafted") + ". Check the highlights and edit anything.");
     } catch (err) { ui.rvDrafting = null; renderReview(); toast(err.message); }
   }
   async function rvBlur(s, boxes) {
@@ -2781,7 +2774,16 @@ footer { color: var(--muted); font-size: 12px; margin-top: 24px; text-align: cen
         save();
       }
       rvBusy(null); save(); renderCompetitors();
-      if (added.length && aiReady()) { toast(plural(added.length, "screenshot", "screenshots") + " added to the review. Claude is checking their sections and titles."); await rvSortShots(added); }
+      if (added.length && aiReady()) {
+        toast(plural(added.length, "screenshot", "screenshots") + " added to the review. Claude is sorting them, then drafting the sections.");
+        await rvSortShots(added);
+        var secs = [];
+        added.forEach(function (x) { (x.sections || []).forEach(function (id) { if (id !== "_none" && secs.indexOf(id) < 0) secs.push(id); }); });
+        var order = r.sections.filter(function (x) { return secs.indexOf(x.id) >= 0; });
+        for (var q = 0; q < order.length; q++) { rvBusy("Claude is drafting the review", q, order.length, order[q].name + " (" + (q + 1) + " of " + order.length + ")"); await rvDraft(v, order[q], ""); }
+        rvBusy(null);
+        if (order.length) toast("The review is drafted: " + order.map(function (x) { return x.name; }).join(", ") + ". Check the highlights and edit anything.");
+      }
       else toast(plural(added.length, "screenshot", "screenshots") + " added to the review of " + op.name + ".");
     } catch (err) { rvBusy(null); toast(err.message); }
   }
