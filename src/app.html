@@ -1541,12 +1541,14 @@ footer { color: var(--muted); font-size: 12px; margin-top: 24px; text-align: cen
     var op = curOp();
     var allOffers = (op ? offersOf(op) : state.competitors).filter(runMatch);
     document.querySelectorAll('input[name="runView"]').forEach(function (r) { r.checked = r.value === ui.runView; });
-    var allPages = (op ? pagesOf(op) : state.research).filter(runMatch);
+    // Offer terms is a reference of each offer's conditions: website content lives in the review now,
+    // and nothing here is compared, ranked or scored
+    var allPages = [];
     // the section menu: Overview, then every offer type and website section that has something
     var count = {};
     allOffers.forEach(function (x) { count[offerKind(x)] = (count[offerKind(x)] || 0) + 1; });
     allPages.forEach(function (x) { count[x.section] = (count[x.section] || 0) + 1; });
-    var known = OFFER_KINDS.concat(PAGE_KINDS).some(function (k) { return k[0] === ui.sec; });
+    var known = OFFER_KINDS.some(function (k) { return k[0] === ui.sec; });
     if (ui.sec !== "overview" && !known) ui.sec = "overview";
     var chip = function (k) { return '<button type="button" class="chip' + (ui.sec === k[0] ? " on" : "") + '" data-sec="' + k[0] + '">' + esc(k[1]) + "<i>" + (count[k[0]] || 0) + "</i></button>"; };
     var shownKinds = function (kinds) { return kinds.filter(function (k) { return count[k[0]] || ui.sec === k[0]; }); };
@@ -1558,7 +1560,7 @@ footer { color: var(--muted); font-size: 12px; margin-top: 24px; text-align: cen
     document.getElementById("addOpen").hidden = !op;
     document.getElementById("trayPanel").hidden = !op || !(ui.adding || tray.targetId);
     var overview = ui.sec === "overview";
-    document.getElementById("cmpPanel").hidden = overview;
+    document.getElementById("cmpPanel").hidden = true;
     if (!overview) ui.cmpKind = ui.sec;
     var offerFilter = overview || isPageKind(ui.sec) ? null : ui.sec;
     var list = offerFilter ? allOffers.filter(function (x) { return offerKind(x) === offerFilter; }) : [];
@@ -1629,7 +1631,7 @@ footer { color: var(--muted); font-size: 12px; margin-top: 24px; text-align: cen
       var tiles = kinds.map(function (k) { var its = items.filter(function (x) { return keyOf(x) === k[0]; }); return its.length ? tile(k[0], its, isOffer) : ""; }).join("");
       return tiles ? '<div class="ovgroup"><div class="sechead"><h3>' + title + "</h3></div><div class=\"ovgrid\">" + tiles + "</div></div>" : "";
     };
-    return group("Offers", OFFER_KINDS, offers, offerKind, true) + group("Website", PAGE_KINDS, pages, function (x) { return x.section; }, false);
+    return group("Offers", OFFER_KINDS, offers, offerKind, true);
   }
   function yourOffer() {
     var steps = cyc().steps.slice().sort(function (a, b) { return a.day - b.day; });
@@ -2019,9 +2021,10 @@ footer { color: var(--muted); font-size: 12px; margin-top: 24px; text-align: cen
   }
   function renderTray() {
     var t = tray.targetId ? findItem(tray.targetId) : null; if (tray.targetId && !t) tray.targetId = null;
+    if (!t && isPageKind(tray.kind)) tray.kind = "welcome"; // website content is added in the review
     var kind = t ? (t.section || offerKind(t)) : tray.kind, page = isPageKind(kind);
     var sel = document.getElementById("trayKind");
-    if (!sel.options.length) sel.innerHTML = '<optgroup label="Offers">' + OFFER_KINDS.map(function (k) { return '<option value="' + k[0] + '">' + k[1] + "</option>"; }).join("") + '</optgroup><optgroup label="Website content">' + PAGE_KINDS.map(function (k) { return '<option value="' + k[0] + '">' + k[1] + "</option>"; }).join("") + "</optgroup>";
+    if (!sel.options.length) sel.innerHTML = OFFER_KINDS.map(function (k) { return '<option value="' + k[0] + '">' + k[1] + "</option>"; }).join("");
     sel.value = kind; sel.disabled = !!t;
     var head = document.getElementById("trayTarget");
     head.hidden = !t;
