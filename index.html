@@ -406,6 +406,25 @@ textarea.inp { resize: vertical; min-height: 70px; }
 .trk .iconbtn { width: 28px; height: 28px; background: transparent; }
 .trk .iconbtn:hover { background: var(--surface); color: var(--bad); }
 .trk .iconbtn[data-trkedit]:hover { color: var(--accent); }
+.trk.pick { cursor: pointer; }
+.trk.pick:hover { box-shadow: inset 0 0 0 2px var(--accent-soft, var(--line)); }
+.trk.pick.on { background: var(--accent); }
+.trk.pick.on b, .trk.pick.on small { color: #FFFFFF; }
+.trk.pick.on .iconbtn { color: #FFFFFF; }
+.trk.pick:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.unbox summary { cursor: pointer; font-size: 13px; font-weight: 600; color: var(--ink); padding: 6px 0; }
+.etile { font: inherit; text-align: left; border: 0; border-radius: 16px; background: var(--surface); color: var(--ink); padding: 14px; cursor: pointer; display: flex; flex-direction: column; gap: 10px; box-shadow: 0 1px 2px rgba(30,27,58,.05); }
+.etile:hover { box-shadow: 0 4px 14px rgba(106,90,224,.16); }
+.etile:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.etile .meta2 b { display: block; font-size: 15px; }
+.etile .meta2 small { color: var(--muted); font-size: 12px; }
+.etile .spark { display: flex; align-items: flex-end; gap: 3px; height: 34px; }
+.etile .spark i { flex: 1; background: var(--accent); border-radius: 3px; min-height: 3px; }
+.etile .spark i.z { background: var(--line); height: 3px !important; }
+.etile .last { font-size: 13px; overflow: hidden; text-overflow: ellipsis; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; }
+.etile .last small { display: block; color: var(--muted); font-size: 11px; }
+.etile .chips3 { display: flex; gap: 6px; flex-wrap: wrap; }
+.etile .chips3:empty { display: none; }
 .addrs { margin-top: 4px; }
 .addr { display: flex; gap: 8px; align-items: center; padding: 6px 0; border-top: 1px solid var(--line); font-size: 12px; }
 .addr span { flex: 1; min-width: 0; overflow-wrap: anywhere; color: var(--muted); }
@@ -629,13 +648,14 @@ footer { color: var(--muted); font-size: 12px; margin-top: 24px; text-align: cen
           <div id="inboxPanel" class="stack"></div>
         </section>
         <section class="panel stack" aria-labelledby="trkH">
-          <h2 class="ptitle" id="trkH">Competitors you follow</h2>
+          <h2 class="ptitle" id="trkH">Casinos you follow</h2>
           <div id="trkList" class="stack" style="gap:8px"></div>
-          <form id="trkForm" class="stack" style="gap:10px">
+          <button class="btn primary" type="button" id="trkAddBtn">+ Follow a casino</button>
+          <form id="trkForm" class="stack" style="gap:10px" hidden>
             <label class="field"><span>Competitor name</span><input class="inp" id="tName" type="text" placeholder="LuckyNova" required></label>
             <label class="field"><span>Match emails by (+tag, domain or name; commas for several)</span><input class="inp" id="tMatch" type="text" placeholder="vegasnova, vn-mail.com" required></label>
             <label class="field"><span>Registered on</span><input class="inp" id="tReg" type="date"></label>
-            <button class="btn primary" type="submit">Follow competitor</button>
+            <div class="row"><button class="btn primary" type="submit">Follow</button><button class="btn" type="button" id="trkFormCancel">Cancel</button></div>
           </form>
           <div id="autoSortBox"></div>
           <div id="unassigned"></div>
@@ -2404,14 +2424,16 @@ footer { color: var(--muted); font-size: 12px; margin-top: 24px; text-align: cen
     document.getElementById("trkCount").textContent = state.trackers.length;
     renderInboxPanel();
     var AVC = ["var(--accent-2)", "var(--coral-bg)", "var(--mint-bg)", "var(--sky-bg)", "var(--c-call)"];
-    document.getElementById("trkList").innerHTML = state.trackers.map(function (t, i) {
+    if (ui.trkSel && !state.trackers.some(function (t) { return t.id === ui.trkSel; })) ui.trkSel = null;
+    var allN = state.trackers.reduce(function (n, t) { return n + emailsOf(t).length; }, 0);
+    document.getElementById("trkList").innerHTML = (state.trackers.length ? '<button type="button" class="opitem' + (!ui.trkSel ? " on" : "") + '" data-trksel=""><span class="avatar" style="background:var(--accent)">' + svg('<rect x="3" y="4" width="6" height="12" rx="1.5"/><rect x="11" y="4" width="6" height="12" rx="1.5"/>', "#FFFFFF") + '</span><span class="meta2"><b>Overview</b><small>' + plural(state.trackers.length, "casino", "casinos") + " · " + plural(allN, "email", "emails") + "</small></span></button>" : "") + state.trackers.map(function (t, i) {
       if (ui.trkEdit === t.id) return '<form class="trk trkedit" data-trkform="' + t.id + '"><div class="meta2"><p class="plabel" style="margin:0 0 2px">Casino name</p><input class="inp" name="n" type="text" value="' + esc(t.name) + '" aria-label="Casino name" style="font-weight:600;margin-top:0"><p class="plabel" style="margin:10px 0 2px">Matches</p><input class="inp" name="m" type="text" style="margin-top:0" value="' + esc(termsOf(t).join(", ")) + '" aria-label="Match emails by"><small>Separate several with commas: a +tag, a domain or a name, e.g. vegasnova, vn-promo.com</small>' + addrList(t) + '<div class="row" style="margin-top:6px"><button class="btn primary" type="submit">Save</button><button class="btn" type="button" data-trkcancel="1">Cancel</button></div></div></form>';
-      return '<div class="trk"><span class="avatar" style="background:' + AVC[i % AVC.length] + '">' + esc(t.name.charAt(0).toUpperCase()) + '</span><div class="meta2"><b>' + esc(t.name) + "</b><small>matches " + termsOf(t).map(function (k) { return "“" + esc(k) + "”"; }).join(", ") + " · " + plural(emailsOf(t).length, "email", "emails") + (t.auto ? " · sorted " + esc(t.auto) : "") + "</small></div>" +
+      return '<div class="trk pick' + (ui.trkSel === t.id ? " on" : "") + '" data-trksel="' + t.id + '" role="button" tabindex="0" aria-label="Show ' + esc(t.name) + '"><span class="avatar" style="background:' + AVC[i % AVC.length] + '">' + esc(t.name.charAt(0).toUpperCase()) + '</span><div class="meta2"><b>' + esc(t.name) + "</b><small>" + plural(emailsOf(t).length, "email", "emails") + (t.auto ? " · sorted " + esc(t.auto) : "") + "</small></div>" +
         '<button class="iconbtn" type="button" data-trkedit="' + t.id + '" aria-label="Change how ' + esc(t.name) + ' is matched" title="Change addresses">' + svg('<path d="M4 14l9-9 2 2-9 9H4z"/>') + "</button>" +
         '<button class="iconbtn" type="button" data-trkdel="' + t.id + '" aria-label="Stop following ' + esc(t.name) + '" title="Stop following">' + svg('<path d="M5 5l10 10M15 5L5 15"/>') + "</button></div>";
-    }).join("") || '<p class="small">Add the competitors you registered with. Their emails are matched by the +tag in the address, or the sender\'s domain or name. Similar senders of one brand are grouped.</p>';
+    }).join("") || '<p class="small">Casinos you registered with appear here as their emails arrive. You can also add one yourself.</p>';
     var un = unassignedGroups();
-    document.getElementById("unassigned").innerHTML = un.length ? '<p class="small" style="margin-bottom:4px"><b>Senders not matched yet</b></p>' + un.slice(0, 10).map(function (g, gi) {
+    document.getElementById("unassigned").innerHTML = un.length ? '<details class="unbox"' + (ui.unOpen ? " open" : "") + '><summary>Senders not matched yet <span class="kindpill">' + un.length + "</span></summary>" + un.slice(0, 10).map(function (g, gi) {
       var who = g.tag ? "+" + g.tag : g.name, from = g.domains.length ? g.domains.join(", ") : "";
       var also = g.names.length > 1 ? " · also “" + g.names.slice(1, 3).join("”, “") + "”" : "";
       var opts = state.trackers.map(function (t) { return '<option value="' + t.id + '">' + esc(t.name) + "</option>"; }).join("");
@@ -2419,7 +2441,7 @@ footer { color: var(--muted); font-size: 12px; margin-top: 24px; text-align: cen
         (g.like ? '<button class="btn primary" type="button" data-addto="' + g.like.id + '" data-gi="' + gi + '">Add to ' + esc(g.like.name) + "</button>"
           : '<button class="btn" type="button" data-follow="' + gi + '">Follow</button>') +
         (opts ? '<select class="inp addsel" data-addsel="' + gi + '" aria-label="Add to a competitor"><option value="">Add to…</option>' + opts + "</select>" : "") + "</div>";
-    }).join("") : "";
+    }).join("") + "</details>" : "";
     lastGroups = un;
     var nc = notCasinoGroups();
     document.getElementById("autoSortBox").innerHTML = '<label class="row" style="gap:8px;align-items:flex-start;flex-wrap:nowrap;margin-top:4px;cursor:pointer"><input type="checkbox" id="autoSortOn" style="margin-top:3px;flex:none"' + (state.autoSortOff ? "" : " checked") + '><span class="small"><b style="color:var(--ink)">Sort emails automatically</b><br>New emails go to the casino that sent them. ' + (aiReady() ? "Claude checks unclear senders." : "Turn on AI for unclear senders.") + "</span></label>" +
@@ -2431,7 +2453,7 @@ footer { color: var(--muted); font-size: 12px; margin-top: 24px; text-align: cen
       wrap.innerHTML = '<div class="panel empty-c">' + ((cloud ? proxy.connected : inbox().url) ? "Follow a competitor on the left to see its emails as a timeline." : "Connect your research inbox on the left, then follow the competitors you registered with.") + "</div>";
       return;
     }
-    wrap.innerHTML = state.trackers.map(function (t, i) {
+    var cardFor = function (t, i) {
       var list = emailsOf(t), sum = t.summary || null, items = (sum && sum.items) || {};
       var days = list.map(function (em) { return dayOf(em, t); });
       var maxD = Math.max(7, days.length ? Math.max.apply(null, days) : 0);
@@ -2457,7 +2479,21 @@ footer { color: var(--muted); font-size: 12px; margin-top: 24px; text-align: cen
         sumHtml +
         (list.length ? '<div class="elist">' + rows + "</div>" : '<p class="small">No emails matched yet. Sync the inbox, or check the match text.</p>') +
         '<div class="row"><button class="btn primary" type="button" data-summ="' + t.id + '"' + (list.length && !t.summarizing ? "" : " disabled") + ">" + (sum ? "Summarise again" : "Summarise with Claude") + '</button><button class="btn" type="button" data-tocycle="' + t.id + '"' + (list.length ? "" : " disabled") + ">Add to builder as a cycle</button>" + (sum ? '<button class="btn" type="button" data-copysum="' + t.id + '">Copy summary</button>' : "") + "</div></article>";
-    }).join("");
+    };
+    var sel = ui.trkSel ? state.trackers.filter(function (t) { return t.id === ui.trkSel; })[0] : null;
+    if (sel) { wrap.innerHTML = '<div class="row"><button class="btn" type="button" data-trksel="">← All casinos</button></div>' + cardFor(sel, state.trackers.indexOf(sel)); return; }
+    // overview: one tile per casino
+    wrap.innerHTML = '<div class="sechead"><h3>All casinos <span class="small" style="font-weight:400">' + plural(state.trackers.length, "casino", "casinos") + "</span></h3></div>" + '<div class="ovgrid">' + state.trackers.map(function (t, i) {
+      var list = emailsOf(t), days = list.map(function (em) { return dayOf(em, t); }), maxD = Math.max(6, days.length ? Math.max.apply(null, days) : 0);
+      var span = Math.min(maxD, 13), bars = "";
+      for (var d = 0; d <= span; d++) { var n = days.filter(function (x) { return x === d; }).length; bars += '<i style="height:' + Math.min(100, n * 25) + '%"' + (n ? "" : ' class="z"') + "></i>"; }
+      var last = list[list.length - 1], perDay = list.length ? (list.length / (maxD + 1)).toFixed(1) : "0";
+      var sum = t.summary, offers = sum ? list.filter(function (em) { var it = (sum.items || {})[em.id]; return it && it.offer_type && it.offer_type !== "none"; }).length : 0;
+      return '<button type="button" class="etile" data-trksel="' + t.id + '"><span class="row" style="gap:10px;flex-wrap:nowrap"><span class="avatar" style="background:' + AVC[i % AVC.length] + '">' + esc(t.name.charAt(0).toUpperCase()) + '</span><span class="meta2"><b>' + esc(t.name) + "</b><small>" + plural(list.length, "email", "emails") + " · about " + perDay + " a day</small></span></span>" +
+        '<span class="spark" aria-hidden="true">' + bars + "</span>" +
+        (last ? '<span class="last"><small>Latest · day ' + days[days.length - 1] + "</small>" + esc(last.subject) + "</span>" : '<span class="last"><small>No emails yet</small></span>') +
+        '<span class="chips3">' + (sum ? '<span class="kindpill">Summarised</span>' + (offers ? '<span class="kindpill page">' + plural(offers, "offer", "offers") + "</span>" : "") : "") + "</span></button>";
+    }).join("") + "</div>";
   }
 
   async function summarise(id) {
@@ -2523,7 +2559,7 @@ footer { color: var(--muted); font-size: 12px; margin-top: 24px; text-align: cen
     var t = { id: uid(), name: name, match: match, registered: document.getElementById("tReg").value || "" };
     state.trackers.push(t);
     if (!t.registered) { var f = emailsOf(t)[0]; if (f) t.registered = localDate(f.date); }
-    e.target.reset(); save(); renderEmails(); toast("Following " + name);
+    e.target.reset(); e.target.hidden = true; document.getElementById("trkAddBtn").hidden = false; ui.trkSel = t.id; save(); renderEmails(); toast("Following " + name);
   });
   function addGroupTo(t, g) { commit(); addTerm(t, g.key); if (t.exclude) t.exclude = t.exclude.filter(function (x) { return (g.addrs || []).indexOf(x) < 0; }); save(); renderEmails(); toast(plural(g.count, "email", "emails") + " from " + (g.tag ? "+" + g.tag : g.name) + " added to " + t.name); }
   document.getElementById("unassigned").addEventListener("click", function (e) {
@@ -2572,6 +2608,15 @@ footer { color: var(--muted); font-size: 12px; margin-top: 24px; text-align: cen
     } else { commit(); state.emailOwner[id] = v; }
     save(); renderEmails(); toast(v === "none" ? "Set aside as not a casino" : "Email moved");
   });
+  document.getElementById("view-emails").addEventListener("click", function (e) {
+    if (e.target.closest("button.iconbtn, [data-trkform], select, input")) return;
+    var pick = e.target.closest("[data-trksel]");
+    if (pick) { ui.trkSel = pick.getAttribute("data-trksel") || null; renderEmails(); if (ui.trkSel) document.getElementById("ecards").scrollIntoView({ behavior: "smooth", block: "start" }); return; }
+    if (e.target.id === "trkAddBtn") { document.getElementById("trkForm").hidden = false; e.target.hidden = true; document.getElementById("tName").focus(); return; }
+    if (e.target.id === "trkFormCancel") { var f = document.getElementById("trkForm"); f.reset(); f.hidden = true; document.getElementById("trkAddBtn").hidden = false; }
+  });
+  document.getElementById("view-emails").addEventListener("keydown", function (e) { var pick = e.target.closest && e.target.closest(".trk.pick"); if (pick && e.target === pick && (e.key === "Enter" || e.key === " ")) { e.preventDefault(); pick.click(); } });
+  document.getElementById("unassigned").addEventListener("toggle", function (e) { if (e.target.classList.contains("unbox")) ui.unOpen = e.target.open; }, true);
   document.getElementById("trkList").addEventListener("click", function (e) {
     var ed = e.target.closest("[data-trkedit]");
     if (ed) { ui.trkEdit = ed.getAttribute("data-trkedit"); renderEmails(); var inp = document.querySelector('[data-trkform] input'); if (inp) inp.focus(); return; }
