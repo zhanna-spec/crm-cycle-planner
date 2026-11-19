@@ -37,6 +37,10 @@ Works in Chrome, Edge and Brave. Only people who run scans need it; everyone in 
 
 For the logged-in run, log in to the site yourself first, then scan again and choose **Logged in**.
 
+## Scan only the promotions
+
+Choose **Promotions & terms** at the top of the popup (it's remembered). The scanner finds the promotions page and opens every promotion one by one, up to 30: its pop-up or own page, More info or the ⓘ icon, and the terms inside. Tick **Also read the general bonus terms** to include the page most promotions refer to. In the planner the promotions appear under **Offer terms** as a list: what each one does, how it works, who can take part and its key terms, with the full text and screenshots. **Download list (CSV)** gives the list as a spreadsheet. Scanning again updates the promotions already in the list.
+
 ## Good to know
 
 - Offers without their own page (like a welcome offer) are looked for in the homepage banners, clicking through the slides, and as a card on the promotions page, where it also opens the card's More info or terms. The homepage scan photographs every banner slide.

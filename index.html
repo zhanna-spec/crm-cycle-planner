@@ -444,6 +444,22 @@ textarea.inp { resize: vertical; min-height: 70px; }
 .chip.on { background: var(--accent); color: #FFFFFF; }
 .chip.on i { background: rgba(255,255,255,.25); color: #FFFFFF; }
 .chip:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.plist2 { display: flex; flex-direction: column; gap: 8px; margin-bottom: 18px; }
+.prow { background: var(--surface); border-radius: 16px; box-shadow: var(--shadow-sm); }
+.prow > summary { list-style: none; cursor: pointer; display: flex; gap: 12px; align-items: flex-start; padding: 14px 16px; }
+.prow > summary::-webkit-details-marker { display: none; }
+.prow > summary .kindpill { flex: none; margin-top: 2px; }
+.pmain { display: flex; flex-direction: column; gap: 4px; min-width: 0; flex: 1; }
+.pmain b { font-size: 15px; }
+.pmain small { color: var(--muted); font-size: 13px; }
+.pchips { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 4px; }
+.pchip { background: var(--sunk); border-radius: 8px; padding: 3px 8px; font-size: 12px; }
+.pchip small { color: var(--muted); margin-right: 5px; font-size: 11px; }
+.pdetail { padding: 0 16px 16px; display: flex; flex-direction: column; gap: 12px; border-top: 1px solid var(--line); padding-top: 12px; }
+.pgrid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 10px; }
+.pgrid > div { background: var(--sunk); border-radius: 10px; padding: 8px 10px; font-size: 13px; }
+.pgrid small { display: block; color: var(--muted); font-size: 11px; }
+.ptext { white-space: pre-wrap; font: inherit; font-size: 12px; color: var(--muted); max-height: 320px; overflow: auto; background: var(--sunk); border-radius: 10px; padding: 10px; }
 .ovgroup { display: flex; flex-direction: column; gap: 10px; }
 .ovgrid { display: grid; grid-template-columns: repeat(auto-fill, minmax(210px, 1fr)); gap: 12px; }
 .ovtile { font: inherit; text-align: left; border: 0; border-radius: 16px; background: var(--surface); color: var(--ink); padding: 0; overflow: hidden; cursor: pointer; display: flex; flex-direction: column; box-shadow: 0 1px 2px rgba(30,27,58,.05); }
@@ -994,6 +1010,7 @@ footer { color: var(--muted); font-size: 12px; margin-top: 24px; text-align: cen
   if (!Array.isArray(state.trackers)) state.trackers = [];
   if (!Array.isArray(state.emails)) state.emails = [];
   state.review = state.review && typeof state.review === "object" ? state.review : {};
+  if (!Array.isArray(state.promos)) state.promos = [];
   if (!state.emailOwner || typeof state.emailOwner !== "object") state.emailOwner = {};
   if (!state.notCasino || typeof state.notCasino !== "object") state.notCasino = {};
   state.trackers.forEach(function (t) { t.summarizing = false; });
@@ -1499,7 +1516,7 @@ footer { color: var(--muted); font-size: 12px; margin-top: 24px; text-align: cen
   function offerKind(x) { return x.kind || "welcome"; }
   function pagesOf(op) { return state.research.filter(function (x) { return x.opId === op.id; }); }
   function findPage(id) { return state.research.filter(function (x) { return x.id === id; })[0]; }
-  function findItem(id) { return findComp(id) || findPage(id); }
+  function findItem(id) { return findComp(id) || findPage(id) || (state.promos || []).filter(function (x) { return x.id === id; })[0]; }
   function ownOp() { return (state.operators || []).filter(function (o) { return o.isOwn; })[0] || null; }
   function isOwnItem(x) { var o = findOp(x.opId); return !!(o && o.isOwn); }
   function runMatch(x) { return ui.runView === "all" || !x.run || x.run === ui.runView; }
@@ -1530,7 +1547,7 @@ footer { color: var(--muted); font-size: 12px; margin-top: 24px; text-align: cen
       return;
     }
     var n = offersOf(op).length + pagesOf(op).length, url = siteUrl(op.website);
-    el.innerHTML = '<div class="ophead"><span class="avatar" style="background:' + opColor(op) + '">' + esc(op.name.charAt(0).toUpperCase()) + '</span><div class="grow"><h2>' + esc(op.name) + (op.isOwn ? ' <span class="ownpill">Your brand</span>' : "") + '</h2><div class="sub2"><span>' + plural(offersOf(op).length, "offer", "offers") + " · " + plural(pagesOf(op).length, "page", "pages") + "</span>" + (url ? '<a href="' + esc(url) + '" target="_blank" rel="noopener">' + esc(op.website) + "</a>" : "") + (op.market ? "<span>" + esc(op.market) + "</span>" : "") + "</div></div>" +
+    el.innerHTML = '<div class="ophead"><span class="avatar" style="background:' + opColor(op) + '">' + esc(op.name.charAt(0).toUpperCase()) + '</span><div class="grow"><h2>' + esc(op.name) + (op.isOwn ? ' <span class="ownpill">Your brand</span>' : "") + '</h2><div class="sub2"><span>' + plural(promosOf(op).filter(function (x) { return x.kind !== "terms"; }).length, "promotion", "promotions") + (offersOf(op).length ? " · " + plural(offersOf(op).length, "offer added by hand", "offers added by hand") : "") + "</span>" + (url ? '<a href="' + esc(url) + '" target="_blank" rel="noopener">' + esc(op.website) + "</a>" : "") + (op.market ? "<span>" + esc(op.market) + "</span>" : "") + "</div></div>" +
       '<div class="row"><button class="btn" type="button" data-opact="edit">Edit details</button><button class="btn danger' + (ui.armed === "op" ? " armed" : "") + '" type="button" data-opact="delete">' + (ui.armed === "op" ? "Click again to delete" + (n ? " with " + plural(n, "item", "items") : "") : "Delete") + "</button></div></div>" +
       (op.notes ? '<p class="opnotes">' + esc(op.notes) + "</p>" : "");
   }
@@ -1625,7 +1642,7 @@ footer { color: var(--muted); font-size: 12px; margin-top: 24px; text-align: cen
       return '<article class="ccard">' + th + '<div class="cbody">' + body + "</div>" + foot + "</article>";
     }).join("") + "</div>";
     var shownPages = !overview && isPageKind(ui.sec) ? allPages.filter(function (x) { return x.section === ui.sec; }) : [];
-    if (overview) cards.innerHTML = overviewHtml(op, allOffers, allPages);
+    if (overview) cards.innerHTML = promosHtml(op) + overviewHtml(op, allOffers, allPages);
     else {
       var items = offerFilter ? list.length : shownPages.length, label = kindLabel(ui.sec);
       var addBtn = op ? '<button class="btn" type="button" data-addsec="' + ui.sec + '">+ Add ' + esc(isTour(ui.sec) ? "a tournament" : label.toLowerCase()) + "</button>" : "";
@@ -1644,6 +1661,77 @@ footer { color: var(--muted); font-size: 12px; margin-top: 24px; text-align: cen
     }
     renderTray();
   }
+
+  // ---------- promotions list (from the extension's "Promotions & terms" scan) ----------
+  var PROMO_TERMS = [["min_deposit", "Min deposit"], ["wagering", "Wagering"], ["max_bet", "Max bet"], ["validity", "Valid for"], ["eligible_games", "Games"], ["max_win", "Max win"], ["bonus_code", "Code"], ["opt_in", "Opt-in"]];
+  var promoBusy = null;
+  function promosOf(op) { return (state.promos || []).filter(function (x) { return (!op || x.opId === op.id) && runMatch(x); }); }
+  function promoKind(k) { return k === "tournament" ? "Tournament" : k === "terms" ? "General terms" : kindLabel(k); }
+  function promosHtml(op) {
+    var list = promosOf(op), head = '<div class="sechead"><h3>Promotions' + (op ? " at " + esc(op.name) : "") + ' <span class="small" style="font-weight:400">' + plural(list.filter(function (x) { return x.kind !== "terms"; }).length, "promotion", "promotions") + "</span></h3>" + (list.length ? '<button class="btn" type="button" data-promocsv="1">Download list (CSV)</button>' : "") + "</div>";
+    var busy = promoBusy ? '<div class="rvprog"><b>' + esc(promoBusy.title) + '</b><div class="scanbar" style="margin:8px 0"><i style="width:' + Math.round(100 * promoBusy.done / Math.max(1, promoBusy.total)) + '%"></i></div><p class="small" style="margin:0">' + esc(promoBusy.text) + "</p></div>" : "";
+    if (!list.length) return head + busy + '<div class="panel empty-c">No promotions yet. In the extension choose <b>Promotions &amp; terms</b> and scan ' + (op ? esc(op.name) : "a casino") + "; every promotion is opened and written up here with its terms.</div>";
+    list = list.slice().sort(function (a, b) { return (a.kind === "terms" ? 1 : 0) - (b.kind === "terms" ? 1 : 0) || (a.order || 0) - (b.order || 0); });
+    return head + busy + '<div class="plist2">' + list.map(function (x) {
+      var o = findOp(x.opId) || { name: "?" }, t = x.terms || {};
+      var chips = PROMO_TERMS.filter(function (k) { return t[k[0]]; }).map(function (k) { return '<span class="pchip"><small>' + k[1] + "</small>" + esc(t[k[0]]) + "</span>"; }).join("");
+      var pics = offerPics(x).filter(Boolean);
+      var detail = '<div class="pdetail">' +
+        (x.how_it_works && x.how_it_works.length ? '<div><p class="plabel">How it works</p><ol class="plist">' + x.how_it_works.map(function (h) { return "<li>" + esc(h) + "</li>"; }).join("") + "</ol></div>" : "") +
+        (x.who_can_join || x.reward ? '<div class="pgrid">' + (x.who_can_join ? "<div><small>Who can take part</small>" + esc(x.who_can_join) + "</div>" : "") + (x.reward ? "<div><small>What the player gets</small>" + esc(x.reward) + "</div>" : "") + "</div>" : "") +
+        (x.other_conditions && x.other_conditions.length ? '<div><p class="plabel">Other conditions</p><ul class="plist">' + x.other_conditions.map(function (h) { return "<li>" + esc(h) + "</li>"; }).join("") + "</ul></div>" : "") +
+        (x.uncertain && x.uncertain.length ? '<p class="small" style="color:var(--warn)">Couldn\'t read for sure: ' + esc(x.uncertain.map(function (u) { var k = PROMO_TERMS.filter(function (t) { return t[0] === u || "terms." + t[0] === u; })[0]; return k ? k[1] : String(u).replace(/_/g, " "); }).join(", ")) + "</p>" : "") +
+        (pics.length ? '<button type="button" class="thumbs" data-lb="' + x.id + '" style="max-width:260px"><img src="' + pics[0] + '" alt="">' + (pics.length > 1 ? '<span class="more">' + pics.length + " screenshots</span>" : "") + "</button>" : "") +
+        (x.text ? '<details><summary class="small" style="cursor:pointer">Full text of the promotion and its terms</summary><pre class="ptext">' + esc(x.text) + "</pre></details>" : "") +
+        '<div class="row"><span class="small">' + esc((x.run === "logged-in" ? "Logged in" : "Logged out") + " · scanned " + new Date(x.at || Date.now()).toLocaleDateString()) + '</span><button class="btn danger" type="button" data-promodel="' + x.id + '" style="margin-left:auto">Delete</button></div></div>';
+      return '<details class="prow"' + (ui.promoOpen === x.id ? " open" : "") + ' data-promo="' + x.id + '"><summary><span class="kindpill">' + esc(promoKind(x.kind)) + "</span><span class=\"pmain\"><b>" + (op ? "" : esc(o.name) + " · ") + esc(x.title || "Promotion") + "</b>" +
+        (x.status === "reading" ? '<small>Claude is reading this promotion…</small>' : x.status === "error" ? '<small style="color:var(--bad)">' + esc(x.error || "Couldn't read it.") + "</small>" : "<small>" + esc(x.summary || "") + "</small>") +
+        (chips ? '<span class="pchips">' + chips + "</span>" : "") + "</span></summary>" + detail + "</details>";
+    }).join("") + "</div>";
+  }
+  async function promosFromScan(op, pages, run) {
+    ui.compMode = "offers"; selectOp(op.id); ui.sec = "overview";
+    var todo = pages.filter(function (pg) { return pg.shots && pg.shots.length && (/^Offer: /.test(pg.label || "") || /(^|,)terms(,|$)/.test(pg.hint || "")); });
+    if (!todo.length) { toast("No promotions were opened in that scan. Check that the promotions page has cards with More info, an ⓘ icon or their own page."); renderCompetitors(); return; }
+    for (var i = 0; i < todo.length; i++) {
+      var pg = todo[i], isTerms = !/^Offer: /.test(pg.label || ""), label = isTerms ? "General bonus terms" : pg.label.replace(/^Offer: /, "");
+      promoBusy = { title: "Reading the promotions of " + op.name, done: i, total: todo.length, text: label + " (" + (i + 1) + " of " + todo.length + ")" }; renderCompetitors();
+      var x = state.promos.filter(function (p) { return p.opId === op.id && (p.run || "") === run && (isTerms ? p.kind === "terms" : p.kind !== "terms" && (squash(p.found || "") === squash(label) || squash(p.title) === squash(label))); })[0];
+      // the same promotion scanned again is updated, matched by its exact name (1st and 2nd deposit offers look alike)
+      if (!x) { x = { id: uid(), opId: op.id, run: run, title: label, kind: isTerms ? "terms" : "other_offer", order: i }; state.promos.push(x); }
+      x.found = label;
+      x.status = "reading"; x.error = ""; x.at = new Date().toISOString(); x.url = pg.url; x.text = String(pg.text || "").slice(0, 30000); x.order = i;
+      try {
+        var images = [], imgs = [];
+        for (var k = 0; k < pg.shots.length && k < 8; k++) { var im = await loadSrc(pg.shots[k]); images.push({ media_type: "image/jpeg", data: scaled(im, 1568, 0, 0.85).split(",")[1] }); }
+        var paths = await uploadPaths(images, "promos"); x.images = paths || []; if (!paths) x.thumbs = images.slice(0, 4).map(function (m) { return "data:image/jpeg;base64," + m.data; });
+        if (isTerms) { x.summary = "The general bonus terms most promotions refer to."; x.status = "done"; save(); continue; }
+        if (!aiReady()) { x.status = "error"; x.error = "Turn on AI to have Claude write up this promotion. Its screenshots and text are kept."; save(); continue; }
+        var d = await backend("read_promotion", { casino: op.name, label: label, images: images, text: x.text });
+        Object.assign(x, { title: d.title || label, kind: d.kind || "other_offer", summary: d.summary || "", how_it_works: d.how_it_works || [], who_can_join: d.who_can_join || "", reward: d.reward || "", terms: d.terms || {}, other_conditions: d.other_conditions || [], uncertain: d.uncertain || [], status: "done" });
+      } catch (err) { x.status = "error"; x.error = err.message; }
+      save();
+    }
+    promoBusy = null; save(); renderCompetitors();
+    toast(plural(todo.length, "promotion", "promotions") + " of " + op.name + " written up. Open a row to see how it works and its terms.");
+  }
+  function promosCsv() {
+    var op = curOp(), list = promosOf(op).filter(function (x) { return x.kind !== "terms"; });
+    var cols = ["Casino", "Promotion", "Type", "What it does", "How it works", "Who can take part", "What the player gets"].concat(PROMO_TERMS.map(function (k) { return k[1]; })).concat(["Other conditions", "Seen", "Address"]);
+    var q = function (v) { v = String(v == null ? "" : v); return /[",\n]/.test(v) ? '"' + v.replace(/"/g, '""') + '"' : v; };
+    var rows = list.map(function (x) {
+      var o = findOp(x.opId) || { name: "" }, t = x.terms || {};
+      return [o.name, x.title, promoKind(x.kind), x.summary, (x.how_it_works || []).join(" → "), x.who_can_join, x.reward].concat(PROMO_TERMS.map(function (k) { return t[k[0]] || ""; })).concat([(x.other_conditions || []).join("; "), x.run === "logged-in" ? "Logged in" : "Logged out", x.url || ""]).map(q).join(",");
+    });
+    var blob = new Blob(["\ufeff" + [cols.map(q).join(",")].concat(rows).join("\n")], { type: "text/csv" });
+    var a = document.createElement("a"); a.href = URL.createObjectURL(blob); a.download = "promotions" + (op ? "-" + op.name.replace(/[^A-Za-z0-9]+/g, "-") : "") + ".csv"; document.body.appendChild(a); a.click(); setTimeout(function () { URL.revokeObjectURL(a.href); a.remove(); }, 2000);
+  }
+  document.getElementById("ccards").addEventListener("click", function (e) {
+    var b;
+    if ((b = e.target.closest("[data-promocsv]"))) { promosCsv(); return; }
+    if ((b = e.target.closest("[data-promodel]"))) { var id = b.getAttribute("data-promodel"), x = state.promos.filter(function (p) { return p.id === id; })[0]; if (!x) return; commit(); state.promos = state.promos.filter(function (p) { return p.id !== id; }); save(); renderCompetitors(); toast((x.title || "Promotion") + " deleted. Click Undo to bring it back."); }
+  });
+  document.getElementById("ccards").addEventListener("toggle", function (e) { var d = e.target.closest && e.target.closest("[data-promo]"); if (d && e.target === d) ui.promoOpen = d.open ? d.getAttribute("data-promo") : (ui.promoOpen === d.getAttribute("data-promo") ? null : ui.promoOpen); }, true);
 
   // Overview: one tile per section, offers first, then the website in the order a player meets it.
   function overviewHtml(op, offers, pages) {
@@ -1766,7 +1854,7 @@ footer { color: var(--muted); font-size: 12px; margin-top: 24px; text-align: cen
     var newName = stem ? stem.charAt(0).toUpperCase() + stem.slice(1) : "New operator";
     var ok = scan.pages.filter(function (pg) { return pg.shots && pg.shots.length; }), bad = scan.pages.length - ok.length;
     var form = document.getElementById("scanForm");
-    form.innerHTML = '<h3 id="scanTitle">Website scan of ' + esc(host) + "</h3>" +
+    form.innerHTML = '<h3 id="scanTitle">' + (scan.kind === "promos" ? "Promotions scan of " : "Website scan of ") + esc(host) + "</h3>" +
       '<p class="small">' + plural(ok.length, "page", "pages") + " scanned " + (scan.run === "logged-in" ? "while logged in" : "while logged out") + (bad ? ", " + plural(bad, "page", "pages") + " couldn't be opened" : "") + ". Claude sorts each page into offers, tournaments and website content, then reads them. About 3 to 6 cents per page.</p>" +
       '<label class="field"><span>Operator</span><select class="inp" id="scanOp">' + state.operators.map(function (o) { return '<option value="' + o.id + '"' + (guess && guess.id === o.id ? " selected" : "") + ">" + esc(o.name) + (o.isOwn ? " (your website)" : "") + "</option>"; }).join("") + '<option value="__new"' + (guess ? "" : " selected") + ">New operator…</option></select></label>" +
       '<label class="field" id="scanNewWrap"' + (guess ? " hidden" : "") + '><span>New operator name</span><input class="inp" id="scanNewName" type="text" maxlength="80" value="' + esc(newName) + '"></label>' +
@@ -1803,6 +1891,7 @@ footer { color: var(--muted); font-size: 12px; margin-top: 24px; text-align: cen
     var pages = Array.prototype.map.call(scanModal.querySelectorAll("[data-scanpg]:checked"), function (cb) { return scan.pages[+cb.getAttribute("data-scanpg")]; });
     window.postMessage({ type: "ccp-scan-received", id: scan.id }, "*");
     incomingScan = null; scanModal.hidden = true; save();
+    if (scan.kind === "promos") { promosFromScan(op, pages, run); return; }
     // every screenshot goes into the review; opened offers also become offer-term cards
     var offerPages = pages.filter(function (pg) { return /^Offer: /.test(pg.label || ""); });
     rvFromScan(op, pages, run).then(function () { if (offerPages.length && aiReady()) processScan(scan.id, op, offerPages, run, scan.skip || []); });
@@ -3641,6 +3730,8 @@ footer { color: var(--muted); font-size: 12px; margin-top: 24px; text-align: cen
     d.research.forEach(function (x) { if (x.status === "reading") { x.status = "error"; x.error = "The review was interrupted. Try again."; } });
     d.trackers = Array.isArray(d.trackers) ? d.trackers : [];
     d.review = d.review && typeof d.review === "object" ? d.review : {};
+    d.promos = Array.isArray(d.promos) ? d.promos : [];
+    d.promos.forEach(function (x) { if (x.status === "reading") { x.status = "error"; x.error = "Reading was interrupted. Scan the promotions again."; } });
     d.emailOwner = d.emailOwner && typeof d.emailOwner === "object" ? d.emailOwner : {};
     d.notCasino = d.notCasino && typeof d.notCasino === "object" ? d.notCasino : {};
     d.emails = [];
@@ -3770,7 +3861,8 @@ footer { color: var(--muted); font-size: 12px; margin-top: 24px; text-align: cen
     var payload = { cycles: state.cycles, activeId: state.activeId, competitors: state.competitors, operators: state.operators, research: state.research,
       trackers: state.trackers.map(function (t) { var c = Object.assign({}, t); delete c.summarizing; delete c.sumError; return c; }),
       emailOwner: state.emailOwner || {}, notCasino: state.notCasino || {}, autoSortOff: !!state.autoSortOff,
-      review: state.review ? JSON.parse(JSON.stringify(state.review, function (k, v) { return k === "data" ? undefined : v; })) : {} };
+      review: state.review ? JSON.parse(JSON.stringify(state.review, function (k, v) { return k === "data" ? undefined : v; })) : {},
+      promos: (state.promos || []).map(function (x) { var c = Object.assign({}, x); delete c.thumbs; return c; }) };
     var r = await sb.rpc("save_state", { ws: wsId, new_data: payload, expected_version: wsVersion });
     saving = false;
     if (!curWs || curWs.id !== wsId) return;

@@ -159,14 +159,35 @@ function row(item, list, i, extra) {
   return '<div class="item"><label><input type="checkbox" data-list="' + list + '" data-i="' + i + '"' + (item.checked ? " checked" : "") + "><span><b>" + esc(item.label) + "</b> " + sub + "<small>" + esc(small) + "</small></span></label>" + (extra || "") + "</div>";
 }
 
+// two kinds of scan: the website review (sections), or every promotion with its terms
+function modeSwitch() {
+  const m = prefs.mode === "promos" ? "promos" : "review";
+  return "<h2>What to scan</h2>" + '<div class="seg"><label><input type="radio" name="mode" value="review"' + (m === "review" ? " checked" : "") + '><span>Website review</span></label><label><input type="radio" name="mode" value="promos"' + (m === "promos" ? " checked" : "") + "><span>Promotions & terms</span></label></div>";
+}
+function runSwitch() {
+  return "<h2>This run is</h2>" + '<div class="seg"><label><input type="radio" name="run" value="logged-out"' + (runMode === "logged-out" ? " checked" : "") + '><span>Logged out</span></label><label><input type="radio" name="run" value="logged-in"' + (runMode === "logged-in" ? " checked" : "") + "><span>Logged in</span></label></div>" +
+    (guessed ? '<p class="note">' + esc(guessed) + "</p>" : "");
+}
+function blurField() {
+  return '<label class="opt" style="display:block"><span><b>Blur on screenshots</b><small>Email addresses are blurred automatically. Add your username or name here, separated by commas.</small></span><input type="text" id="blurWords" value="' + esc(prefs.blur || "") + '" placeholder="your username, your name" style="width:100%;margin-top:6px"></label>';
+}
+function renderPromos() {
+  main.innerHTML = modeSwitch() + runSwitch() +
+    '<p class="note">Finds the promotions page and opens every promotion one by one (up to 30): its pop-up or page, More info or the ⓘ icon, and the terms inside. The planner then writes up each one: what it does, how it works and its terms, as a list.</p>' +
+    '<label class="opt"><input type="checkbox" id="promoTerms"' + (prefs.promoTerms !== false ? " checked" : "") + '><span><b>Also read the general bonus terms</b><small>The page most promotions refer to.</small></span></label>' +
+    blurField() +
+    '<button class="primary" id="go">Scan promotions</button>' +
+    '<p class="note">About 10 seconds per promotion. Don\'t switch tabs until the planner opens.</p>';
+}
 function render() {
+  if (prefs.mode === "promos") { renderPromos(); return; }
   let lastGroup = "";
-  main.innerHTML =
+  main.innerHTML = modeSwitch() +
     "<h2>This run is</h2>" +
     '<div class="seg"><label><input type="radio" name="run" value="logged-out"' + (runMode === "logged-out" ? " checked" : "") + '><span>Logged out</span></label><label><input type="radio" name="run" value="logged-in"' + (runMode === "logged-in" ? " checked" : "") + "><span>Logged in</span></label></div>" +
     (guessed ? '<p class="note">' + esc(guessed) + "</p>" : "") +
     '<label class="opt"><input type="checkbox" id="openCards"' + (prefs.cards === true ? " checked" : "") + '><span><b>Open every promotion</b><small>Only needed for offer terms: the review compares how pages are set up. About 10 seconds more per offer.</small></span></label>' +
-    '<label class="opt" style="display:block"><span><b>Blur on screenshots</b><small>Email addresses are blurred automatically. Add your username or name here, separated by commas.</small></span><input type="text" id="blurWords" value="' + esc(prefs.blur || "") + '" placeholder="your username, your name" style="width:100%;margin-top:6px"></label>' +
+    blurField() +
     "<h2>Always</h2>" +
     '<div class="list">' + base.map((p, i) => row(p, "b", i)).join("") + "</div>" +
     "<h2>Sections to find</h2>" +
@@ -181,11 +202,14 @@ function render() {
   count();
 }
 function chosen() { return base.concat(sections.filter(fits), pages, suggestions).filter((p) => p.checked); }
-function count() { const n = chosen().length; const b = document.getElementById("go"); if (b) { b.textContent = "Scan " + n + (n === 1 ? " section" : " sections"); b.disabled = !n; } }
+function count() {
+  if (prefs.mode === "promos") return; const n = chosen().length; const b = document.getElementById("go"); if (b) { b.textContent = "Scan " + n + (n === 1 ? " section" : " sections"); b.disabled = !n; } }
 function listOf(l) { return l === "b" ? base : l === "s" ? sections : l === "p" ? pages : suggestions; }
 
 main.addEventListener("change", async (e) => {
   if (e.target.name === "run") { runMode = e.target.value; guessed = false; render(); return; }
+  if (e.target.name === "mode") { prefs.mode = e.target.value; await savePrefs(); render(); return; }
+  if (e.target.id === "promoTerms") { prefs.promoTerms = e.target.checked; await savePrefs(); return; }
   if (e.target.id === "openCards") { prefs.cards = e.target.checked; await savePrefs(); return; }
   if (e.target.id === "blurWords") { prefs.blur = e.target.value.trim(); await savePrefs(); return; }
   const i = e.target.getAttribute("data-i"); if (i === null) return;
@@ -225,6 +249,15 @@ main.addEventListener("click", async (e) => {
   if (t.id === "add") {
     const v = document.getElementById("extra").value.trim();
     try { const u = new URL(v); pages.push({ type: "page", url: u.toString(), cat: "custom", label: "Added by you", sub: u.pathname, checked: true }); await saveSite(); render(); } catch (err) { document.getElementById("extra").focus(); }
+  }
+  if (t.id === "go" && prefs.mode === "promos") {
+    const home = base[0].url, P = DEFAULT_SECTIONS.find((x) => x.key === "promotions"), T = DEFAULT_SECTIONS.find((x) => x.key === "terms");
+    const list = [{ type: "find", url: home, label: "Promotions", cat: "promotions", words: P.words, not: P.not || "", cards: true, cardLabel: "Offer", cardLimit: 30, details: false }];
+    if (prefs.promoTerms !== false) list.push({ type: "find", url: home, label: "Bonus terms", cat: "terms", words: T.words, not: T.not || "", details: true, help: true });
+    const run = document.querySelector('input[name="run"]:checked').value;
+    await chrome.runtime.sendMessage({ type: "scan", kind: "promos", tabId: target.id, pages: list, run, skip: [], blur: String(prefs.blur || "").split(",").map((w) => w.trim()).filter((w) => w.length >= 3), site: { host: target.info.host, title: target.info.title, url: target.info.url } });
+    showProgress();
+    return;
   }
   if (t.id === "go") {
     const home = base[0].url;
@@ -276,7 +309,7 @@ function showProgress() {
   const { scanStatus } = await chrome.storage.local.get("scanStatus");
   if (scanStatus && scanStatus.state === "running") { document.getElementById("site").textContent = "A scan is running"; showProgress(); return; }
   const stored = (await chrome.storage.sync.get("sectionPrefs")).sectionPrefs;
-  if (stored) prefs = { off: stored.off || [], on: stored.on || [], custom: stored.custom || [], cards: stored.cards, blur: stored.blur || "" };
+  if (stored) prefs = { off: stored.off || [], on: stored.on || [], custom: stored.custom || [], cards: stored.cards, blur: stored.blur || "", mode: stored.mode || "review", promoTerms: stored.promoTerms };
   // ?tab=<id> lets the popup be opened as a normal page for testing.
   const q = new URLSearchParams(location.search).get("tab");
   const tab = q ? await chrome.tabs.get(+q) : (await chrome.tabs.query({ active: true, currentWindow: true }))[0];

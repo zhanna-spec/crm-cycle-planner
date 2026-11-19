@@ -440,7 +440,7 @@ function findOfferCards() {
   cards = cards.filter((c) => { const w = c.getBoundingClientRect().width; return cards.some((o) => o !== c && Math.abs(o.getBoundingClientRect().width - w) < w * 0.15); });
   cards.sort((a, b) => { const ra = a.getBoundingClientRect(), rb = b.getBoundingClientRect(); return (ra.top - rb.top) || (ra.left - rb.left); });
   document.querySelectorAll("[data-ccp-card]").forEach((e) => e.removeAttribute("data-ccp-card"));
-  return cards.slice(0, 12).map((c, i) => {
+  return cards.slice(0, 30).map((c, i) => {
     c.setAttribute("data-ccp-card", String(i));
     const head = c.querySelector("h1, h2, h3, h4, h5, [class*=title], [class*=Title], strong, b");
     const title = ((head && textOf(head)) || textOf(c)).split(/\n| {2}/)[0].slice(0, 60);
@@ -695,7 +695,7 @@ async function scanCards(tabId, windowId, url, pg) {
   const out = [], seen = new Set();
   let cards = await run(tabId, findOfferCards).catch(() => []) || [];
   const kindWord = pg.cardLabel || "Offer";
-  for (let n = 0; n < Math.min(cards.length, 12); n++) {
+  for (let n = 0; n < Math.min(cards.length, pg.cardLimit || 12); n++) {
     const c = cards[n], label = kindWord + ": " + (c.title || "card " + (n + 1));
     await chrome.storage.local.set({ scanStatus: Object.assign((await chrome.storage.local.get("scanStatus")).scanStatus || {}, { current: "opening " + label }) });
     try {
@@ -905,7 +905,7 @@ async function scanFind(tabId, windowId, pg, results, scanned) {
   return Object.assign({ url: now, found }, await scanPage(tabId, windowId, now, { details: pg.details, stay: true }));
 }
 
-async function runScan({ tabId, pages, run: runLabel, site, skip, blur }) {
+async function runScan({ tabId, pages, run: runLabel, site, skip, blur, kind }) {
   scanCtx.tabId = tabId; scanCtx.blur = Array.isArray(blur) ? blur : []; scanCtx.els = new Map();
   const tab = await chrome.tabs.get(tabId);
   const startUrl = tab.url;
@@ -955,7 +955,7 @@ async function runScan({ tabId, pages, run: runLabel, site, skip, blur }) {
     await chrome.storage.local.set({ scanStatus: { state: "stopped", message: mode === "discard" ? "" : "Nothing was finished yet, so there's nothing to import." } });
     return;
   }
-  const scan = { id: Date.now().toString(36) + Math.random().toString(36).slice(2, 6), site, run: runLabel, at: new Date().toISOString(), pages: results, skip: skip || [] };
+  const scan = { id: Date.now().toString(36) + Math.random().toString(36).slice(2, 6), site, run: runLabel, at: new Date().toISOString(), pages: results, skip: skip || [], kind: kind || "review" };
   await chrome.storage.local.set({ pendingScan: scan, scanStatus: { state: "done", done: total, total, partial: !!mode, kept: done.length } });
   const { plannerUrl } = await chrome.storage.local.get("plannerUrl");
   await chrome.tabs.create({ url: plannerUrl || PLANNER_URL });

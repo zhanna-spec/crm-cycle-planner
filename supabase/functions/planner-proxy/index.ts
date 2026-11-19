@@ -161,6 +161,50 @@ function summariseEmails(apiKey: string, body: Record<string, unknown>) {
   return askClaude(apiKey, EMAIL_SYSTEM, [{ type: "text", text: input }], EMAIL_SCHEMA);
 }
 
+// ---------- one promotion: what it does, how it works, its terms ----------
+
+const PROMO_SCHEMA = {
+  type: "object", additionalProperties: false,
+  required: ["title", "kind", "summary", "how_it_works", "who_can_join", "reward", "terms", "other_conditions", "uncertain"],
+  properties: {
+    title: { type: "string" },
+    kind: { type: "string", enum: ["welcome", "second", "third", "reload", "cashback", "freespins", "vip", "sports", "tournament", "other_offer"] },
+    summary: { type: "string" },
+    how_it_works: { type: "array", items: { type: "string" } },
+    who_can_join: { type: "string" },
+    reward: { type: "string" },
+    terms: {
+      type: "object", additionalProperties: false,
+      required: ["min_deposit", "wagering", "max_bet", "validity", "eligible_games", "max_win", "bonus_code", "opt_in"],
+      properties: { min_deposit: STR, wagering: STR, max_bet: STR, validity: STR, eligible_games: STR, max_win: STR, bonus_code: STR, opt_in: STR },
+    },
+    other_conditions: { type: "array", items: { type: "string" } },
+    uncertain: { type: "array", items: { type: "string" } },
+  },
+};
+const PROMO_SYSTEM = [
+  "You read one promotion of an online casino or sportsbook, from screenshots of its card, pop-up or page and the text of its terms and conditions, and write it up for a CRM team's list of promotions.",
+  "title: the promotion's name as the site writes it, in full (cards often cut it off; use the full name from the pop-up, page or terms).",
+  "kind: welcome (first deposit / new players), second / third (2nd / 3rd deposit), reload, cashback, freespins (a free-spins offer), vip (loyalty reward), sports (sportsbook offer), tournament (race, leaderboard, prize drop), other_offer.",
+  "summary: what the promotion does, in one plain sentence (e.g. 'A 100% match on the first deposit up to €500 plus 100 free spins').",
+  "how_it_works: the steps a player takes, short, in order (e.g. 'Opt in on the promotion card', 'Deposit at least €20 with code WELCOME', 'Bonus and spins are credited instantly').",
+  "who_can_join: who it's for (new players, players with a first deposit, VIP level 3+, every player…). reward: what the player gets.",
+  "terms: the values as written, with their units ('35x bonus', '€20', '€5 per spin', '7 days', 'Book of Dead', '€100', 'WELCOME100', 'opt in on the card'). Use null when the terms don't say.",
+  "other_conditions: every other rule that matters to a player (excluded payment methods, game weighting, countries, one per household, cancellation…), short, one per line.",
+  "uncertain: the field names you couldn't read for sure. Use only what the screenshots and text show.",
+].join("\n");
+
+function readPromotion(apiKey: string, body: Record<string, unknown>) {
+  const images = (Array.isArray(body.images) ? body.images : [])
+    .filter((im: { media_type?: string; data?: string }) => im && IMAGE_TYPES.includes(im.media_type ?? "") && typeof im.data === "string" && im.data.length > 0)
+    .slice(0, 8) as { media_type: "image/jpeg"; data: string }[];
+  const text = typeof body.text === "string" ? body.text.trim().slice(0, 30000) : "";
+  if (!images.length && !text) throw new UserFacingError("bad_request", "No screenshots or text for this promotion.");
+  const content: Anthropic.Beta.BetaContentBlockParam[] = images.map((im) => ({ type: "image", source: { type: "base64", media_type: im.media_type, data: im.data } }));
+  content.push({ type: "text", text: `Casino: ${String(body.casino ?? "").slice(0, 80)}\nPromotion as found by the scanner: ${String(body.label ?? "").slice(0, 160)}` + (text ? `\n\nText from the promotion, its pop-up or page and its terms:\n<text>\n${text}\n</text>` : "") + "\n\nWrite up this promotion." });
+  return askClaude(apiKey, PROMO_SYSTEM, content, PROMO_SCHEMA, "low", 6000);
+}
+
 // ---------- which casino sent which emails ----------
 
 const SENDERS_SCHEMA = {
@@ -488,7 +532,7 @@ Deno.serve(async (req) => {
       return reply(await callScript(`${scriptUrl}${sep}${tokenParam}&days=${days}`));
     }
 
-    if (action === "read_offer" || action === "summarise_emails" || action === "analyse_page" || action === "sort_page" || action === "sort_senders" || action === "sort_review_shots" || action === "draft_review_section") {
+    if (action === "read_offer" || action === "summarise_emails" || action === "analyse_page" || action === "sort_page" || action === "sort_senders" || action === "sort_review_shots" || action === "draft_review_section" || action === "read_promotion") {
       if (!anthropicKey) return reply({ error: "no_ai_key", message: "AI isn't set up yet. Add the ANTHROPIC_API_KEY secret in Supabase." });
       const result = action === "read_offer" ? await readOffer(anthropicKey, body)
         : action === "analyse_page" ? await analysePage(anthropicKey, body)
@@ -496,6 +540,7 @@ Deno.serve(async (req) => {
         : action === "sort_senders" ? await sortSenders(anthropicKey, body)
         : action === "sort_review_shots" ? await sortReviewShots(anthropicKey, body)
         : action === "draft_review_section" ? await draftReviewSection(anthropicKey, body)
+        : action === "read_promotion" ? await readPromotion(anthropicKey, body)
         : await summariseEmails(anthropicKey, body);
       return reply({ result });
     }
