@@ -400,6 +400,12 @@ textarea.inp { resize: vertical; min-height: 70px; }
 .trk small { color: var(--muted); font-size: 12px; overflow-wrap: anywhere; }
 .trk .iconbtn { width: 28px; height: 28px; background: transparent; }
 .trk .iconbtn:hover { background: var(--surface); color: var(--bad); }
+.trk .iconbtn[data-trkedit]:hover { color: var(--accent); }
+.addrs { margin-top: 4px; }
+.addr { display: flex; gap: 8px; align-items: center; padding: 6px 0; border-top: 1px solid var(--line); font-size: 12px; }
+.addr span { flex: 1; min-width: 0; overflow-wrap: anywhere; color: var(--muted); }
+.addr b { color: var(--ink); font-weight: 500; }
+.addr .btn { padding: 5px 9px; font-size: 12px; }
 .unas { display: flex; align-items: center; gap: 8px; font-size: 12px; padding: 6px 0; border-top: 1px solid var(--line); }
 .unas span { flex: 1; min-width: 0; overflow-wrap: anywhere; color: var(--muted); }
 .unas b { color: var(--ink); font-weight: 500; }
@@ -2129,14 +2135,17 @@ footer { color: var(--muted); font-size: 12px; margin-top: 24px; text-align: cen
   // A competitor can be matched by several terms ("vegasnova, vn-promo"): a +tag, a domain or a name.
   // Spaces, dashes and dots don't count, so "Vegas Nova" <news@vegas-nova.io> matches "vegasnova".
   function squash(x) { return String(x || "").toLowerCase().replace(/[^a-z0-9@+]/g, ""); }
+  function senderAddr(from) { var m = /<([^>]+)>/.exec(from || "") || /([^\s<>"]+@[^\s<>"]+)/.exec(from || ""); return (m ? m[1] : String(from || "")).trim().toLowerCase(); }
   function termsOf(t) { return String(t.match || "").split(",").map(function (k) { return k.trim().toLowerCase().replace(/^\+/, ""); }).filter(Boolean); }
   function trackerFor(em) {
     // an email you moved by hand stays where you put it ("none" = not a casino)
     var own = state.emailOwner && state.emailOwner[em.id];
     if (own) return own === "none" ? null : state.trackers.filter(function (t) { return t.id === own; })[0] || null;
     var to = (em.to || "").toLowerCase(), from = (em.from || "").toLowerCase(), fromS = squash(em.from);
+    var addr = senderAddr(em.from);
     for (var i = 0; i < state.trackers.length; i++) {
       var t = state.trackers[i], ks = termsOf(t);
+      if ((t.exclude || []).indexOf(addr) >= 0) continue; // an address you took out of this casino
       for (var j = 0; j < ks.length; j++) {
         var k = ks[j], kS = squash(k);
         if (to.indexOf("+" + k + "@") >= 0 || from.indexOf(k) >= 0 || (kS.length >= 4 && fromS.indexOf(kS) >= 0)) return t;
@@ -2265,6 +2274,7 @@ footer { color: var(--muted); font-size: 12px; margin-top: 24px; text-align: cen
       if (g.subjects.length < 4) g.subjects.push(em.subject || "");
       if (!g.snippet) g.snippet = String(em.text || "").replace(/\s+/g, " ").slice(0, 400);
       if (dom && g.domains.indexOf(dom) < 0) g.domains.push(dom);
+      g.addrs = g.addrs || []; var ad = senderAddr(em.from); if (g.addrs.indexOf(ad) < 0) g.addrs.push(ad);
       var nm = senderName(em.from); if (nm && g.names.indexOf(nm) < 0) g.names.push(nm);
       g.count++; if (em.date < g.first) g.first = em.date;
     });
@@ -2272,17 +2282,18 @@ footer { color: var(--muted); font-size: 12px; margin-top: 24px; text-align: cen
       // the match term: the +tag, or the brand (which also catches its other domains and names)
       g.key = g.tag || (g.brand.length >= 4 ? g.brand : g.domains[0] || "unknown");
       g.name = g.names[0] || g.key;
-      g.like = g.tag ? null : state.trackers.filter(function (t) { return sameBrand(brandWords(t.name), g.brand) || termsOf(t).some(function (k) { return sameBrand(brandWords(k), g.brand); }); })[0] || null;
+      g.like = g.tag ? null : state.trackers.filter(function (t) { return !takenOut(t, g) && (sameBrand(brandWords(t.name), g.brand) || termsOf(t).some(function (k) { return sameBrand(brandWords(k), g.brand); })); })[0] || null;
     });
     return groups.filter(function (g) { return !state.notCasino[g.key]; }).sort(function (a, b) { return b.count - a.count; });
   }
+  function takenOut(t, g) { return (t.exclude || []).some(function (a) { return (g.addrs || []).indexOf(a) >= 0; }); }
   function notCasinoGroups() {
     var n = 0; state.emails.forEach(function (em) { if ((state.emailOwner || {})[em.id] === "none") n++; });
     return n + Object.keys(state.notCasino).length;
   }
 
   // ---- automatic sorting: which casino sent which email ----
-  var autoBusy = false;
+  var autoBusy = false, askedKeys = {};
   function niceName(x) { x = String(x || "").replace(/\b(casino|team|vip|news|newsletter|support|rewards?|promotions?|offers?|mail|no-?reply)\b/gi, "").replace(/\s+/g, " ").trim(); return x || "Unknown casino"; }
   function newTracker(name, key, first, why) {
     var t = state.trackers.filter(function (x) { return x.name.toLowerCase() === name.toLowerCase(); })[0];
@@ -2301,25 +2312,28 @@ footer { color: var(--muted); font-size: 12px; margin-top: 24px; text-align: cen
       groups.forEach(function (g) {
         // 1. looks like a casino you follow, 2. matches an operator from competitor research, 3. a +tag you chose
         var op = !g.tag && (state.operators || []).filter(function (o) { return sameBrand(brandWords(o.name), g.brand); })[0];
-        if (g.like) { addTerm(g.like, g.key); changed++; }
-        else if (op) { newTracker(op.name, g.key, g.first, "from competitor research"); changed++; }
+        var opT = op && state.trackers.filter(function (x) { return x.name.toLowerCase() === op.name.toLowerCase(); })[0];
+        if (g.like) { if (addTerm(g.like, g.key)) changed++; }
+        else if (op && !(opT && takenOut(opT, g))) { newTracker(op.name, g.key, g.first, "from competitor research"); changed++; }
         else if (g.tag) { newTracker(g.tag.charAt(0).toUpperCase() + g.tag.slice(1), g.key, g.first, "from the +" + g.tag + " address"); changed++; }
-        else ask.push(g);
+        else if (!askedKeys[g.key]) ask.push(g);
       });
       if (ask.length) {
         if (aiReady()) {
           // 4. Claude reads names, subjects and a snippet and says which casino it is (or that it isn't one)
           var known = state.trackers.map(function (t) { return t.name; }).concat((state.operators || []).map(function (o) { return o.name; }));
+          ask.forEach(function (g) { askedKeys[g.key] = true; });
           var d = await backend("sort_senders", { known: known, groups: ask.slice(0, 40).map(function (g) { return { key: g.key, names: g.names, domains: g.domains, subjects: g.subjects, snippet: g.snippet }; }) });
           (d.senders || []).forEach(function (r) {
             var g = ask.filter(function (x) { return x.key === r.key; })[0]; if (!g) return;
             if (!r.is_casino) { state.notCasino[g.key] = { name: g.name, domains: g.domains, count: g.count }; changed++; return; }
             var t = r.known ? state.trackers.filter(function (x) { return x.name.toLowerCase() === r.known.toLowerCase(); })[0] : null;
             if (!t && r.known) { var op2 = (state.operators || []).filter(function (o) { return o.name.toLowerCase() === r.known.toLowerCase(); })[0]; if (op2) t = newTracker(op2.name, g.key, g.first, "by Claude"); }
-            if (t) addTerm(t, g.key); else newTracker(r.casino ? r.casino.trim() : casinoName(g.name, g.domains), g.key, g.first, "by Claude");
-            changed++;
+            if (t && takenOut(t, g)) return; // you took these addresses out of that casino: leave them for you
+            if (t) { if (addTerm(t, g.key)) changed++; } else { newTracker(r.casino ? r.casino.trim() : casinoName(g.name, g.domains), g.key, g.first, "by Claude"); changed++; }
           });
         } else ask.forEach(function (g) {
+          askedKeys[g.key] = true;
           // without AI: obvious non-casinos are set aside, clear brand names become casinos, unclear ones wait for you
           if (/google|apple|microsoft|outlook|yahoo|paypal|amazon|facebook|meta|linkedin|instagram|twitter|icloud|dropbox|zoom|slack/i.test(g.names.join(" ") + " " + g.domains.join(" "))) { state.notCasino[g.key] = { name: g.name, domains: g.domains, count: g.count }; changed++; return; }
           var nm = casinoName(g.name, g.domains);
@@ -2350,9 +2364,19 @@ footer { color: var(--muted); font-size: 12px; margin-top: 24px; text-align: cen
     }
     return niceName(clean).split(" ").slice(0, 3).join(" ") || clean;
   }
-  function addTerm(t, term) { var ks = termsOf(t); term = String(term || "").trim().toLowerCase(); if (term && ks.indexOf(term) < 0) ks.push(term); t.match = ks.join(", "); }
+  function addTerm(t, term) { var ks = termsOf(t); term = String(term || "").trim().toLowerCase(); if (!term || ks.indexOf(term) >= 0) return false; ks.push(term); t.match = ks.join(", "); return true; }
 
   var lastGroups = [];
+  // the sender addresses whose emails are under this casino, each with its count and a way to take it out
+  function addrList(t) {
+    var by = {};
+    emailsOf(t).forEach(function (em) { var a = senderAddr(em.from); var r = by[a] || (by[a] = { a: a, name: senderName(em.from), n: 0 }); r.n++; });
+    var rows = Object.keys(by).map(function (k) { return by[k]; }).sort(function (x, y) { return y.n - x.n; });
+    var out = (t.exclude || []);
+    return '<div class="addrs"><p class="plabel" style="margin:10px 0 4px">Sender addresses (' + rows.length + ")</p>" +
+      (rows.length ? rows.map(function (r) { return '<div class="addr"><span><b>' + esc(r.a) + "</b>" + (r.name && r.name.toLowerCase() !== r.a ? " · " + esc(r.name) : "") + " · " + plural(r.n, "email", "emails") + '</span><button class="btn" type="button" data-addrout="' + esc(r.a) + '" data-trk="' + t.id + '">Remove</button></div>'; }).join("") : '<p class="small">No emails yet.</p>') +
+      (out.length ? '<p class="small" style="margin:8px 0 2px">Taken out of this casino:</p>' + out.map(function (a) { return '<div class="addr"><span>' + esc(a) + '</span><button class="btn" type="button" data-addrin="' + esc(a) + '" data-trk="' + t.id + '">Put back</button></div>'; }).join("") : "") + "</div>";
+  }
   function notCasinoHtml() {
     var keys = Object.keys(state.notCasino), ems = state.emails.filter(function (em) { return (state.emailOwner || {})[em.id] === "none"; });
     return keys.map(function (k) { var g = state.notCasino[k]; return '<div class="unas"><span><b>' + esc(g.name || k) + "</b> · " + esc((g.domains || []).join(", ")) + '</span><button class="btn" type="button" data-unnc="' + esc(k) + '">It is a casino</button></div>'; }).join("") +
@@ -2373,7 +2397,7 @@ footer { color: var(--muted); font-size: 12px; margin-top: 24px; text-align: cen
     renderInboxPanel();
     var AVC = ["var(--accent-2)", "var(--coral-bg)", "var(--mint-bg)", "var(--sky-bg)", "var(--c-call)"];
     document.getElementById("trkList").innerHTML = state.trackers.map(function (t, i) {
-      if (ui.trkEdit === t.id) return '<form class="trk trkedit" data-trkform="' + t.id + '"><div class="meta2"><input class="inp" name="n" type="text" value="' + esc(t.name) + '" aria-label="Casino name" style="font-weight:600"><input class="inp" name="m" type="text" value="' + esc(termsOf(t).join(", ")) + '" aria-label="Match emails by"><small>Separate several with commas: a +tag, a domain or a name, e.g. vegasnova, vn-promo.com</small><div class="row" style="margin-top:6px"><button class="btn primary" type="submit">Save</button><button class="btn" type="button" data-trkcancel="1">Cancel</button></div></div></form>';
+      if (ui.trkEdit === t.id) return '<form class="trk trkedit" data-trkform="' + t.id + '"><div class="meta2"><p class="plabel" style="margin:0 0 2px">Casino name</p><input class="inp" name="n" type="text" value="' + esc(t.name) + '" aria-label="Casino name" style="font-weight:600;margin-top:0"><p class="plabel" style="margin:10px 0 2px">Matches</p><input class="inp" name="m" type="text" style="margin-top:0" value="' + esc(termsOf(t).join(", ")) + '" aria-label="Match emails by"><small>Separate several with commas: a +tag, a domain or a name, e.g. vegasnova, vn-promo.com</small>' + addrList(t) + '<div class="row" style="margin-top:6px"><button class="btn primary" type="submit">Save</button><button class="btn" type="button" data-trkcancel="1">Cancel</button></div></div></form>';
       return '<div class="trk"><span class="avatar" style="background:' + AVC[i % AVC.length] + '">' + esc(t.name.charAt(0).toUpperCase()) + '</span><div class="meta2"><b>' + esc(t.name) + "</b><small>matches " + termsOf(t).map(function (k) { return "“" + esc(k) + "”"; }).join(", ") + " · " + plural(emailsOf(t).length, "email", "emails") + (t.auto ? " · sorted " + esc(t.auto) : "") + "</small></div>" +
         '<button class="iconbtn" type="button" data-trkedit="' + t.id + '" aria-label="Change how ' + esc(t.name) + ' is matched" title="Change addresses">' + svg('<path d="M4 14l9-9 2 2-9 9H4z"/>') + "</button>" +
         '<button class="iconbtn" type="button" data-trkdel="' + t.id + '" aria-label="Stop following ' + esc(t.name) + '" title="Stop following">' + svg('<path d="M5 5l10 10M15 5L5 15"/>') + "</button></div>";
@@ -2493,7 +2517,7 @@ footer { color: var(--muted); font-size: 12px; margin-top: 24px; text-align: cen
     if (!t.registered) { var f = emailsOf(t)[0]; if (f) t.registered = localDate(f.date); }
     e.target.reset(); save(); renderEmails(); toast("Following " + name);
   });
-  function addGroupTo(t, g) { commit(); addTerm(t, g.key); save(); renderEmails(); toast(plural(g.count, "email", "emails") + " from " + (g.tag ? "+" + g.tag : g.name) + " added to " + t.name); }
+  function addGroupTo(t, g) { commit(); addTerm(t, g.key); if (t.exclude) t.exclude = t.exclude.filter(function (x) { return (g.addrs || []).indexOf(x) < 0; }); save(); renderEmails(); toast(plural(g.count, "email", "emails") + " from " + (g.tag ? "+" + g.tag : g.name) + " added to " + t.name); }
   document.getElementById("unassigned").addEventListener("click", function (e) {
     var b = e.target.closest("[data-follow]");
     if (b) {
@@ -2544,6 +2568,14 @@ footer { color: var(--muted); font-size: 12px; margin-top: 24px; text-align: cen
     var ed = e.target.closest("[data-trkedit]");
     if (ed) { ui.trkEdit = ed.getAttribute("data-trkedit"); renderEmails(); var inp = document.querySelector('[data-trkform] input'); if (inp) inp.focus(); return; }
     if (e.target.closest("[data-trkcancel]")) { ui.trkEdit = null; renderEmails(); return; }
+    var ab = e.target.closest("[data-addrout], [data-addrin]");
+    if (ab) {
+      var tt = state.trackers.filter(function (x) { return x.id === ab.getAttribute("data-trk"); })[0]; if (!tt) return;
+      commit(); tt.exclude = tt.exclude || [];
+      if (ab.hasAttribute("data-addrout")) { var a = ab.getAttribute("data-addrout"); if (tt.exclude.indexOf(a) < 0) tt.exclude.push(a); toast(a + " is no longer counted as " + tt.name); }
+      else tt.exclude = tt.exclude.filter(function (a) { return a !== ab.getAttribute("data-addrin"); });
+      save(); renderEmails(); return;
+    }
     var b = e.target.closest("[data-trkdel]"); if (!b) return;
     commit(); var id = b.getAttribute("data-trkdel"); state.trackers = state.trackers.filter(function (t) { return t.id !== id; });
     save(); renderEmails(); toast("Stopped following. Undo to bring it back.");
