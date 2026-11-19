@@ -385,6 +385,10 @@ textarea.inp { resize: vertical; min-height: 70px; }
 .rvcas b { display: block; font-weight: 600; }
 .rvcas small { color: var(--muted); font-size: 12px; }
 .rvcas .cdot { width: 12px; height: 12px; margin: 0; }
+.rvai { background: var(--surface); border-radius: 20px; padding: 14px 18px; box-shadow: var(--shadow-sm); }
+.rvai textarea { font: inherit; font-size: 14px; border: 1px solid var(--line); background: var(--surface); color: var(--ink); border-radius: 10px; padding: 8px 10px; width: 100%; box-sizing: border-box; margin-top: 4px; }
+.rvq { background: var(--ye-soft); border-radius: 12px; padding: 10px 14px; margin-top: 10px; font-size: 13px; }
+.rvq ul { margin: 6px 0; padding-left: 18px; } .rvq li { margin: 3px 0; }
 .rvempty { background: var(--surface); border-radius: 20px; padding: 28px; text-align: center; color: var(--muted); box-shadow: var(--shadow-sm); }
 .rvfoot { text-align: center; color: var(--muted); font-size: 13px; }
 .rvprog { background: var(--surface); border-radius: 16px; padding: 14px 18px; box-shadow: var(--shadow-sm); }
@@ -2312,7 +2316,7 @@ footer { color: var(--muted); font-size: 12px; margin-top: 24px; text-align: cen
     if (!Array.isArray(r.sections) || !r.sections.length) r.sections = RV_SECTIONS.map(function (k) { return { id: k[0], name: k[1] }; });
     if (!Array.isArray(r.versions) || !r.versions.length) r.versions = [{ id: "desktop", label: "Desktop", device: "desktop", footer: "" }];
     if (!Array.isArray(r.shots)) r.shots = [];
-    ["cards", "comps", "notes"].forEach(function (k) { if (!r[k] || typeof r[k] !== "object") r[k] = {}; });
+    ["cards", "comps", "notes", "questions"].forEach(function (k) { if (!r[k] || typeof r[k] !== "object") r[k] = {}; });
     if (!Array.isArray(r.rules)) r.rules = [];
     return r;
   }
@@ -2388,7 +2392,17 @@ footer { color: var(--muted); font-size: 12px; margin-top: 24px; text-align: cen
         : key === "ideas" ? ((c.ideas || []).length ? '<ol class="ml dn">' + c.ideas.map(function (t) { return "<li>" + esc(t) + "</li>"; }).join("") + "</ol>" : '<p class="none">Not offered</p>') : rvBullets(list, key === "works" ? "g" : "b");
       return '<div class="qcard ' + cls + '"><h3><span class="qi">' + icon + "</span>" + title + "</h3>" + body + "</div>";
     };
-    var tools = '<div class="rvtools">' + (editC ? '<span class="small">One point per line. Add “(to check)” at the end of a line that still needs confirming.</span><span class="grow"></span><button class="btn primary" type="button" data-rvact="savecards">Save</button><button class="btn" type="button" data-rvact="canceledit">Cancel</button>'
+    var qs = ((r.questions[v.id] || {})[sec.id] || []), busyHere = ui.rvDrafting === v.id + "/" + sec.id;
+    var ai = '<div class="rvai">' +
+      (busyHere ? '<div class="reading"><div class="bar"></div><div class="bar" style="width:70%"></div></div><p class="small" style="margin:6px 0 0">Claude is ' + (ui.rvDraftMode === "notes" ? "applying your notes to" : "writing") + " " + esc(sec.name) + ". This takes about a minute.</p>"
+        : '<div class="rvtools"><button class="btn primary" type="button" data-rvact="draft"' + (aiReady() && rvShotsFor(v, sec).length ? "" : " disabled") + ">" + (c.works.length || c.gaps.length || pts.length ? "Redraft with Claude" : "Draft with Claude") + "</button>" +
+          '<span class="small">' + (!aiReady() ? "Turn on AI to draft with Claude." : !rvShotsFor(v, sec).length ? "Add or sort screenshots into this section first." : "Claude follows your review rules; your notes below and earlier corrections are applied.") + "</span></div>" +
+          (qs.length ? '<div class="rvq"><b>To check with you</b><ul>' + qs.map(function (q) { return "<li>" + esc(q) + "</li>"; }).join("") + "</ul><small>Answer in the notes below; they'll be applied.</small></div>" : "") +
+          '<label class="small" style="display:block;margin-top:10px">Your notes on ' + esc(sec.name) + '<textarea id="rvNotes" rows="3" placeholder="e.g. Don\'t list the single filter as a gap. Show Oliver\'s menu instead of HertzBetz.">' + esc((r.notes[v.id] || {})[sec.id] || "") + "</textarea></label>" +
+          '<div class="rvtools" style="margin-top:6px"><button class="btn" type="button" data-rvact="applynotes"' + (aiReady() ? "" : " disabled") + '>Apply notes with Claude</button><label class="small row" style="gap:6px"><input type="checkbox" id="rvCarry" checked> Carry them forward to other sections and versions</label><span class="grow"></span>' +
+          (r.rules.length ? '<button class="ebtn" type="button" data-rvact="showrules">Corrections so far (' + r.rules.length + ")</button>" : "") + "</div>" +
+          (ui.rvShowRules ? '<div class="rvq"><b>Corrections carried forward</b><ul>' + r.rules.map(function (x, i) { return "<li>" + esc(x) + ' <button class="ebtn" type="button" data-rvact="delrule" data-i="' + i + '">Remove</button></li>'; }).join("") + "</ul></div>" : "")) + "</div>";
+    var tools = ai + '<div class="rvtools">' + (editC ? '<span class="small">One point per line. Add “(to check)” at the end of a line that still needs confirming.</span><span class="grow"></span><button class="btn primary" type="button" data-rvact="savecards">Save</button><button class="btn" type="button" data-rvact="canceledit">Cancel</button>'
       : '<span class="grow"></span><button class="ebtn" type="button" data-rvact="editcards">Edit the three cards</button>') + "</div>";
     var tri = '<div class="tri">' + card("works", "good", "✓", "Works", c.works) + card("gaps", "bad", "!", "Potential gaps", c.gaps) + card("ideas", "do", "→", "Ideas to consider", c.ideas) + "</div>";
     var points = pts.map(function (p, pi) {
@@ -2397,12 +2411,16 @@ footer { color: var(--muted); font-size: 12px; margin-top: 24px; text-align: cen
         '<div class="vgrid c' + Math.min(4, (p.shots || []).length || 1) + '">' + (p.shots || []).map(function (sh, si) { return rvFigure(p, pi, sh, si, subj); }).join("") + "</div></div>";
     }).join("");
     var gshots = rvShotsFor(v, sec), unsorted = rvShotsFor(v, null);
-    var gal = rvGallery(gshots, "sec") + (unsorted.length ? '<details class="allshots" style="margin-top:14px"' + (ui.rvUnsortedOpen ? " open" : "") + ' data-rvdet="unsorted"><summary>Not sorted into a section yet (' + unsorted.length + ")</summary>" + rvGallery(unsorted, "uns") + "</details>" : "");
+    var gal = rvGallery(gshots, "sec"), nosec = rv().shots.filter(function (x) { return x.v === v.id && (x.sections || []).join() === "_none"; });
+    var uns = nosec.length ? '<details class="allshots"' + (ui.rvNosecOpen ? " open" : "") + ' data-rvdet="nosec"><summary>Not in any section (' + nosec.length + ')</summary><p class="small">Screenshots that show none of the sections (a game lobby, a help article…). Use Edit to put one in a section.</p>' + rvGallery(nosec, "nos") + "</details>" : "";
+    uns = (unsorted.length ? '<div class="allshots"><div class="row" style="justify-content:space-between;align-items:center"><b>' + plural(unsorted.length, "screenshot", "screenshots") + ' not sorted into a section yet</b><span class="row">' +
+      (ui.rvSorting ? '<span class="small">Claude is sorting…</span>' : '<button class="btn primary" type="button" data-rvact="sortshots"' + (aiReady() ? "" : " disabled") + ">Sort with Claude</button>") +
+      '<button class="ebtn" type="button" data-rvact="toggleuns">' + (ui.rvUnsortedOpen ? "Hide" : "Show") + "</button></span></div>" + (ui.rvUnsortedOpen ? rvGallery(unsorted, "uns") : "") + "</div>" : "") + uns;
     main.innerHTML = head + tabs +
       '<div class="stack ' + mode + '" style="gap:16px">' + tools + tri +
       '<div class="row" style="justify-content:space-between;align-items:center"><h2 class="vtitle">How it compares</h2><button class="ebtn" type="button" data-rvact="addpoint">+ Add a point</button></div>' +
       (points || '<div class="rvempty small">No comparison points for ' + esc(sec.name) + " yet.</div>") +
-      '<details class="allshots" data-rvdet="all"' + (ui.rvAllOpen ? " open" : "") + "><summary>All screenshots for this section (" + gshots.length + ")</summary>" + gal + "</details>" +
+      '<details class="allshots" data-rvdet="all"' + (ui.rvAllOpen ? " open" : "") + "><summary>All screenshots for this section (" + gshots.length + ")</summary>" + gal + "</details>" + uns +
       (v.footer ? '<p class="rvfoot">' + esc(v.footer) + "</p>" : "") + "</div>";
     if (ui.rvTitleEdit) { var ti = document.getElementById("rvTitleInp"); if (ti) { ti.focus(); ti.select(); } }
   }
@@ -2415,7 +2433,7 @@ footer { color: var(--muted); font-size: 12px; margin-top: 24px; text-align: cen
       var op = findOp(s.op);
       if (ui.rvShotEdit === s.id) return rvShotEditor(s);
       return '<figure class="shot"' + (f !== "all" && s.op !== f ? " hidden" : "") + ">" + rvFrame(s, null, 'data-lbs="' + esc(s.id) + '" data-lbscope="' + scope + '"') +
-        '<figcaption>' + rvChip(op) + "<b>" + esc(s.title || "Untitled") + '</b></figcaption><button class="ebtn sedit" type="button" data-rvshot="' + esc(s.id) + '">Edit</button></figure>';
+        '<figcaption>' + rvChip(op) + "<b>" + esc(s.title || "Untitled") + "</b>" + (s.flag ? '<span class="ktag k-check" style="white-space:normal" title="' + esc(s.flag) + '">Check: ' + esc(s.flag) + "</span>" : "") + '</figcaption><button class="ebtn sedit" type="button" data-rvshot="' + esc(s.id) + '">Edit</button></figure>';
     }).join("");
     return pills + '<div class="gal">' + (items || '<p class="small">No screenshots yet.</p>') + "</div>";
   }
@@ -2502,13 +2520,24 @@ footer { color: var(--muted); font-size: 12px; margin-top: 24px; text-align: cen
       var p = rvPointsFor(v, sec)[+t.getAttribute("data-lbp")]; if (p) rvLbOpen(p.shots, +t.getAttribute("data-lbi")); return;
     }
     if ((t = e.target.closest(".frame[data-lbs]"))) {
-      var scope = t.getAttribute("data-lbscope"), list = (scope === "uns" ? rvShotsFor(v, null) : rvShotsFor(v, sec)).filter(function (s) { return !ui.rvFilter || s.op === ui.rvFilter; });
+      var scope = t.getAttribute("data-lbscope"), list = (scope === "uns" ? rvShotsFor(v, null) : scope === "nos" ? r.shots.filter(function (x) { return x.v === v.id && (x.sections || []).join() === "_none"; }) : rvShotsFor(v, sec)).filter(function (s) { return !ui.rvFilter || s.op === ui.rvFilter; });
       var cas = rvCasinos(); list.sort(function (a, b) { return cas.indexOf(findOp(a.op)) - cas.indexOf(findOp(b.op)); });
       rvLbOpen(list.map(function (s) { return { shot: s.id, boxes: [], kind: "" }; }), Math.max(0, list.map(function (s) { return s.id; }).indexOf(t.getAttribute("data-lbs")))); return;
     }
     t = e.target.closest("[data-rvact]"); if (!t) return;
     var a = t.getAttribute("data-rvact"), pi = +t.getAttribute("data-pi"), pts = rvPointsFor(v, sec);
     if (a === "import") { rvImportPick(); return; }
+    if (a === "draft") { rvDraft(v, sec, ""); return; }
+    if (a === "applynotes") {
+      var nt = (document.getElementById("rvNotes").value || "").trim(); if (!nt) { toast("Write your notes first."); return; }
+      commit(); r.notes[v.id] = r.notes[v.id] || {}; r.notes[v.id][sec.id] = nt;
+      if (document.getElementById("rvCarry").checked) nt.split(/\n+/).map(function (x) { return x.trim(); }).filter(Boolean).forEach(function (x) { var line = sec.name + ": " + x; if (r.rules.indexOf(line) < 0) r.rules.push(line); });
+      save(); rvDraft(v, sec, nt); return;
+    }
+    if (a === "showrules") { ui.rvShowRules = !ui.rvShowRules; renderReview(); return; }
+    if (a === "delrule") { commit(); r.rules.splice(+t.getAttribute("data-i"), 1); rvSaveState(); return; }
+    if (a === "sortshots") { rvSortShots(); return; }
+    if (a === "toggleuns") { ui.rvUnsortedOpen = !ui.rvUnsortedOpen; renderReview(); return; }
     if (a === "export") { ui.rvExportOpen = !ui.rvExportOpen; renderReview(); return; }
     if (a === "exportclose") { ui.rvExportOpen = false; renderReview(); return; }
     if (a === "exporthtml") { rvExportHtml(); return; }
@@ -2550,7 +2579,7 @@ footer { color: var(--muted); font-size: 12px; margin-top: 24px; text-align: cen
         Object.keys(r.comps).forEach(function (vk) { Object.keys(r.comps[vk]).forEach(function (sk) { r.comps[vk][sk].forEach(function (pp) { pp.shots = (pp.shots || []).filter(function (x) { return x.shot !== s.id; }); }); }); });
       } else {
         var fig = t.closest("figure");
-        s.title = fig.querySelector('[data-se="title"]').value.trim(); s.op = fig.querySelector('[data-se="op"]').value;
+        s.title = fig.querySelector('[data-se="title"]').value.trim(); s.op = fig.querySelector('[data-se="op"]').value; delete s.flag;
         s.sections = Array.prototype.filter.call(fig.querySelectorAll("[data-se-sec]"), function (cb) { return cb.checked; }).map(function (cb) { return cb.getAttribute("data-se-sec"); });
       }
       ui.rvShotEdit = null; rvSaveState(); return;
@@ -2579,8 +2608,101 @@ footer { color: var(--muted); font-size: 12px; margin-top: 24px; text-align: cen
   });
   document.getElementById("reviewApp").addEventListener("toggle", function (e) {
     var d = e.target.getAttribute && e.target.getAttribute("data-rvdet");
-    if (d === "all") ui.rvAllOpen = e.target.open; if (d === "unsorted") ui.rvUnsortedOpen = e.target.open;
+    if (d === "all") ui.rvAllOpen = e.target.open; if (d === "unsorted") ui.rvUnsortedOpen = e.target.open; if (d === "nosec") ui.rvNosecOpen = e.target.open;
   }, true);
+
+  // ---- Claude: drafting a section, applying notes, sorting screenshots ----
+  async function rvPrep(s, maxEdge) {
+    var blob = await rvBlob(s), url = URL.createObjectURL(blob);
+    try {
+      var img = await new Promise(function (res, rej) { var im = new Image(); im.onload = function () { res(im); }; im.onerror = function () { rej(new Error("A screenshot couldn't be read.")); }; im.src = url; });
+      var k = Math.min(1, maxEdge / Math.max(img.naturalWidth, img.naturalHeight)), c = document.createElement("canvas");
+      c.width = Math.round(img.naturalWidth * k); c.height = Math.round(img.naturalHeight * k);
+      c.getContext("2d").drawImage(img, 0, 0, c.width, c.height);
+      return c.toDataURL("image/jpeg", 0.72).split(",")[1];
+    } finally { URL.revokeObjectURL(url); }
+  }
+  // the reviewed casino's tags are works / gap / check / mixed; competitors' are good / mixed / avoid / note
+  function rvKindFor(sh, k) {
+    var subj = rvSubject(), mine = sh && subj && sh.op === subj.id;
+    if (mine) return { good: "works", avoid: "gap", note: "check" }[k] || (["works", "gap", "check", "mixed"].indexOf(k) >= 0 ? k : "works");
+    return { works: "good", gap: "avoid", check: "note" }[k] || (["good", "mixed", "avoid", "note"].indexOf(k) >= 0 ? k : "good");
+  }
+  function rvThousandths(s, b) { var W = s.w || 1000, H = s.h || 1000; return [Math.round(b.x * W / 1000), Math.round(b.y * H / 1000), Math.round(b.w * W / 1000), Math.round(b.h * H / 1000)]; }
+  async function rvDraft(v, sec, notes) {
+    var r = rv(), subj = rvSubject(); if (!subj) { toast("Set your own website first: it's the casino being reviewed."); return; }
+    var pool = rvShotsFor(v, sec), pts = rvPointsFor(v, sec), used = {};
+    pts.forEach(function (p) { (p.shots || []).forEach(function (x) { used[x.shot] = 1; }); });
+    // the subject's screenshots, then competitors' (the ones already used first), about 24 in all
+    var mine = pool.filter(function (s) { return s.op === subj.id; }).slice(0, 8), byOp = {};
+    pool.filter(function (s) { return s.op !== subj.id; }).sort(function (a, b) { return (used[b.id] ? 1 : 0) - (used[a.id] ? 1 : 0); }).forEach(function (s) { (byOp[s.op] = byOp[s.op] || []).push(s); });
+    var pick = mine.slice(), round = 0;
+    while (pick.length < 24 && Object.keys(byOp).some(function (k) { return byOp[k].length > round; })) { Object.keys(byOp).forEach(function (k) { if (pick.length < 24 && byOp[k][round]) pick.push(byOp[k][round]); }); round++; }
+    ui.rvDrafting = v.id + "/" + sec.id; ui.rvDraftMode = notes ? "notes" : "draft"; renderReview();
+    try {
+      var images = [];
+      for (var i = 0; i < pick.length; i++) {
+        var s = pick[i], op = findOp(s.op);
+        var els = (s.els || []).slice(0, 40).map(function (e) { return [String(e[4] || "").slice(0, 40), Math.round(e[0] * 1000 / (s.w || 1)), Math.round(e[1] * 1000 / (s.h || 1)), Math.round(e[2] * 1000 / (s.w || 1)), Math.round(e[3] * 1000 / (s.h || 1))]; });
+        images.push({ id: s.id, casino: op ? op.name : "", title: s.title || "", media_type: "image/jpeg", data: await rvPrep(s, 1100), elements: els });
+      }
+      var c = rvCardsFor(v, sec);
+      var draft = notes || c.works.length || c.gaps.length || pts.length ? { works: c.works, gaps: c.gaps, ideas: c.ideas, points: pts.map(function (p) { return { title: p.title, text: p.text, shots: p.shots.map(function (x) { var sh = rvShot(x.shot); return { id: x.shot, kind: x.kind, boxes: (x.boxes || []).map(function (b) { return { x: Math.round(b[0] * 1000 / (sh && sh.w || 1)), y: Math.round(b[1] * 1000 / (sh && sh.h || 1)), w: Math.round(b[2] * 1000 / (sh && sh.w || 1)), h: Math.round(b[3] * 1000 / (sh && sh.h || 1)), label: b[4] || "" }; }) }; }) }; }) } : null;
+      var d = await backend("draft_review_section", { subject: subj.name, section: sec.name, casinos: rvCasinos().filter(function (o) { return o.id !== subj.id; }).map(function (o) { return o.name; }),
+        images: images, corrections: r.rules, draft: draft, notes: notes || "" });
+      commit();
+      c.works = d.works || []; c.gaps = d.gaps || []; c.ideas = d.ideas || [];
+      r.comps[v.id] = r.comps[v.id] || {};
+      r.comps[v.id][sec.id] = (d.points || []).map(function (p) {
+        var shots = (p.shots || []).filter(function (x) { return rvShot(x.id); }).map(function (x) { var sh = rvShot(x.id); return { shot: x.id, kind: rvKindFor(sh, x.kind), boxes: (x.boxes || []).map(function (b) { return rvThousandths(sh, b).concat([b.label || ""]); }) }; });
+        return { title: p.title, text: p.text, shots: shots };
+      });
+      r.questions[v.id] = r.questions[v.id] || {}; r.questions[v.id][sec.id] = d.questions || [];
+      ui.rvDrafting = null; save(); renderReview(); toast(sec.name + (notes ? ": notes applied" : " drafted") + ". Check the highlights and edit anything.");
+    } catch (err) { ui.rvDrafting = null; renderReview(); toast(err.message); }
+  }
+  async function rvBlur(s, boxes) {
+    // blur personal data in the picture itself, then store the blurred copy in its place
+    var blob = await rvBlob(s), url = URL.createObjectURL(blob);
+    try {
+      var img = await new Promise(function (res, rej) { var im = new Image(); im.onload = function () { res(im); }; im.onerror = rej; im.src = url; });
+      var c = document.createElement("canvas"), x = c.getContext("2d"); c.width = img.naturalWidth; c.height = img.naturalHeight; x.drawImage(img, 0, 0);
+      boxes.forEach(function (b) {
+        var px = rvThousandths(s, b), pad = 6, bx = Math.max(0, px[0] - pad), by = Math.max(0, px[1] - pad), bw = Math.min(c.width - bx, px[2] + pad * 2), bh = Math.min(c.height - by, px[3] + pad * 2);
+        if (bw < 2 || bh < 2) return;
+        x.save(); x.beginPath(); x.rect(bx, by, bw, bh); x.clip(); x.filter = "blur(10px)"; x.drawImage(img, 0, 0); x.restore();
+      });
+      var out = await new Promise(function (res) { c.toBlob(res, "image/jpeg", 0.9); });
+      Object.assign(s, await rvStore(out, s.v + "/" + s.op)); s.blurred = true;
+    } finally { URL.revokeObjectURL(url); }
+  }
+  async function rvSortShots() {
+    var r = rv(), v = rvVersion(), todo = rvShotsFor(v, null), ops = {};
+    todo.forEach(function (s) { (ops[s.op] = ops[s.op] || []).push(s); });
+    ui.rvSorting = true; renderReview();
+    try {
+      var done = 0, keys = Object.keys(ops);
+      for (var k = 0; k < keys.length; k++) {
+        var list = ops[keys[k]], op = findOp(keys[k]);
+        for (var i = 0; i < list.length; i += 10) {
+          var batch = list.slice(i, i + 10), images = [];
+          rvBusy("Sorting screenshots with Claude", done, todo.length, (op ? op.name : "") + ": " + (i + 1) + "–" + (i + batch.length) + " of " + list.length);
+          for (var j = 0; j < batch.length; j++) images.push({ id: batch[j].id, media_type: "image/jpeg", data: await rvPrep(batch[j], 1000) });
+          var d = await backend("sort_review_shots", { casino: op ? op.name : "", sections: r.sections, images: images });
+          for (var n = 0; n < (d.shots || []).length; n++) {
+            var res = d.shots[n], s = rvShot(res.id); if (!s) continue;
+            s.sections = (res.sections || []).filter(function (id) { return r.sections.some(function (x) { return x.id === id; }); });
+            if (res.title) s.title = res.title;
+            if (res.unusual) s.flag = res.unusual;
+            if ((res.personal || []).length) await rvBlur(s, res.personal);
+            if (!s.sections.length) s.sections = ["_none"]; // looked at, belongs to no section
+          }
+          done += batch.length; save();
+        }
+      }
+      ui.rvSorting = false; rvBusy(null); save(); renderReview(); toast("Screenshots sorted into sections. Ones that fit no section are kept under “Not in any section”.");
+    } catch (err) { ui.rvSorting = false; rvBusy(null); toast(err.message); }
+  }
 
   // ---- screenshots in: storage ----
   function rvImgSize(blob) { return new Promise(function (res) { var u = URL.createObjectURL(blob), im = new Image(); im.onload = function () { res({ w: im.naturalWidth, h: im.naturalHeight }); URL.revokeObjectURL(u); }; im.onerror = function () { res({ w: 0, h: 0 }); URL.revokeObjectURL(u); }; im.src = u; }); }
@@ -2621,7 +2743,8 @@ footer { color: var(--muted); font-size: 12px; margin-top: 24px; text-align: cen
         r.shots.push(Object.assign({ id: uid(), v: v.id, op: op.id, file: blobs[k].name, title: blobs[k].name.replace(/\.[a-z]+$/i, ""), sections: [], src: "upload" }, size, stored)); added++;
       }
       rvBusy(null); save(); renderReview();
-      toast(plural(added, "screenshot", "screenshots") + " added for " + op.name + ". They're under “Not sorted into a section yet”: open one with Edit to choose its section.");
+      if (added && aiReady()) { toast(plural(added, "screenshot", "screenshots") + " added for " + op.name + ". Claude is sorting them into sections."); rvSortShots(); }
+      else toast(plural(added, "screenshot", "screenshots") + " added for " + op.name + ". They're under “not sorted into a section yet”: open one with Edit to choose its section.");
     } catch (err) { rvBusy(null); toast(err.message); }
   });
 

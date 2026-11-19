@@ -99,16 +99,16 @@ const EMAIL_SYSTEM = [
   "patterns: up to 5 short, concrete observations a CRM manager could act on.",
 ].join("\n");
 
-async function askClaude(apiKey: string, system: string, content: Anthropic.Beta.BetaContentBlockParam[], schema: Record<string, unknown>): Promise<unknown> {
+async function askClaude(apiKey: string, system: string, content: Anthropic.Beta.BetaContentBlockParam[], schema: Record<string, unknown>, effort: "low" | "medium" | "high" = "medium", maxTokens = 16000): Promise<unknown> {
   const client = new Anthropic({ apiKey });
   let res: Anthropic.Beta.BetaMessage;
   try {
     res = await client.beta.messages.create({
       model: MODEL,
-      max_tokens: 16000,
+      max_tokens: maxTokens,
       betas: ["server-side-fallback-2026-07-01"],
       fallbacks: "default",
-      output_config: { effort: "medium", format: { type: "json_schema", schema } },
+      output_config: { effort, format: { type: "json_schema", schema } },
       system,
       messages: [{ role: "user", content }],
     });
@@ -197,6 +197,136 @@ function sortSenders(apiKey: string, body: Record<string, unknown>) {
     `=== key: ${String(g.key).slice(0, 80)}\nSender names: ${list(g.names, 5, 80).join(" | ")}\nDomains: ${list(g.domains, 5, 80).join(", ")}\n` +
     `Subjects: ${list(g.subjects, 4, 160).join(" | ")}\nSnippet: ${String(g.snippet ?? "").slice(0, 400)}`).join("\n\n");
   return askClaude(apiKey, SENDERS_SYSTEM, [{ type: "text", text: input }], SENDERS_SCHEMA);
+}
+
+// ---------- competitor review (the reviewer's method, see report/HANDOFF.md) ----------
+
+const REVIEW_RULES = [
+  "THE METHOD",
+  "- The review compares STRUCTURE AND SETUP, not offers: how pages are laid out, how navigation works, how flows are built, how features are presented and where they live.",
+  "- Never compare numbers or types of things: number of missions, promotions or store items, prize sizes, bonus amounts, which promotion types a casino runs. Screenshots never capture everything. Offer figures on a screenshot are not a point of comparison.",
+  "TONE",
+  "- No scores, ranks or averages. No superlatives about competitors (no best, clearest, strongest, best-in-class). Write 'some competitors' or name the casinos (e.g. 'Sir Betalot has a clean layout').",
+  "- Competitor features are examples, not recommendations. When two approaches both work, say so (e.g. 'VegasNova and Sir Betalot give the store its own page; SlotMonster and Oliver show it as a tab inside their rewards hub. Both approaches work.').",
+  "- Ideas are suggestions worded as options: could, consider, is worth testing, is another option.",
+  "- Keep text minimal: card bullets are short phrases; each comparison is a short title plus one or two plain sentences.",
+  "NOT A GAP (never list these as potential gaps)",
+  "- Valid design choices (e.g. missions and store on separate pages keeps each purpose clear; show a combined hub only as an alternative example).",
+  "- One filter when there is only one promotion type (at most: 'Single filter won't scale if more promotion types are added').",
+  "- Mission rewards that differ in size; not showing what a reward is worth; missing starter/streak missions; repeated store artwork; no 'next reward you can afford' hint.",
+  "- A second gap that is only a consequence of the first (no tournaments -> don't also list 'nothing in the menu').",
+  "- Personal preferences: a large banner that uses its space well is a strength; only a banner with a lot of empty space is a fair negative.",
+  "FACTS THAT NEED CHECKING",
+  "- Anything that might depend on the account or the day (e.g. the cashier shows no bonus: had the account already deposited? a button didn't work) is not stated as a gap: end that bullet with '(to check)' and add a question for the reviewer. Ask before treating an unusual screenshot (a form or pop-up that may have been taken by mistake) as a finding.",
+  "SCREENSHOTS IN COMPARISONS",
+  "- Each comparison point covers one idea, with 2 to 4 screenshots; the subject casino's screenshot comes first whenever it's relevant.",
+  "- Use only screenshots of this section's actual page or feature (promotions = the promotions page, not homepage banners or cashier bonus cards; tournaments = tournament/race/leaderboard pages; missions = missions pages).",
+  "- Put 1 to 3 numbered highlight boxes on the exact elements discussed, each with a short label.",
+  "- kind for the subject casino: works, gap (potential gap), check (to check), mixed. For competitors: good (Example), mixed, avoid, note (For reference, a neutral fact).",
+  "- Promo cards that send players to other features (missions, rewards hub) are 'mixed': they help discovery but blur promotions and other features; missions belong in their own visible section.",
+  "CARDS",
+  "- Three cards about the subject casino: works, gaps (shown as 'Potential gaps'), ideas (shown as 'Ideas to consider', numbered). Leave a card empty when nothing fits (it shows 'Not offered').",
+].join("\n");
+
+const REVIEW_SHOT_SCHEMA = {
+  type: "object", additionalProperties: false, required: ["shots"],
+  properties: {
+    shots: {
+      type: "array", items: {
+        type: "object", additionalProperties: false, required: ["id", "sections", "title", "personal", "unusual"],
+        properties: {
+          id: { type: "string" },
+          sections: { type: "array", items: { type: "string" } },
+          title: { type: "string" },
+          personal: { type: "array", items: { type: "object", additionalProperties: false, required: ["x", "y", "w", "h"], properties: { x: { type: "number" }, y: { type: "number" }, w: { type: "number" }, h: { type: "number" } } } },
+          unusual: { type: "string" },
+        },
+      },
+    },
+  },
+};
+const REVIEW_SHOT_SYSTEM = [
+  "You sort screenshots of an online casino website for a competitor review.",
+  "For each screenshot: sections = the ids of the sections whose actual page or feature it shows (usually one; two only if it genuinely shows both pages; none if it shows none of them, e.g. a game lobby or a help article).",
+  "A homepage banner about a promotion is homepage, not promotions; a bonus card in the cashier is deposit; a promo card about a race is promotions, not tournaments.",
+  "title = a short title of what the screenshot shows (e.g. 'Lobby with welcome-offer banner', 'Cashier step 1: amount and method'). No casino name, no numbers from offers.",
+  "personal = boxes around personal data to blur: player names, usernames, email addresses, cardholder names, phone numbers. Coordinates in thousandths of the image width and height (0 to 1000). Not balances or offer amounts.",
+  "unusual = a short note when the screenshot may have been taken by mistake (an unrelated form, an error page, a personal-details form) so the reviewer can confirm; otherwise an empty string.",
+].join("\n");
+
+const REVIEW_SECTION_SCHEMA = {
+  type: "object", additionalProperties: false, required: ["works", "gaps", "ideas", "points", "questions"],
+  properties: {
+    works: { type: "array", items: { type: "string" } },
+    gaps: { type: "array", items: { type: "string" } },
+    ideas: { type: "array", items: { type: "string" } },
+    points: {
+      type: "array", items: {
+        type: "object", additionalProperties: false, required: ["title", "text", "shots"],
+        properties: {
+          title: { type: "string" },
+          text: { type: "string" },
+          shots: {
+            type: "array", items: {
+              type: "object", additionalProperties: false, required: ["id", "kind", "boxes"],
+              properties: {
+                id: { type: "string" },
+                kind: { type: "string", enum: ["works", "gap", "check", "mixed", "good", "avoid", "note"] },
+                boxes: { type: "array", items: { type: "object", additionalProperties: false, required: ["x", "y", "w", "h", "label"], properties: { x: { type: "number" }, y: { type: "number" }, w: { type: "number" }, h: { type: "number" }, label: { type: "string" } } } },
+              },
+            },
+          },
+        },
+      },
+    },
+    questions: { type: "array", items: { type: "string" } },
+  },
+};
+
+type ReviewImage = { id?: string; casino?: string; title?: string; media_type?: string; data?: string; elements?: unknown[] };
+function reviewImages(body: Record<string, unknown>, max: number) {
+  return (Array.isArray(body.images) ? body.images : [])
+    .filter((im: ReviewImage) => im && IMAGE_TYPES.includes(im.media_type ?? "") && typeof im.data === "string" && im.data.length > 0)
+    .slice(0, max) as ReviewImage[];
+}
+
+function sortReviewShots(apiKey: string, body: Record<string, unknown>) {
+  const images = reviewImages(body, 12);
+  if (!images.length) throw new UserFacingError("bad_request", "No screenshots were received.");
+  const sections = (Array.isArray(body.sections) ? body.sections : []).map((x: { id?: string; name?: string }) => `${String(x.id).slice(0, 40)} (${String(x.name).slice(0, 60)})`).join(", ");
+  const content: Anthropic.Beta.BetaContentBlockParam[] = [{ type: "text", text: `Casino: ${String(body.casino ?? "").slice(0, 80)}\nSections: ${sections}` }];
+  images.forEach((im) => {
+    content.push({ type: "text", text: `Screenshot id: ${String(im.id).slice(0, 64)}` });
+    content.push({ type: "image", source: { type: "base64", media_type: im.media_type as "image/jpeg", data: im.data as string } });
+  });
+  content.push({ type: "text", text: "Sort every screenshot." });
+  return askClaude(apiKey, REVIEW_SHOT_SYSTEM, content, REVIEW_SHOT_SCHEMA, "low", 8000);
+}
+
+function draftReviewSection(apiKey: string, body: Record<string, unknown>) {
+  const images = reviewImages(body, 40);
+  if (!images.length) throw new UserFacingError("bad_request", "This section has no screenshots yet.");
+  const subject = String(body.subject ?? "").slice(0, 80), section = String(body.section ?? "").slice(0, 80);
+  const casinos = (Array.isArray(body.casinos) ? body.casinos : []).map((c) => String(c).slice(0, 80)).join(", ");
+  const rules = (Array.isArray(body.corrections) ? body.corrections : []).map((c) => "- " + String(c).slice(0, 500)).slice(0, 60).join("\n");
+  const draft = body.draft && typeof body.draft === "object" ? JSON.stringify(body.draft).slice(0, 30000) : "";
+  const notes = typeof body.notes === "string" ? body.notes.trim().slice(0, 6000) : "";
+  const system = "You prepare one section of a competitor review of online casinos for a reviewer. The subject casino is reviewed; the others are competitors shown as examples.\n\n" + REVIEW_RULES +
+    "\n\nOUTPUT\n- works, gaps, ideas: short phrases about the subject casino.\n- points: the 'How it compares' points, each with title, text (one or two sentences: what the subject does and what competitors do) and 2 to 4 shots chosen by id from the screenshots given.\n" +
+    "- boxes: coordinates in thousandths of that screenshot's width and height (0 to 1000), tight around the element. When a screenshot lists page elements with positions, align the box to the matching element.\n" +
+    "- questions: short questions for the reviewer about anything marked to check or any screenshot that may be a mistake. Empty when there are none.";
+  const content: Anthropic.Beta.BetaContentBlockParam[] = [{ type: "text", text:
+    `Subject casino: ${subject}\nCompetitors: ${casinos}\nSection: ${section}` +
+    (rules ? `\n\nCorrections the reviewer gave earlier (apply them here too):\n${rules}` : "") +
+    (draft ? `\n\nCurrent draft of this section (JSON):\n${draft}` : "") +
+    (notes ? `\n\nThe reviewer's notes on this section. Apply them exactly; keep everything else unless a note changes it:\n<notes>\n${notes}\n</notes>` : "") }];
+  images.forEach((im) => {
+    const els = Array.isArray(im.elements) && im.elements.length ? "\nPage elements (text, x, y, w, h in thousandths): " + JSON.stringify(im.elements).slice(0, 4000) : "";
+    content.push({ type: "text", text: `Screenshot id: ${String(im.id).slice(0, 64)} | ${String(im.casino ?? "").slice(0, 80)} | ${String(im.title ?? "").slice(0, 120)}${els}` });
+    content.push({ type: "image", source: { type: "base64", media_type: im.media_type as "image/jpeg", data: im.data as string } });
+  });
+  content.push({ type: "text", text: draft || notes ? "Return the revised section." : "Write this section." });
+  return askClaude(apiKey, system, content, REVIEW_SECTION_SCHEMA, "medium", 16000);
 }
 
 // ---------- pages and journeys (registration, deposit, homepage...) ----------
@@ -354,12 +484,14 @@ Deno.serve(async (req) => {
       return reply(await callScript(`${scriptUrl}${sep}${tokenParam}&days=${days}`));
     }
 
-    if (action === "read_offer" || action === "summarise_emails" || action === "analyse_page" || action === "sort_page" || action === "sort_senders") {
+    if (action === "read_offer" || action === "summarise_emails" || action === "analyse_page" || action === "sort_page" || action === "sort_senders" || action === "sort_review_shots" || action === "draft_review_section") {
       if (!anthropicKey) return reply({ error: "no_ai_key", message: "AI isn't set up yet. Add the ANTHROPIC_API_KEY secret in Supabase." });
       const result = action === "read_offer" ? await readOffer(anthropicKey, body)
         : action === "analyse_page" ? await analysePage(anthropicKey, body)
         : action === "sort_page" ? await sortPage(anthropicKey, body)
         : action === "sort_senders" ? await sortSenders(anthropicKey, body)
+        : action === "sort_review_shots" ? await sortReviewShots(anthropicKey, body)
+        : action === "draft_review_section" ? await draftReviewSection(anthropicKey, body)
         : await summariseEmails(anthropicKey, body);
       return reply({ result });
     }
