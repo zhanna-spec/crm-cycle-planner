@@ -1029,6 +1029,27 @@ header.top .viewnav a.on .num { background: #FFFFFF; color: var(--accent); }
 .scrimg img { max-height: 260px; }
 .scrthumbs .sth { width: 80px; } .scrthumbs .sthi { height: 48px; } .scrthumbs { gap: 8px; margin-top: 12px; }
 .scrr h2 { font-size: 24px; }
+
+/* overview: one column of labelled rows */
+.ovsum { display: grid; grid-template-columns: minmax(0, 1fr) 300px; gap: 40px; align-items: center; padding: 8px 0 28px; }
+.ovone { margin: 0 0 12px; font-size: 22px; font-weight: 600; line-height: 1.35; letter-spacing: -0.01em; }
+.ovpts { margin: 16px 0 0; padding-left: 18px; color: #55516F; display: grid; gap: 6px; line-height: 1.45; }
+.ovr { display: grid; grid-template-columns: 190px minmax(0, 1fr); gap: 32px; padding: 26px 0; border-top: 1px solid var(--line); }
+.ovrl h3 { margin: 0; font-size: 15px; } .ovrl p { margin: 4px 0 0; color: var(--muted); font-size: 12.5px; line-height: 1.4; }
+.ovrc { min-width: 0; }
+.ovr .ovfacts { border: 0; padding: 0; }
+.ovr .ovline { margin: 0 0 14px; }
+.ovr .bstrip { margin-top: 0; }
+.kpath { display: flex; flex-wrap: wrap; gap: 8px 28px; }
+.kstep { font: inherit; display: flex; flex-direction: column; align-items: center; gap: 5px; width: 104px; white-space: nowrap; background: none; border: 0; cursor: pointer; color: var(--ink); text-align: center; }
+.kstep .jdot { width: 50px; height: 50px; }
+.kstep.on .jdot { background: var(--accent); color: #FFFFFF; box-shadow: 0 8px 18px -8px rgba(90,75,220,.7); }
+.kstep b { font-size: 13px; } .kstep small { font-size: 11.5px; color: var(--muted); }
+.kstep:not(.on) { opacity: .55; }
+.kstep:hover .jdot { box-shadow: 0 0 0 4px var(--accent-soft); }
+.ovr .prods { grid-template-columns: repeat(auto-fill, minmax(84px, 92px)); margin: 0; }
+.ovr .ovsub { margin-top: 10px; }
+@media (max-width: 900px) { .ovsum, .ovr { grid-template-columns: minmax(0, 1fr); gap: 14px; } }
 </style>
 
 <div class="wrap">
@@ -2104,65 +2125,58 @@ header.top .viewnav a.on .num { background: #FFFFFF; color: var(--accent); }
     var blk = function (title, body, cls) { return '<section class="ovb' + (cls ? " " + cls : "") + '"><h3>' + title + "</h3>" + body + "</section>"; };
     var shot = profileHero(p), lic = g.licence || String(m.licence || "").split(/[,–(]/)[0].trim();
 
-    // 1. what it is, with a small homepage picture
-    var top = '<section class="ovtop"><div><small class="scrk">At a glance</small><h2>' + esc(g.one_liner || firstSentence(p.summary)) + "</h2>" + (p.positioning ? '<p class="scrlead">' + esc(firstSentence(p.positioning)) + "</p>" : "") + (arr(g.tags).length ? chips(g.tags) : "") + "</div>" +
-      (shot ? '<div class="ovshot scrframe"><div class="pbar"><i></i><i></i><i></i><span>' + esc(String(op.website || "").replace(/^https?:\/\//, "").replace(/\/$/, "")) + '</span></div><img src="' + shot + '" alt=""></div>' : "") + "</section>";
-
-    // 2. key facts as icons, flags and coins
+    var row = function (title, hint, body) { return body ? '<section class="ovr"><div class="ovrl"><h3>' + title + "</h3>" + (hint ? "<p>" + hint + "</p>" : "") + '</div><div class="ovrc">' + body + "</div></section>" : ""; };
     var cur = arr(m.currencies), isCrypto = CRYPTO_RE.test(cur.join(" ") + " " + (pay.crypto || "")) && !/^no\b/i.test(pay.crypto || "");
-    var flags = function (list, n) { list = arr(list); return list.slice(0, n).map(function (x) { var f = flagOf(x); return '<span class="fl" title="' + esc(x) + '">' + (f ? '<b>' + f + "</b>" : "") + esc(short(x, 16)) + "</span>"; }).join("") + (list.length > n ? '<span class="fl muted">+' + (list.length - n) + "</span>" : ""); };
+    var outs = arr(p.stands_out).slice(0, 3);
+
+    // summary: what it is, its key points, and a small homepage picture
+    var summary = '<div class="ovsum"><div><p class="ovone">' + esc(g.one_liner || firstSentence(p.summary)) + "</p>" + (arr(g.tags).length ? chips(g.tags) : "") +
+      (outs.length ? '<ul class="ovpts">' + outs.map(function (x) { return "<li>" + esc(short(x, 110)) + "</li>"; }).join("") + "</ul>" : "") + "</div>" +
+      (shot ? '<div class="ovshot scrframe"><div class="pbar"><i></i><i></i><i></i></div><img src="' + shot + '" alt=""></div>' : "") + "</div>";
+
+    // basics: licence, where, languages, money in and out
+    var flags = function (list, n) { list = arr(list); return list.slice(0, n).map(function (x) { var f = flagOf(x); return '<span class="fl" title="' + esc(x) + '">' + (f ? "<b>" + f + "</b>" : "") + esc(short(x, 16)) + "</span>"; }).join("") + (list.length > n ? '<span class="fl muted">+' + (list.length - n) + "</span>" : ""); };
     var coins = cur.slice(0, 7).map(function (c) { var k = String(c).toUpperCase().replace(/[^A-Z]/g, ""), sym = COIN[k] || k.slice(0, 3); return '<span class="coin sm' + (CRYPTO_RE.test(k) ? " cr" : "") + '" title="' + esc(c) + '"><b>' + esc(sym) + "</b></span>"; }).join("") + (cur.length > 7 ? '<span class="coin sm more"><b>+' + (cur.length - 7) + "</b></span>" : "");
-    var fact = function (icon, label, body) { return '<div class="ovf">' + ic(icon) + "<div><small>" + label + "</small><div>" + (body || '<span class="muted">Not found</span>') + "</div></div></div>"; };
-    var facts = '<div class="ovfacts">' + fact("shield", "Licence", lic ? "<b>" + esc(lic) + "</b>" : "") + fact("globe", "Markets", flags(m.markets, 4)) + fact("chat", "Languages", flags(m.languages, 4)) +
+    var fact = function (icon, label, body) { return body ? '<div class="ovf">' + ic(icon) + "<div><small>" + label + "</small><div>" + body + "</div></div></div>" : ""; };
+    var basics = '<div class="ovfacts">' + fact("shield", "Licence", lic ? "<b>" + esc(lic) + "</b>" : "") + fact("globe", "Markets", arr(m.markets).length ? flags(m.markets, 3) : "") + fact("chat", "Languages", arr(m.languages).length ? flags(m.languages, 3) : "") +
       fact("wallet", "Currencies", coins ? '<span class="coins sm">' + coins + "</span>" : "") + fact("wallet", "Min deposit", pay.min_deposit ? "<b>" + esc(short(pay.min_deposit, 22)) + "</b>" : "") + fact("clock", "Payout", (g.withdrawal || pay.withdrawal_time) ? "<b>" + esc(g.withdrawal || short(pay.withdrawal_time, 26)) + "</b>" : "") + "</div>";
 
-    // 3. the welcome package as deposit steps, and the real promotion banners
+    // welcome offer: the headline and the deposit steps
     var promos = promosOf(op).filter(function (x) { return x.kind !== "terms"; });
     var ladder = promos.map(function (x) { return { n: depNoOf(x), x: x }; }).filter(function (d) { return d.n > 0 && d.n < 10; }).sort(function (a, b) { return a.n - b.n; }).filter(function (d, i, all) { return !i || all[i - 1].n !== d.n; });
-    var welcome = "";
+    var steps = "";
     if (ladder.length >= 2) {
       var pct = function (x) { var mm = /(\d{2,3})\s?%/.exec((x.title || "") + " " + (x.reward || "")); return mm ? +mm[1] : 0; }, maxp = Math.max.apply(null, ladder.map(function (d) { return pct(d.x) || 50; }));
-      welcome = '<div class="lsteps">' + ladder.map(function (d) { var v = pct(d.x), fs = /(\d+)\s*(free spins|fs)\b/i.exec((d.x.title || "") + " " + (d.x.reward || "")); return '<button type="button" class="lstep" data-castab="promos" title="' + esc(d.x.title || "") + '"><div class="lbar" style="height:' + Math.round(40 + 52 * (v || 50) / maxp) + 'px"><b>' + (v ? v + "%" : "✓") + "</b>" + (fs ? "<small>+" + fs[1] + " FS</small>" : "") + "</div><span>" + d.n + (["th", "st", "nd", "rd"][d.n] || "th") + " deposit</span></button>"; }).join("") + "</div>";
+      steps = '<div class="lsteps">' + ladder.map(function (d) { var v = pct(d.x), fs = /(\d+)\s*(free spins|fs)\b/i.exec((d.x.title || "") + " " + (d.x.reward || "")); return '<button type="button" class="lstep" data-castab="promos" title="' + esc(d.x.title || "") + '"><div class="lbar" style="height:' + Math.round(40 + 44 * (v || 50) / maxp) + 'px"><b>' + (v ? v + "%" : "✓") + "</b>" + (fs ? "<small>+" + fs[1] + " FS</small>" : "") + "</div><span>" + d.n + (["th", "st", "nd", "rd"][d.n] || "th") + " deposit</span></button>"; }).join("") + "</div>";
     }
     var wt = g.welcome || of.welcome_offer;
-    var banners = promos.map(function (x) { return { x: x, src: bannerSrc(x) }; }).filter(function (b) { return b.src; }).slice(0, 6);
-    var offersB = (wt ? '<p class="ovline">' + ic("gift") + "<b>" + esc(short(wt, 90)) + "</b></p>" : "") + welcome +
-      (banners.length ? '<div class="bstrip">' + banners.map(function (b) { return '<button type="button" class="bthumb" data-castab="promos" title="' + esc(b.x.title || "") + '"><img src="' + b.src + '" alt=""><span>' + esc(short(b.x.title, 30)) + "</span></button>"; }).join("") + "</div>" : "");
+    var welcome = wt || steps ? (wt ? '<p class="ovline"><b>' + esc(short(wt, 90)) + "</b></p>" : "") + steps : "";
 
-    // 4. what keeps players: a path of icons
+    // promotions: the real banners
+    var banners = promos.map(function (x) { return { x: x, src: bannerSrc(x) }; }).filter(function (b) { return b.src; }).slice(0, 6);
+    var promoRow = banners.length ? '<div class="bstrip">' + banners.map(function (b) { return '<button type="button" class="bthumb" data-castab="promos" title="' + esc(b.x.title || "") + '"><img src="' + b.src + '" alt=""><span>' + esc(short(b.x.title, 28)) + "</span></button>"; }).join("") + "</div>" : "";
+
+    // what keeps players: found or not, details on hover and in each tab
     var fc = function (k) { return featuresOf(op).filter(function (x) { return x.part === k; }).length; };
     var on = function (t, n) { return n > 0 || !!(t && !/^(none|no|not offered|not found|n\/a)\b/i.test(String(t))); };
-    var steps = [["tag", "Promotions", "promos", on(arr(of.promotions).join(""), promos.length), promos.length ? plural(promos.length, "promotion", "promotions") : arr(of.promotions).join(", ")],
-      ["crown", "Loyalty / VIP", "f:vip", on(of.loyalty, fc("vip")), g.vip || of.loyalty], ["target", "Missions", "f:missions", on(of.missions, fc("missions")), of.missions],
+    var keep = [["crown", "Loyalty / VIP", "f:vip", on(of.loyalty, fc("vip")), g.vip || of.loyalty], ["target", "Missions", "f:missions", on(of.missions, fc("missions")), of.missions],
       ["trophy", "Tournaments", "f:tournaments", on(of.tournaments, fc("tournaments")), of.tournaments], ["bag", "Store", "f:shop", on(of.store, fc("shop")), of.store],
       ["dots", "Other", "f:other", on("", arr(p.other).length + fc("custom")), arr(p.other).map(function (o) { return o.name; }).join(", ")]];
-    var journey = '<div class="jpath ovj">' + steps.map(function (st) { return '<button type="button" class="jstep' + (st[3] ? " on" : "") + '" data-castab="' + st[2] + '" title="' + esc(st[4] || "Not found") + '"><span class="jdot">' + svg(RI[st[0]]) + "</span><b>" + st[1] + "</b><small>" + esc(st[3] ? short(st[4], 40) : "Not found") + "</small></button>"; }).join("") + "</div>";
+    var keepRow = '<div class="kpath">' + keep.map(function (st) { return '<button type="button" class="kstep' + (st[3] ? " on" : "") + '" data-castab="' + st[2] + '" title="' + esc(st[4] || "Not found") + '"><span class="jdot">' + svg(RI[st[0]]) + "</span><b>" + st[1] + "</b><small>" + (st[3] ? "Has it" : "Not found") + "</small></button>"; }).join("") + "</div>";
 
-    // 5. games and payments
+    // games and payments
     var prods = arr(pr.verticals), provs = arr(pr.providers);
-    var games = (prods.length ? '<div class="prods">' + prods.map(function (x) { return '<span class="prod">' + ic(productIcon(x)) + "<small>" + esc(short(x, 16)) + "</small></span>"; }).join("") + "</div>" : '<p class="muted">Not found</p>') +
-      (provs.length ? '<p class="ovsub"><b>' + provs.length + "</b> game providers · " + esc(provs.slice(0, 5).join(", ")) + (provs.length > 5 ? "…" : "") + "</p>" : "");
+    var games = prods.length ? '<div class="prods">' + prods.map(function (x) { return '<span class="prod">' + ic(productIcon(x)) + "<small>" + esc(short(x, 16)) + "</small></span>"; }).join("") + "</div>" + (provs.length ? '<p class="ovsub"><b>' + provs.length + "</b> game providers</p>" : "") : "";
     var methods = []; arr(pay.deposit_methods).concat(arr(pay.withdrawal_methods)).forEach(function (x) { if (!methods.some(function (y) { return y.toLowerCase() === String(x).toLowerCase(); })) methods.push(x); });
-    var pays = (methods.length ? '<div class="pays">' + methods.slice(0, 12).map(function (x) { return '<span class="pay ' + payKind(x) + '">' + esc(short(x, 20)) + "</span>"; }).join("") + (methods.length > 12 ? '<span class="pay more">+' + (methods.length - 12) + "</span>" : "") + "</div>" : '<p class="muted">Not found</p>') +
-      '<p class="ovsub">' + (isCrypto ? "<b>Crypto accepted</b>" : pay.crypto ? "No crypto" : "") + (pay.kyc ? (isCrypto || pay.crypto ? " · " : "") + "ID check: " + esc(short(pay.kyc, 60)) : "") + "</p>";
+    var pays = methods.length || isCrypto ? (methods.length ? '<div class="pays">' + methods.slice(0, 10).map(function (x) { return '<span class="pay ' + payKind(x) + '">' + esc(short(x, 20)) + "</span>"; }).join("") + (methods.length > 10 ? '<span class="pay more">+' + (methods.length - 10) + "</span>" : "") + "</div>" : "") + (isCrypto ? '<p class="ovsub"><b>Crypto accepted</b></p>' : "") : "";
 
-    // 6. what stands out
-    var outs = arr(p.stands_out);
-    var stand = outs.length ? '<ol class="scrnotes">' + outs.slice(0, 5).map(function (x, k) { return '<li><span class="sn">' + (k + 1) + "</span><span>" + esc(x) + "</span></li>"; }).join("") + "</ol>" : "";
-
-    var det = function (title, rows) { return '<details class="pfdet"><summary>' + title + '</summary><dl>' + rows.map(function (r) { return "<dt>" + r[0] + "</dt><dd>" + r[1] + "</dd>"; }).join("") + "</dl></details>"; };
-    var details = '<div class="scrmore"><h3>All details</h3><div class="pfdets">' +
-      det("Market &amp; licence", [["Licence", val(m.licence)], ["Operator", val(m.operator)], ["Markets", chips(m.markets)], ["Languages", chips(m.languages)], ["Currencies", chips(m.currencies)], ["Restricted countries", chips(m.restricted_countries, 12)], ["Founded", val(m.founded)]]) +
-      det("Products &amp; games", [["Products", chips(pr.verticals)], ["Game providers", chips(pr.providers, 60)], ["Special games", chips(pr.special_games)], ["Notes", val(pr.notes)]]) +
-      det("Payments", [["Deposit methods", chips(pay.deposit_methods)], ["Withdrawal methods", chips(pay.withdrawal_methods)], ["Crypto", val(pay.crypto)], ["Min deposit", val(pay.min_deposit)], ["Min withdrawal", val(pay.min_withdrawal)], ["Max withdrawal", val(pay.max_withdrawal)], ["Withdrawal time", val(pay.withdrawal_time)], ["Fees", val(pay.fees)], ["Verification (KYC)", val(pay.kyc)]]) +
-      det("Offers &amp; bonus rules", [["Welcome offer", val(of.welcome_offer)], ["Promotions", chips(of.promotions)], ["Loyalty / VIP", val(of.loyalty)], ["Missions", val(of.missions)], ["Tournaments", val(of.tournaments)], ["Store", val(of.store)], ["Bonus rules", '<ul class="outs">' + arr(of.bonus_rules).map(function (x) { return "<li>" + esc(x) + "</li>"; }).join("") + "</ul>"]]) +
-      det("Support &amp; responsible gambling", [["Support", chips(sup.channels)], ["Hours", val(sup.hours)], ["Responsible-gambling tools", chips(sup.rg_tools)], ["App", val(sup.app)]]) +
-      det("About this casino", [["Summary", esc(p.summary || "")], ["Positioning", esc(p.positioning || "")]].concat(arr(p.other).map(function (o) { return [esc(o.name), esc(o.what_it_is || "") + (o.where ? ' <span class="muted">· ' + esc(o.where) + "</span>" : "")]; }))) +
-      det("Pages read (" + arr(p.sources).length + ")", arr(p.sources).map(function (src) { return [esc(src.label), '<a href="' + esc(src.url) + '" target="_blank" rel="noopener">' + esc(src.url) + "</a>"]; })) + "</div></div>";
-    el.innerHTML = busy + top + facts +
-      '<div class="ovgrid">' + blk("Offers", offersB || '<p class="muted">Not found</p>') + blk("What stands out", stand || '<p class="muted">Nothing noted</p>') + "</div>" +
-      blk("What keeps players", journey, "wide") +
-      '<div class="ovgrid">' + blk("Games", games) + blk("Payments", pays) + "</div>";
+    el.innerHTML = busy + summary +
+      row("Basics", "Licence, markets and money", basics) +
+      row("Welcome offer", "What a new player gets", welcome) +
+      row("Promotions", plural(promos.length, "promotion", "promotions") + " · click one to open", promoRow) +
+      row("What keeps players", "Click one to open its write-up", keepRow) +
+      row("Games", "What there is to play", games) +
+      row("Payments", "How players pay in and out", pays);
   }
   // all casinos side by side on the main facts
   function renderCompareAll() {
