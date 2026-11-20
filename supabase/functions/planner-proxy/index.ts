@@ -258,6 +258,8 @@ function readFeature(apiKey: string, body: Record<string, unknown>) {
 // ---------- the research profile of a casino ----------
 
 const LIST = { type: "array", items: { type: "string" } };
+// plain strings (empty when not shown): the API allows at most 16 nullable fields per schema
+const TXT = { type: "string" };
 const RESEARCH_SCHEMA = {
   type: "object", additionalProperties: false,
   required: ["summary", "positioning", "stands_out", "market", "products", "payments", "offers", "support", "other", "uncertain"],
@@ -265,31 +267,31 @@ const RESEARCH_SCHEMA = {
     summary: { type: "string" },
     positioning: { type: "string" },
     stands_out: LIST,
-    other: { type: "array", items: { type: "object", additionalProperties: false, required: ["name", "what_it_is", "where"], properties: { name: { type: "string" }, what_it_is: { type: "string" }, where: { type: ["string", "null"] } } } },
+    other: { type: "array", items: { type: "object", additionalProperties: false, required: ["name", "what_it_is", "where"], properties: { name: { type: "string" }, what_it_is: { type: "string" }, where: { type: "string" } } } },
     market: {
       type: "object", additionalProperties: false,
       required: ["markets", "licence", "operator", "languages", "currencies", "restricted_countries", "founded"],
-      properties: { markets: LIST, licence: STR, operator: STR, languages: LIST, currencies: LIST, restricted_countries: LIST, founded: STR },
+      properties: { markets: LIST, licence: TXT, operator: TXT, languages: LIST, currencies: LIST, restricted_countries: LIST, founded: TXT },
     },
     products: {
       type: "object", additionalProperties: false,
       required: ["verticals", "providers", "special_games", "notes"],
-      properties: { verticals: LIST, providers: LIST, special_games: LIST, notes: STR },
+      properties: { verticals: LIST, providers: LIST, special_games: LIST, notes: TXT },
     },
     payments: {
       type: "object", additionalProperties: false,
       required: ["deposit_methods", "withdrawal_methods", "crypto", "min_deposit", "min_withdrawal", "max_withdrawal", "withdrawal_time", "fees", "kyc"],
-      properties: { deposit_methods: LIST, withdrawal_methods: LIST, crypto: STR, min_deposit: STR, min_withdrawal: STR, max_withdrawal: STR, withdrawal_time: STR, fees: STR, kyc: STR },
+      properties: { deposit_methods: LIST, withdrawal_methods: LIST, crypto: TXT, min_deposit: TXT, min_withdrawal: TXT, max_withdrawal: TXT, withdrawal_time: TXT, fees: TXT, kyc: TXT },
     },
     offers: {
       type: "object", additionalProperties: false,
       required: ["welcome_offer", "promotions", "loyalty", "missions", "tournaments", "store", "other_features", "bonus_rules"],
-      properties: { welcome_offer: STR, promotions: LIST, loyalty: STR, missions: STR, tournaments: STR, store: STR, other_features: LIST, bonus_rules: LIST },
+      properties: { welcome_offer: TXT, promotions: LIST, loyalty: TXT, missions: TXT, tournaments: TXT, store: TXT, other_features: LIST, bonus_rules: LIST },
     },
     support: {
       type: "object", additionalProperties: false,
       required: ["channels", "hours", "rg_tools", "app"],
-      properties: { channels: LIST, hours: STR, rg_tools: LIST, app: STR },
+      properties: { channels: LIST, hours: TXT, rg_tools: LIST, app: TXT },
     },
     uncertain: LIST,
   },
@@ -303,7 +305,7 @@ const RESEARCH_SYSTEM = [
   "offers: welcome offer in one line, ongoing promotions (one short line each), loyalty / VIP, missions, tournaments, store, other retention features (wheel, cashback, rakeback, drops…), and the general bonus rules (wagering, max bet, game weighting…), short.",
   "support: contact channels, hours, responsible-gambling tools, mobile app.",
   "other: everything notable that fits none of the categories above: unique features (wheel of fortune, refer a friend, daily bonus, drops, bonus buy, social or community features, live events), sponsorships, partnerships, a blog, unusual site features. One entry each: its name as the site calls it, what it is in one or two sentences, and where it lives on the site. Empty list if nothing.",
-  "Use only what the pages show; write values as the site writes them. Use null or an empty list when something isn't shown, and add the field names you couldn't confirm to uncertain.",
+  "Use only what the pages show; write values as the site writes them. Use an empty string or an empty list when something isn't shown, and add the field names you couldn't confirm to uncertain.",
 ].join("\n");
 
 function researchCasino(apiKey: string, body: Record<string, unknown>) {

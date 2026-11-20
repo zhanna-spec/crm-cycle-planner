@@ -1817,9 +1817,11 @@ footer { color: var(--muted); font-size: 12px; margin-top: 24px; text-align: cen
       if (!aiReady()) throw new Error("Turn on AI to build the casino's profile.");
       var images = [];
       for (var i = 0; i < good.length && images.length < 4; i++) { if (/homepage|menu/.test(good[i].hint || "") && good[i].shots && good[i].shots.length) { var im = await loadSrc(good[i].shots[good[i].shots.length - 1]); images.push({ media_type: "image/jpeg", data: scaled(im, 1400, 0, 0.8).split(",")[1] }); } }
-      var d = await backend("research_casino", { casino: op.name, site: op.website || "", run: run, images: images, pages: good.filter(function (pg) { return !/^Offer: /.test(pg.label || ""); }).map(function (pg) { return { label: String(pg.label || "").replace(/\s*\(found .*\)\s*$/, ""), url: pg.url, text: pg.text || "" }; }).concat(offerPages.filter(function (pg) { return /^Offer: /.test(pg.label || ""); }).slice(0, 12).map(function (pg) { return { label: pg.label, url: pg.url, text: String(pg.text || "").slice(0, 2500) }; })) });
-      state.profiles[op.id] = Object.assign(d, { at: new Date().toISOString(), run: run, sources: good.map(function (pg) { return { label: String(pg.label || "").replace(/\s*\(found .*\)\s*$/, ""), url: pg.url }; }) });
-      if (!op.market && d.market && d.market.markets && d.market.markets.length) op.market = d.market.markets.slice(0, 3).join(", ");
+      var researchErr = null, d = null;
+      try { d = await backend("research_casino", { casino: op.name, site: op.website || "", run: run, images: images, pages: good.filter(function (pg) { return !/^Offer: /.test(pg.label || ""); }).map(function (pg) { return { label: String(pg.label || "").replace(/\s*\(found .*\)\s*$/, ""), url: pg.url, text: pg.text || "" }; }).concat(offerPages.filter(function (pg) { return /^Offer: /.test(pg.label || ""); }).slice(0, 12).map(function (pg) { return { label: pg.label, url: pg.url, text: String(pg.text || "").slice(0, 2500) }; })) });
+      } catch (e) { researchErr = e; }
+      if (d) state.profiles[op.id] = Object.assign(d, { at: new Date().toISOString(), run: run, sources: good.map(function (pg) { return { label: String(pg.label || "").replace(/\s*\(found .*\)\s*$/, ""), url: pg.url }; }) });
+      if (d && !op.market && d.market && d.market.markets && d.market.markets.length) op.market = d.market.markets.slice(0, 3).join(", ");
       save(); step++;
       for (var f = 0; f < featPages.length; f++) {
         var key = String(featPages[f].hint || "").split(",")[0], plabel = key === "other" ? String(featPages[f].label || "Other").replace(/\s*\(found .*\)\s*$/, "") : PARTMAP[key];
@@ -1827,7 +1829,8 @@ footer { color: var(--muted); font-size: 12px; margin-top: 24px; text-align: cen
         await featuresFromScan(op, [featPages[f]], run, key === "other" ? { key: "custom", label: plabel } : { key: key, label: plabel }, true); step++;
       }
       if (offerPages.length) { tick("Reading " + plural(offerPages.filter(function (pg) { return /^Offer: /.test(pg.label || ""); }).length, "promotion", "promotions") + "…"); await promosFromScan(op, offerPages, run, true); step++; }
-      researchBusy = null; save(); renderCompetitors(); toast(op.name + " is researched. Its profile tabs are filled in.");
+      researchBusy = null; save(); renderCompetitors();
+      toast(researchErr ? "The promotions and features of " + op.name + " are written up, but its overview couldn't be built: " + researchErr.message : op.name + " is researched. Its profile tabs are filled in.");
     } catch (err) { researchBusy = null; renderCompetitors(); toast(err.message); }
   }
 
