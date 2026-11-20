@@ -909,6 +909,90 @@ details.guide ol { margin: 8px 0 0; padding-left: 18px; font-size: 12px; color: 
 .toast { position: fixed; left: 50%; transform: translateX(-50%); bottom: calc(18px + env(safe-area-inset-bottom, 0px)); background: var(--ink); color: var(--bg); padding: 10px 16px; border-radius: 14px; font-weight: 500; z-index: 80; box-shadow: var(--shadow); }
 footer { color: var(--muted); font-size: 12px; margin-top: 24px; text-align: center; }
 @media (prefers-reduced-motion: reduce) { .block, .card { transition: none; } }
+
+/* ===== Review layout (direction A): light app bar, open page, screen-by-screen sections ===== */
+:root { --bg: #F7F6FB; --line: #ECEAF5; }
+header.top { background: #FFFFFF; color: var(--ink); border-radius: 0; margin: -20px -16px 22px; padding: 12px clamp(16px, 3vw, 28px); border-bottom: 1px solid var(--line); }
+@media (min-width: 1472px) { header.top { margin-left: calc((1440px - 100vw) / 2); margin-right: calc((1440px - 100vw) / 2); padding-left: calc((100vw - 1440px) / 2 + 28px); padding-right: calc((100vw - 1440px) / 2 + 28px); } }
+header.top::before, header.top::after { display: none; }
+header.top .logo { width: 32px; height: 32px; border-radius: 9px; background: var(--accent); box-shadow: none; }
+header.top .logo svg path, header.top .logo svg circle { stroke: #FFFFFF; } header.top .logo svg circle { fill: #FFFFFF; }
+header.top h1 { font-size: 17px; font-weight: 600; } header.top .sub { display: none; }
+header.top .viewnav { background: none; padding: 0; gap: 4px; margin-left: 18px; }
+header.top .viewnav a { color: var(--muted); padding: 7px 12px; border-radius: 8px; }
+header.top .viewnav a:hover { background: var(--sunk); color: var(--ink); }
+header.top .viewnav a.on { background: var(--accent-soft); color: var(--accent); box-shadow: none; font-weight: 600; }
+header.top .viewnav .num { background: var(--sunk); color: var(--muted); }
+header.top .viewnav a.on .num { background: #FFFFFF; color: var(--accent); }
+.hbtn { background: var(--surface); color: var(--ink); border: 1px solid var(--line); }
+.hbtn.solid { background: var(--surface); color: var(--ink); }
+.savestate { color: var(--muted) !important; }
+.panel { box-shadow: none; border: 1px solid var(--line); }
+/* casino list */
+.opitem { background: transparent; } .opitem:hover { background: var(--sunk); }
+.opitem.on { background: var(--accent-soft); color: var(--accent); } .opitem.on small { color: var(--accent); }
+.opitem .avatar { border-radius: 8px; }
+/* casino title and tabs on the page, no card */
+.caswrap { background: none; box-shadow: none; border: 0; border-radius: 0; overflow: visible; }
+.caswrap > #opHead { background: none; border: 0; padding: 0 0 4px; }
+#opHead .ophead > .avatar { display: none; }
+#opHead h2 { font-size: 28px; letter-spacing: -0.02em; display: inline; margin-right: 12px; }
+#opHead .sub2 { display: inline-flex; gap: 10px; flex-wrap: wrap; color: var(--muted); font-size: 13px; vertical-align: 4px; }
+.caswrap > .castabs { background: none; border-top: 0; border-bottom: 1px solid var(--line); padding: 0; margin-top: 10px; gap: 22px; border-radius: 0; overflow-x: auto; }
+.castabs button { padding: 10px 0; border-radius: 0; color: var(--muted); font-weight: 500; border-bottom: 2px solid transparent; margin-bottom: -1px; background: none; }
+.castabs button.on { background: none; color: var(--ink); font-weight: 600; border-bottom-color: var(--accent); }
+.castabs button.none:not(.on) { opacity: .5; }
+/* the screen review */
+.scr { display: grid; grid-template-columns: minmax(0, 1.35fr) minmax(0, 1fr); gap: 44px; align-items: start; padding-top: 8px; }
+.scrframe { border-radius: 14px; overflow: hidden; background: #15122b; box-shadow: 0 22px 44px -22px rgba(30,20,80,.5); }
+.scrframe .pbar { display: flex; align-items: center; gap: 5px; height: 24px; padding: 0 10px; background: #26233a; }
+.scrframe .pbar i { width: 8px; height: 8px; border-radius: 50%; background: #ff6159; } .scrframe .pbar i + i { background: #ffbd2e; } .scrframe .pbar i + i + i { background: #28c941; }
+.scrframe .pbar span { margin-left: 8px; font-size: 11px; color: #bdb9d6; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.scrimg { display: block; width: 100%; border: 0; padding: 0; background: none; cursor: zoom-in; }
+.scrimg img { display: block; width: 100%; max-height: 520px; object-fit: cover; object-position: top; }
+.scrnone { aspect-ratio: 16 / 10; display: grid; place-items: center; color: #9a96b8; font-size: 13px; }
+.scrthumbs { display: flex; gap: 12px; margin-top: 18px; overflow-x: auto; padding-bottom: 4px; }
+.sth { font: inherit; flex: none; width: 128px; border: 0; padding: 0; background: none; cursor: pointer; text-align: left; color: var(--muted); }
+.sthi { display: block; height: 76px; border-radius: 10px; overflow: hidden; background: #2b2750; border: 2px solid transparent; }
+.sthi img { width: 100%; height: 100%; object-fit: cover; object-position: top; display: block; }
+.sth.on .sthi { border-color: var(--accent); } .sth:hover .sthi { border-color: var(--accent-soft); }
+.sth > span:last-child { display: block; font-size: 12px; margin-top: 6px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.sth.on > span:last-child { color: var(--ink); font-weight: 600; }
+.scrk { display: block; font-size: 11.5px; font-weight: 600; letter-spacing: .07em; text-transform: uppercase; color: var(--accent); margin-bottom: 6px; }
+.scrr h2 { margin: 0 0 8px; font-size: 22px; line-height: 1.3; letter-spacing: -0.01em; }
+.scrlead { margin: 0 0 22px; color: #55516F; font-size: 15px; line-height: 1.55; }
+.scrlead .where { display: block; margin-top: 8px; font-size: 13px; color: var(--muted); }
+.scrnotes { list-style: none; margin: 0; padding: 0; display: grid; gap: 14px; }
+.scrnotes li { display: flex; gap: 12px; line-height: 1.45; color: #3b3856; }
+.sn { flex: none; width: 24px; height: 24px; border-radius: 50%; background: var(--accent); color: #FFFFFF; font-weight: 700; font-size: 12px; display: grid; place-items: center; }
+.scrfacts { display: flex; flex-wrap: wrap; gap: 14px 28px; margin-top: 24px; padding-top: 18px; border-top: 1px solid var(--line); }
+.scrfacts small { display: block; color: #9A96B3; font-size: 11px; letter-spacing: .06em; text-transform: uppercase; }
+.scrfacts b { font-size: 16px; }
+.scract { margin-top: 22px; display: flex; flex-wrap: wrap; align-items: center; gap: 8px; font-size: 13.5px; }
+.scract .dot { color: var(--muted); }
+.scrfull { margin-top: 30px; padding-top: 24px; border-top: 1px solid var(--line); }
+.scrpick { display: flex; gap: 10px; overflow-x: auto; padding: 4px 2px 18px; }
+.spk { font: inherit; flex: none; display: flex; align-items: center; gap: 10px; max-width: 260px; padding: 6px 12px 6px 6px; border-radius: 12px; border: 1px solid var(--line); background: var(--surface); cursor: pointer; text-align: left; color: var(--ink); }
+.spk img { width: 56px; height: 34px; object-fit: cover; border-radius: 7px; flex: none; }
+.spk span { display: flex; flex-direction: column; min-width: 0; } .spk small { color: var(--muted); font-size: 11px; } .spk b { font-size: 13px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.spk.on { border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-soft); }
+.scrmore { margin-top: 40px; }
+.scrmore h3 { font-size: 11.5px; font-weight: 600; letter-spacing: .07em; text-transform: uppercase; color: var(--muted); margin: 0 0 10px; }
+.mrow { display: grid; grid-template-columns: 200px minmax(0, 1fr); gap: 16px; padding: 10px 0; border-top: 1px solid var(--line); }
+.mrow em { color: var(--muted); font-style: normal; }
+.pfdets { gap: 0; border-top: 1px solid var(--line); }
+.pfdet { background: none; box-shadow: none; border: 0; border-radius: 0; border-bottom: 1px solid var(--line); padding: 0 2px; }
+.pfdet summary { padding: 13px 0; font-weight: 500; }
+#casOverview, #featuresApp, #promosApp { gap: 0 !important; }
+@media (max-width: 900px) { .scr { grid-template-columns: minmax(0, 1fr); gap: 24px; } .mrow { grid-template-columns: minmax(0, 1fr); gap: 2px; } header.top { margin: -20px -16px 16px; } }
+
+.scrframe.empty { background: var(--sunk); box-shadow: none; border: 1px dashed var(--line); }
+.scrframe.empty .pbar { background: transparent; } .scrframe.empty .pbar i { background: var(--line) !important; }
+.scrframe.empty .scrnone { aspect-ratio: auto; padding: 40px 20px; color: var(--muted); }
+.stat.feature { background: var(--surface); color: var(--ink); } .stat.feature .k, .stat.feature .n { color: var(--muted); } .stat.feature .v { color: var(--accent); }
+.stat { box-shadow: none; border: 1px solid var(--line); }
+.daybtn { background: var(--accent-soft); color: var(--accent); }
+#boardwrap { box-shadow: none; border: 1px solid var(--line); }
 </style>
 
 <div class="wrap">
@@ -1802,7 +1886,7 @@ footer { color: var(--muted); font-size: 12px; margin-top: 24px; text-align: cen
       return;
     }
     var n = offersOf(op).length + pagesOf(op).length, url = siteUrl(op.website);
-    el.innerHTML = '<div class="ophead"><span class="avatar" style="background:' + opColor(op) + '">' + esc(op.name.charAt(0).toUpperCase()) + '</span><div class="grow"><h2>' + esc(op.name) + (op.isOwn ? ' <span class="ownpill">Your brand</span>' : "") + '</h2><div class="sub2"><span>' + (state.profiles[op.id] ? "Researched " + esc(new Date(state.profiles[op.id].at).toLocaleDateString()) : "Not researched yet") + "</span>" + (url ? '<a href="' + esc(url) + '" target="_blank" rel="noopener">' + esc(String(op.website).replace(/^https?:\/\//, "").replace(/\/$/, "")) + "</a>" : "") + "</div></div>" +
+    el.innerHTML = '<div class="ophead"><span class="avatar" style="background:' + opColor(op) + '">' + esc(op.name.charAt(0).toUpperCase()) + '</span><div class="grow"><h2>' + esc(op.name) + (op.isOwn ? ' <span class="ownpill">Your brand</span>' : "") + '</h2><div class="sub2"><span>' + (function () { var pp = state.profiles[op.id]; if (!pp) return "Not researched yet"; var gg = pp.glance || {}, mm = pp.market || {}, lc = gg.licence || String(mm.licence || "").split(/[,–(]/)[0].trim(), cc = (mm.currencies || []).slice(0, 3).join(", "); return [lc ? esc(lc) + " licence" : "", esc(cc), "researched " + esc(new Date(pp.at).toLocaleDateString(undefined, { day: "numeric", month: "short" }))].filter(Boolean).join(" · "); })() + "</span>" + (url ? '<a href="' + esc(url) + '" target="_blank" rel="noopener">' + esc(String(op.website).replace(/^https?:\/\//, "").replace(/\/$/, "")) + "</a>" : "") + "</div></div>" +
       '<div class="row"><button class="btn icob" type="button" data-opact="edit" title="Edit details" aria-label="Edit details">' + svg('<path d="M4 16l1-4 8-8 3 3-8 8z"/><path d="M11 6l3 3"/>') + '</button><button class="btn danger' + (ui.armed === "op" ? " armed" : " icob") + '" type="button" data-opact="delete" title="Delete" aria-label="Delete">' + (ui.armed === "op" ? "Click again to delete" + (n ? " with " + plural(n, "item", "items") : "") : svg('<path d="M4 6h12M8 6V4h4v2M6 6l1 10h6l1-10"/>')) + "</button></div></div>" +
       (op.notes ? '<p class="opnotes">' + esc(op.notes) + "</p>" : "");
   }
@@ -1851,7 +1935,7 @@ footer { color: var(--muted); font-size: 12px; margin-top: 24px; text-align: cen
       var has = function (id) { if (id === "promos") return promosOf(opC).length || offersOf(opC).length; if (id === "f:other") return featuresOf(opC).some(function (x) { return x.part === "custom"; }) || ((state.profiles[opC.id] || {}).other || []).length; if (id.indexOf("f:") !== 0) return true; var k = id.slice(2); return featuresOf(opC).some(function (x) { return x.part === k; }); };
       var tabsEl = document.getElementById("casTabs"); tabsEl.hidden = !opC;
       var TABI = { overview: '<path d="M3 10l7-6 7 6v7H3z"/><path d="M8 17v-4h4v4"/>', promos: RI.tag, "f:vip": RI.crown, "f:missions": RI.target, "f:tournaments": RI.trophy, "f:shop": RI.bag, "f:deposit": RI.wallet, "f:other": RI.dots };
-      tabsEl.innerHTML = opC ? tabs.map(function (t) { return '<button type="button" class="' + (tab === t[0] ? "on" : "") + (has(t[0]) ? "" : " none") + '" data-castab="' + t[0] + '">' + (TABI[t[0]] ? svg(TABI[t[0]]) : "") + esc(t[1]) + "</button>"; }).join("") : "";
+      tabsEl.innerHTML = opC ? tabs.map(function (t) { return '<button type="button" class="' + (tab === t[0] ? "on" : "") + (has(t[0]) ? "" : " none") + '" data-castab="' + t[0] + '">' + esc(t[1]) + "</button>"; }).join("") : "";
       var isF = tab.indexOf("f:") === 0;
       document.getElementById("casOverview").hidden = !(tab === "overview" || tab === "all");
       document.getElementById("promosApp").hidden = tab !== "promos"; document.getElementById("featuresApp").hidden = !isF;
@@ -1977,91 +2061,32 @@ footer { color: var(--muted); font-size: 12px; margin-top: 24px; text-align: cen
     if (!p) { el.innerHTML = busy + '<div class="panel empty-c"><b>' + esc(op.name) + " hasn't been researched yet.</b><br>Open its website" + (op.website ? " (" + esc(op.website) + ")" : "") + ", click the scanner extension and choose <b>Research this casino</b>.</div>"; return; }
     var g = p.glance || {}, m = p.market || {}, pr = p.products || {}, pay = p.payments || {}, of = p.offers || {}, sup = p.support || {};
     var arr = function (v) { return Array.isArray(v) ? v.filter(Boolean) : v ? [v] : []; };
-    var firstSentence = function (t) { t = String(t || ""); var i = t.search(/[.!?](\s|$)/); return i > 0 && i < 220 ? t.slice(0, i + 1) : t; };
+    var firstSentence = function (t) { t = String(t || ""); var i = t.search(/[.!?](\s|$)/); return i > 0 && i < 240 ? t.slice(0, i + 1) : t; };
     var chips = function (list, n) { list = arr(list); if (!list.length) return '<span class="muted">Not found</span>'; n = n || list.length; return '<span class="pfchips">' + list.slice(0, n).map(function (x) { return "<span>" + esc(x) + "</span>"; }).join("") + (list.length > n ? '<span class="more">+' + (list.length - n) + "</span>" : "") + "</span>"; };
     var val = function (v) { return arr(v).length ? esc(arr(v).join(", ")) : '<span class="muted">Not found</span>'; };
-    var ic = function (k) { return '<i class="pic">' + svg(RI[k] || PICON[k]) + "</i>"; };
-
-    // HERO: the homepage, what it is, licence, where and in which languages
-    var shot = profileHero(p), lic = g.licence || short(String(m.licence || "").split(/[,–]/)[0], 24);
-    var places = arr(m.markets).slice(0, 6).map(function (x) { var f = flagOf(x); return '<span class="flag" title="' + esc(x) + '">' + (f || "") + " " + esc(short(x, 18)) + "</span>"; }).join("");
-    var langs = arr(m.languages).map(function (x) { var f = flagOf(x); return f ? '<span class="flagbig" title="' + esc(x) + '">' + f + "</span>" : '<span class="flag">' + esc(x) + "</span>"; }).join("");
-    var hero = '<section class="phero' + (shot ? "" : " noshot") + '">' + (shot ? '<div class="pshot"><div class="pbar"><i></i><i></i><i></i><span>' + esc(String(op.website || "").replace(/^https?:\/\//, "")) + '</span></div><img src="' + shot + '" alt="' + esc(op.name) + ' homepage"></div>' : "") +
-      '<div class="pinfo"><p class="pflead">' + esc(g.one_liner || firstSentence(p.summary)) + "</p>" + (arr(g.tags).length ? chips(g.tags) : "") +
-      '<div class="pbadges">' + (lic ? '<div class="pbadge">' + ic("shield") + "<span><small>Licence</small><b>" + esc(lic) + "</b></span></div>" : "") +
-      (places ? '<div class="pbadge">' + ic("globe") + "<span><small>Markets</small><b class=\"flags\">" + places + "</b></span></div>" : "") +
-      (langs ? '<div class="pbadge">' + ic("chat") + "<span><small>Languages</small><b class=\"flags\">" + langs + "</b></span></div>" : "") + "</div></div></section>";
-
-    // The overview tells one story, in the order a player meets the casino:
-    // in short → 1 joining → 2 playing → 3 staying → 4 cashing out → 5 help & safety
-    var stat = function (icon, label, value, sub) { return '<div class="st">' + ic(icon) + "<span><small>" + label + "</small><b>" + (value ? esc(value) : '<em>Not found</em>') + "</b>" + (sub ? "<i>" + esc(sub) + "</i>" : "") + "</span></div>"; };
-    var chapter = function (n, title, lead, body) { return '<section class="chap"><span class="cnum">' + n + '</span><div class="chead"><h3>' + title + "</h3><p>" + lead + "</p></div>" + body + "</section>"; };
-    var sub = function (t) { return '<p class="csub">' + t + "</p>"; };
-    var fcount = function (k) { return featuresOf(op).filter(function (x) { return x.part === k; }).length; };
-    var promosAll = promosOf(op).filter(function (x) { return x.kind !== "terms"; });
-    var present = function (t, n) { return n > 0 || !!(t && !/^(none|no|not offered|not found|n\/a)\b/i.test(String(t))); };
-
-    // in short
-    var outs = arr(p.stands_out).slice(0, 5);
-    var inShort = outs.length ? '<section class="inshort"><h3>' + ic("spark") + "In short</h3><ol>" + outs.map(function (x) { return "<li>" + esc(x) + "</li>"; }).join("") + "</ol></section>" : "";
-
-    // 1. joining: welcome package, first deposit, how to pay in
-    var depNo = function (x) { if (x.kind === "welcome") { var w = /(\d)(st|nd|rd|th)\s+deposit/i.exec(x.title || ""); return w ? +w[1] : 1; } if (x.kind === "second") return 2; if (x.kind === "third") return 3; var mm = /(\d)(st|nd|rd|th)\s+deposit/i.exec((x.title || "") + " " + (x.reward || "")); return mm ? +mm[1] : 0; };
-    var ladder = promosAll.map(function (x) { return { n: depNo(x), x: x }; }).filter(function (d) { return d.n > 0 && d.n < 10; }).sort(function (a, b) { return a.n - b.n; }).filter(function (d, i, all) { return !i || all[i - 1].n !== d.n; });
-    var welcomeVis = "";
-    if (ladder.length >= 2) {
-      var pct = function (x) { var mm = /(\d{2,3})\s?%/.exec((x.title || "") + " " + (x.reward || "")); return mm ? +mm[1] : 0; }, maxp = Math.max.apply(null, ladder.map(function (d) { return pct(d.x) || 50; }));
-      welcomeVis = '<div class="lsteps">' + ladder.map(function (d) { var v = pct(d.x); var extra = /(\d+)\s*(free spins|fs)\b/i.exec((d.x.title || "") + " " + (d.x.reward || "")); return '<button type="button" class="lstep" data-castab="promos" title="' + esc(d.x.title || "") + '"><div class="lbar" style="height:' + Math.round(40 + 50 * (v || 50) / maxp) + 'px"><b>' + (v ? v + "%" : "✓") + "</b>" + (extra ? "<small>+" + extra[1] + " FS</small>" : "") + "</div><span>" + d.n + (["th", "st", "nd", "rd"][d.n] || "th") + " deposit</span></button>"; }).join("") + "</div>";
-    } else if (g.welcome || of.welcome_offer) welcomeVis = '<button type="button" class="wbox" data-castab="promos">' + ic("gift") + "<b>" + esc(g.welcome || short(of.welcome_offer, 80)) + "</b></button>";
-    var cur = arr(m.currencies), isCrypto = CRYPTO_RE.test(cur.join(" ") + " " + (pay.crypto || "")) && !/^no\b/i.test(pay.crypto || "");
-    var coins = cur.slice(0, 10).map(function (c) { var k = String(c).toUpperCase().replace(/[^A-Z]/g, ""), sym = COIN[k] || k.slice(0, 3); return '<span class="coin' + (CRYPTO_RE.test(k) ? " cr" : "") + '" title="' + esc(c) + '"><b>' + esc(sym) + "</b><small>" + esc(k || c) + "</small></span>"; }).join("") + (cur.length > 10 ? '<span class="coin more"><b>+' + (cur.length - 10) + "</b></span>" : "");
-    var payList = function (list) { list = arr(list); return list.length ? '<div class="pays">' + list.slice(0, 12).map(function (x) { return '<span class="pay ' + payKind(x) + '">' + esc(short(x, 20)) + "</span>"; }).join("") + (list.length > 12 ? '<span class="pay more">+' + (list.length - 12) + "</span>" : "") + "</div>" : '<p class="small">Not found</p>'; };
-    var ch1 = chapter(1, "Joining", "What a new player gets and how they pay in.",
-      sub("Welcome package") + (welcomeVis || '<p class="small">Not found</p>') +
-      '<div class="sts">' + stat("wallet", "Min deposit", short(pay.min_deposit, 20)) + '<div class="st"><i class="pic' + (isCrypto ? " gold" : "") + '"><b>₿</b></i><span><small>Crypto</small><b>' + (isCrypto ? "Accepted" : pay.crypto ? "No" : "<em>Not found</em>") + "</b></span></div></div>" +
-      (coins ? sub("Currencies") + '<div class="coins">' + coins + "</div>" : "") + sub("Deposit methods") + payList(pay.deposit_methods));
-
-    // 2. playing: what there is to play
-    var prods = arr(pr.verticals), provs = arr(pr.providers);
-    var ch2 = chapter(2, "Playing", "What there is to play, and who makes the games.",
-      (prods.length ? '<div class="prods">' + prods.map(function (x) { return '<span class="prod">' + ic(productIcon(x)) + "<small>" + esc(short(x, 16)) + "</small></span>"; }).join("") + "</div>" : '<p class="small">Not found</p>') +
-      '<div class="sts">' + stat("slot", "Game providers", provs.length ? String(provs.length) : "", provs.slice(0, 5).join(", ") + (provs.length > 5 ? "…" : "")) +
-      (arr(pr.special_games).length ? stat("instant", "Special games", arr(pr.special_games).slice(0, 3).join(", ")) : "") + "</div>");
-
-    // 3. staying: what brings players back
-    var steps = [["tag", "Promotions", "promos", present(arr(of.promotions).join(""), promosAll.length), promosAll.length ? plural(promosAll.length, "promotion", "promotions") : arr(of.promotions).join(", ")],
-      ["crown", "Loyalty / VIP", "f:vip", present(of.loyalty, fcount("vip")), g.vip || of.loyalty],
-      ["target", "Missions", "f:missions", present(of.missions, fcount("missions")), of.missions],
-      ["trophy", "Tournaments", "f:tournaments", present(of.tournaments, fcount("tournaments")), of.tournaments],
-      ["bag", "Store", "f:shop", present(of.store, fcount("shop")), of.store],
-      ["dots", "Other", "f:other", present("", arr(p.other).length + fcount("custom")), arr(p.other).map(function (o) { return o.name; }).join(", ")]];
-    var banners = promosAll.map(function (x) { return { x: x, src: bannerSrc(x) }; }).filter(function (b) { return b.src; }).slice(0, 8);
-    var ch3 = chapter(3, "Staying", "What brings players back. Click one to open its write-up.",
-      '<div class="jpath">' + steps.map(function (st) { return '<button type="button" class="jstep' + (st[3] ? " on" : "") + '" data-castab="' + st[2] + '" title="' + esc(st[4] || (st[3] ? "" : "Not found")) + '"><span class="jdot">' + svg(RI[st[0]]) + "</span><b>" + st[1] + "</b><small>" + esc(st[3] ? short(st[4], 34) : "Not found") + "</small></button>"; }).join("") + "</div>" +
-      (banners.length ? sub("Current promotions") + '<div class="bstrip">' + banners.map(function (b) { return '<button type="button" class="bthumb" data-castab="promos" title="' + esc(b.x.title || "") + '"><img src="' + b.src + '" alt=""><span>' + esc(short(b.x.title, 30)) + "</span></button>"; }).join("") + "</div>" : ""));
-
-    // 4. cashing out
-    var ch4 = chapter(4, "Cashing out", "How fast and how much players can withdraw.",
-      '<div class="sts">' + stat("clock", "Withdrawal time", g.withdrawal || short(pay.withdrawal_time, 26)) + stat("wallet", "Min withdrawal", short(pay.min_withdrawal, 20)) + stat("wallet", "Max withdrawal", short(pay.max_withdrawal, 24)) + stat("shield", "Verification", short(pay.kyc, 40)) + "</div>" +
-      sub("Withdrawal methods") + payList(pay.withdrawal_methods));
-
-    // 5. help & safety
-    var ch5 = chapter(5, "Help &amp; safety", "Where players get help and how they can stay in control.",
-      '<div class="sts">' + stat("chat", "Support", arr(sup.channels).slice(0, 3).join(", "), sup.hours ? short(sup.hours, 30) : "") + stat("shield", "Responsible gambling", arr(sup.rg_tools).length ? plural(arr(sup.rg_tools).length, "tool", "tools") : "", arr(sup.rg_tools).slice(0, 3).join(", ")) + stat("slot", "App", short(sup.app, 30)) + "</div>");
-    var story = '<div class="thread">' + ch1 + ch2 + ch3 + ch4 + ch5 + "</div>";
-
+    // the homepage, then one thumbnail per section that has a picture (click to open it)
+    var promos = promosOf(op).filter(function (x) { return x.kind !== "terms"; });
+    var wel = promos.filter(function (x) { return x.kind === "welcome"; })[0] || promos[0];
+    var fpic = function (k) { var f = featuresOf(op).filter(function (x) { return x.part === k; })[0]; return f ? offerPics(f).filter(Boolean)[0] : ""; };
+    var thumbs = [{ src: profileHero(p), label: "Homepage", attrs: 'data-castab="overview"', on: true }];
+    [[wel ? bannerSrc(wel) || offerPics(wel).filter(Boolean)[0] : "", "Promotions", "promos"], [fpic("vip"), "Loyalty / VIP", "f:vip"], [fpic("missions"), "Missions", "f:missions"], [fpic("tournaments"), "Tournaments", "f:tournaments"], [fpic("shop"), "Store", "f:shop"], [fpic("deposit"), "Deposit", "f:deposit"]]
+      .forEach(function (t) { if (t[0]) thumbs.push({ src: t[0], label: t[1], attrs: 'data-castab="' + t[2] + '"' }); });
+    var cur = arr(m.currencies);
+    var lic = g.licence || String(m.licence || "").split(/[,–(]/)[0].trim();
+    var screen = screenView({ shots: [profileHero(p)].filter(Boolean), thumbs: thumbs.length > 1 ? thumbs : [], url: op.website, kicker: "At a glance", title: g.one_liner || firstSentence(p.summary), lead: esc(firstSentence(p.positioning || "")),
+      notes: arr(p.stands_out), noShot: "Research again to capture the homepage",
+      facts: [["Licence", lic], ["Currencies", cur.slice(0, 3).join(", ") + (cur.length > 3 ? " +" + (cur.length - 3) : "")], ["Min deposit", pay.min_deposit && String(pay.min_deposit).split(/[ (]/)[0]], ["Payout", g.withdrawal || (pay.withdrawal_time && String(pay.withdrawal_time).split(/[,(]/)[0])]] });
     var det = function (title, rows) { return '<details class="pfdet"><summary>' + title + '</summary><dl>' + rows.map(function (r) { return "<dt>" + r[0] + "</dt><dd>" + r[1] + "</dd>"; }).join("") + "</dl></details>"; };
-    var details = '<div class="sechead" style="margin-top:4px"><h3>All details</h3></div><div class="pfdets">' +
+    var details = '<div class="scrmore"><h3>All details</h3><div class="pfdets">' +
       det("Market &amp; licence", [["Licence", val(m.licence)], ["Operator", val(m.operator)], ["Markets", chips(m.markets)], ["Languages", chips(m.languages)], ["Currencies", chips(m.currencies)], ["Restricted countries", chips(m.restricted_countries, 12)], ["Founded", val(m.founded)]]) +
       det("Products &amp; games", [["Products", chips(pr.verticals)], ["Game providers", chips(pr.providers, 60)], ["Special games", chips(pr.special_games)], ["Notes", val(pr.notes)]]) +
       det("Payments", [["Deposit methods", chips(pay.deposit_methods)], ["Withdrawal methods", chips(pay.withdrawal_methods)], ["Crypto", val(pay.crypto)], ["Min deposit", val(pay.min_deposit)], ["Min withdrawal", val(pay.min_withdrawal)], ["Max withdrawal", val(pay.max_withdrawal)], ["Withdrawal time", val(pay.withdrawal_time)], ["Fees", val(pay.fees)], ["Verification (KYC)", val(pay.kyc)]]) +
       det("Offers &amp; bonus rules", [["Welcome offer", val(of.welcome_offer)], ["Promotions", chips(of.promotions)], ["Loyalty / VIP", val(of.loyalty)], ["Missions", val(of.missions)], ["Tournaments", val(of.tournaments)], ["Store", val(of.store)], ["Bonus rules", '<ul class="outs">' + arr(of.bonus_rules).map(function (x) { return "<li>" + esc(x) + "</li>"; }).join("") + "</ul>"]]) +
       det("Support &amp; responsible gambling", [["Support", chips(sup.channels)], ["Hours", val(sup.hours)], ["Responsible-gambling tools", chips(sup.rg_tools)], ["App", val(sup.app)]]) +
       det("About this casino", [["Summary", esc(p.summary || "")], ["Positioning", esc(p.positioning || "")]].concat(arr(p.other).map(function (o) { return [esc(o.name), esc(o.what_it_is || "") + (o.where ? ' <span class="muted">· ' + esc(o.where) + "</span>" : "")]; }))) +
-      det("Pages read (" + arr(p.sources).length + ")", arr(p.sources).map(function (src) { return [esc(src.label), '<a href="' + esc(src.url) + '" target="_blank" rel="noopener">' + esc(src.url) + "</a>"]; })) + "</div>";
-    el.innerHTML = busy + hero + inShort + story + details +
-      (arr(p.uncertain).length ? '<p class="small" style="color:var(--warn)">Not confirmed on the site: ' + esc(arr(p.uncertain).map(function (u) { return String(u).replace(/^.*\./, "").replace(/_/g, " "); }).join(", ")) + ".</p>" : "") +
-      '<p class="small">Researched ' + esc(new Date(p.at).toLocaleDateString()) + " while " + (p.run === "logged-in" ? "logged in" : "logged out") + ". Research again with the extension to update it.</p>";
+      det("Pages read (" + arr(p.sources).length + ")", arr(p.sources).map(function (src) { return [esc(src.label), '<a href="' + esc(src.url) + '" target="_blank" rel="noopener">' + esc(src.url) + "</a>"]; })) + "</div></div>";
+    el.innerHTML = busy + screen + details +
+      (arr(p.uncertain).length ? '<p class="small" style="color:var(--warn);margin-top:10px">Not confirmed on the site: ' + esc(arr(p.uncertain).map(function (u) { return String(u).replace(/^.*\./, "").replace(/_/g, " "); }).join(", ")) + ".</p>" : "");
   }
   // all casinos side by side on the main facts
   function renderCompareAll() {
@@ -2197,31 +2222,59 @@ footer { color: var(--muted); font-size: 12px; margin-top: 24px; text-align: cen
       '<label class="small">What stands out (one per line)<textarea name="stand" rows="3">' + esc((x.stands_out || []).join("\n")) + "</textarea></label>" +
       '<div class="row"><button class="btn primary" type="submit">Save</button><button class="btn" type="button" data-ftedit="">Cancel</button></div></form>';
   }
-  function renderFeatures() {
-    var all = state.features || [], ops = state.operators.filter(function (o) { return all.some(function (x) { return x.opId === o.id; }); });
-    var cnt = function (id) { return all.filter(function (x) { return !id || x.opId === id; }).length; };
-    document.getElementById("ftCasinos").innerHTML = '<button type="button" class="opitem' + (!ui.ftOp ? " on" : "") + '" data-ftop=""><span class="avatar" style="background:var(--accent)">' + svg('<rect x="3" y="4" width="6" height="12" rx="1.5"/><rect x="11" y="4" width="6" height="12" rx="1.5"/>', "#FFFFFF") + '</span><span class="meta2"><b>All casinos</b><small>' + plural(cnt(""), "write-up", "write-ups") + "</small></span></button>" +
-      ops.map(function (o) { return '<button type="button" class="opitem' + (ui.ftOp === o.id ? " on" : "") + '" data-ftop="' + o.id + '"><span class="avatar" style="background:' + opColor(o) + '">' + esc(o.name.charAt(0).toUpperCase()) + '</span><span class="meta2"><b>' + esc(o.name) + "</b><small>" + plural(cnt(o.id), "feature", "features") + "</small></span></button>"; }).join("");
-    var op = ui.ftOp ? findOp(ui.ftOp) : null; if (ui.ftOp && !op) { ui.ftOp = null; }
-    var fp = ui.ftPart || "", list = featuresOf(op).filter(function (x) { return !fp || (fp === "other" ? x.part === "custom" : x.part === fp); }), main = document.getElementById("ftMain"), order = state.operators.map(function (o) { return o.id; });
-    var busy = featBusy ? '<div class="rvprog"><b>' + esc(featBusy.title) + '</b><p class="small" style="margin:6px 0 0">' + esc(featBusy.text) + "</p></div>" : "";
-    var others = fp === "other" && op && state.profiles[op.id] ? (state.profiles[op.id].other || []) : [];
-    var otherHtml = others.length ? '<section class="pgroup"><h3 class="pgh">Also on the site <span class="small">' + others.length + '</span></h3><div class="plist2">' + others.map(function (o) { return '<div class="prow" style="padding:12px 16px"><b>' + esc(o.name) + "</b><div class=\"small\" style=\"margin-top:2px\">" + esc(o.what_it_is || "") + (o.where ? " · " + esc(o.where) : "") + "</div></div>"; }).join("") + "</div></section>" : "";
-    if (fp === "other" && !list.length && others.length) { main.innerHTML = busy + otherHtml; return; }
-    if (!list.length) { main.innerHTML = busy + '<div class="panel empty-c">' + (fp === "other" ? "Nothing else found" + (op ? " for " + esc(op.name) : "") + " yet. Here go the things that fit none of the other tabs: a wheel of fortune, refer a friend, a blog, sponsorships… The research picks them up from the site's menu and pages." : fp ? "No " + esc(ui.ftPartLabel || "write-up") + " found" + (op ? " for " + esc(op.name) : "") + " yet. The research looks for it on the site; if " + (op ? esc(op.name) : "the casino") + " has one, research it again" + (fp === "deposit" ? " while logged in" : "") + "." : "No features yet. Research " + (op ? esc(op.name) : "a casino") + " with the extension.") + "</div>"; return; }
-    // grouped by part: the standard ones, then each unique feature by its name
-    var groups = FEATURE_PARTS.map(function (k) { return { label: k[1], items: list.filter(function (x) { return x.part === k[0]; }) }; });
-    var customs = []; list.filter(function (x) { return x.part === "custom"; }).forEach(function (x) { var g = customs.filter(function (c) { return squash(c.label) === squash(x.partLabel); })[0]; if (!g) { g = { label: x.partLabel || "Other feature", items: [] }; customs.push(g); } g.items.push(x); });
-    groups = groups.concat(customs).filter(function (g) { return g.items.length; });
-    main.innerHTML = busy + (fp ? "" : '<div class="sechead"><h3>' + (op ? "Features at " + esc(op.name) : "All features") + "</h3></div>") + groups.map(function (g) {
-      g.items.sort(function (a, b) { return order.indexOf(a.opId) - order.indexOf(b.opId); });
-      return '<section class="pgroup">' + (fp && fp !== "other" ? "" : '<h3 class="pgh">' + esc(g.label) + ' <span class="small">' + g.items.length + "</span></h3>") + '<div class="plist2">' + g.items.map(function (x) { return featurePreview(x, !op); }).join("") + "</div></section>";
-    }).join("") + otherHtml;
+
+  // ---------- screen-by-screen review: a big screenshot, a few numbered notes, two to four key figures ----------
+  function screenView(o) {
+    var shots = o.shots || [], i = Math.max(0, Math.min(o.sel || 0, shots.length - 1));
+    var host = o.url ? String(o.url).replace(/^https?:\/\//, "").split("/")[0] : "";
+    var frame = '<div class="scrframe' + (shots[i] ? "" : " empty") + '"><div class="pbar"><i></i><i></i><i></i>' + (host ? "<span>" + esc(host) + "</span>" : "") + "</div>" +
+      (shots[i] ? '<button type="button" class="scrimg"' + (o.lb ? ' data-lb="' + o.lb + '" data-lbi="' + i + '"' : "") + ' aria-label="Enlarge"><img src="' + shots[i] + '" alt=""></button>' : '<div class="scrnone">' + esc(o.noShot || "No screenshot of this page") + "</div>") + "</div>";
+    var thumbs = o.thumbs || (shots.length > 1 ? shots.map(function (src, k) { return { src: src, label: (o.shotLabel || "Screen") + " " + (k + 1), attrs: 'data-scr-shot="' + k + '" data-scr-for="' + (o.key || "") + '"', on: k === i }; }) : []);
+    var strip = thumbs.length ? '<div class="scrthumbs">' + thumbs.map(function (t) { return '<button type="button" class="sth' + (t.on ? " on" : "") + '" ' + t.attrs + '><span class="sthi">' + (t.src ? '<img src="' + t.src + '" alt="">' : "<em>" + esc(t.ph || "") + "</em>") + "</span><span>" + esc(t.label) + "</span></button>"; }).join("") + "</div>" : "";
+    var notes = (o.notes || []).filter(Boolean).slice(0, 4);
+    var facts = (o.facts || []).filter(function (f) { return f && f[1]; }).slice(0, 4);
+    return '<div class="scr"><div class="scrl">' + frame + strip + '</div><div class="scrr">' + (o.kicker ? '<small class="scrk">' + esc(o.kicker) + "</small>" : "") + "<h2>" + esc(o.title || "") + "</h2>" + (o.lead ? '<p class="scrlead">' + o.lead + "</p>" : "") +
+      (notes.length ? '<ol class="scrnotes">' + notes.map(function (n, k) { return '<li><span class="sn">' + (k + 1) + "</span><span>" + esc(n) + "</span></li>"; }).join("") + "</ol>" : "") +
+      (facts.length ? '<div class="scrfacts">' + facts.map(function (f) { return "<div><small>" + esc(f[0]) + "</small><b>" + esc(f[1]) + "</b></div>"; }).join("") + "</div>" : "") +
+      (o.actions ? '<div class="scract">' + o.actions + "</div>" : "") + "</div></div>" + (o.full ? '<div class="scrfull">' + o.full + "</div>" : "");
   }
+  function depNoOf(x) { if (x.kind === "welcome") { var w = /(\d)(st|nd|rd|th)\s+deposit/i.exec(x.title || ""); return w ? +w[1] : 1; } if (x.kind === "second") return 2; if (x.kind === "third") return 3; var mm = /(\d)(st|nd|rd|th)\s+deposit/i.exec((x.title || "") + " " + (x.reward || "")); return mm ? +mm[1] : 0; }
+  function itemPicker(items, cur, kind) {
+    if (items.length < 2) return "";
+    return '<div class="scrpick">' + items.map(function (it) { return '<button type="button" class="spk' + (it.id === cur ? " on" : "") + '" data-scr-pick="' + kind + ":" + it.id + '">' + (it.src ? '<img src="' + it.src + '" alt="">' : "") + "<span>" + (it.kicker ? "<small>" + esc(it.kicker) + "</small>" : "") + "<b>" + esc(it.label) + "</b></span></button>"; }).join("") + "</div>";
+  }
+  function renderFeatures() {
+    var op = ui.ftOp ? findOp(ui.ftOp) : null; if (ui.ftOp && !op) ui.ftOp = null;
+    var fp = ui.ftPart || "", main = document.getElementById("ftMain");
+    var list = featuresOf(op).filter(function (x) { return !fp || (fp === "other" ? x.part === "custom" : x.part === fp); });
+    var busy = featBusy ? '<div class="rvprog"><b>' + esc(featBusy.title) + '</b><p class="small" style="margin:6px 0 0">' + esc(featBusy.text) + "</p></div>" : "";
+    var p = op ? state.profiles[op.id] : null, of = (p && p.offers) || {}, pay = (p && p.payments) || {};
+    var label = ui.ftPartLabel || (FEATURE_PARTS.filter(function (k) { return k[0] === fp; })[0] || [])[1] || "Feature";
+    var others = fp === "other" && p ? (p.other || []) : [];
+    var otherHtml = others.length ? '<div class="scrmore"><h3>Also on the site</h3>' + others.map(function (o) { return '<div class="mrow"><b>' + esc(o.name) + "</b><span>" + esc(o.what_it_is || "") + (o.where ? ' <em>· ' + esc(o.where) + "</em>" : "") + "</span></div>"; }).join("") + "</div>" : "";
+    if (!list.length) {
+      var txt = { vip: of.loyalty, missions: of.missions, tournaments: of.tournaments, shop: of.store }[fp];
+      if (fp === "deposit" && p) { main.innerHTML = busy + screenView({ kicker: "Deposit", title: "Paying in", lead: esc(pay.min_deposit ? "Minimum deposit " + pay.min_deposit + "." : ""), notes: [(pay.deposit_methods || []).length ? "Methods: " + pay.deposit_methods.join(", ") : "", pay.crypto ? "Crypto: " + pay.crypto : "", pay.kyc ? "Verification: " + pay.kyc : ""], facts: [["Min deposit", pay.min_deposit], ["Withdrawal", pay.withdrawal_time], ["Fees", pay.fees]], noShot: "Log in and research again to capture the cashier" }); return; }
+      if (txt && isOnTxt(txt)) { main.innerHTML = busy + screenView({ kicker: label, title: label, lead: esc(txt), noShot: "No screenshot of this page yet" }) + otherHtml; return; }
+      if (others.length) { main.innerHTML = busy + otherHtml; return; }
+      main.innerHTML = busy + '<div class="panel empty-c">' + (fp === "other" ? "Nothing else found" + (op ? " for " + esc(op.name) : "") + " yet. Here go the things that fit none of the other tabs: a wheel of fortune, refer a friend, a blog… The research picks them up from the site's menu and pages." : "No " + esc(label) + " found" + (op ? " for " + esc(op.name) : "") + " yet. The research looks for it on the site; if " + (op ? esc(op.name) : "the casino") + " has one, research it again" + (fp === "deposit" ? " while logged in" : "") + ".") + "</div>";
+      return;
+    }
+    var x = list.filter(function (q) { return q.id === ui.ftSel; })[0] || list[0]; ui.ftSel = x.id;
+    var pics = offerPics(x), shots = pics.filter(Boolean);
+    var notes = (x.stands_out || []).length ? x.stands_out : (x.how_it_works || []);
+    var open = ui.ftOpen === x.id;
+    main.innerHTML = busy + itemPicker(list.map(function (q) { var pq = offerPics(q).filter(Boolean)[0]; return { id: q.id, label: q.title || q.partLabel || "Feature", kicker: q.partLabel || "", src: pq }; }), x.id, "ft") +
+      screenView({ key: x.id, sel: (ui.shotIdx || {})[x.id] || 0, shots: shots, lb: x.id, url: x.url, kicker: x.partLabel || label, title: x.title || label, lead: esc(x.summary || "") + (x.where ? '<span class="where">Where: ' + esc(x.where) + "</span>" : ""), notes: notes,
+        facts: (x.key_facts || []).map(function (f) { return [f.label, f.value]; }), noShot: pics.length ? "Loading screenshot…" : "No screenshot",
+        actions: '<button type="button" class="linkbtn" data-ftopen="' + x.id + '">' + (open ? "Hide the full write-up" : "Full write-up") + "</button>",
+        full: open ? (ui.ftEdit === x.id ? featureEditor(x) : featureBody(x)) : "" }) + otherHtml;
+  }
+  function isOnTxt(t) { return !!(t && !/^(none|no|not offered|not found|n\/a)\b/i.test(String(t))); }
   document.getElementById("featuresApp").addEventListener("click", function (e) {
     var b;
     if ((b = e.target.closest("[data-ftop]"))) { ui.ftOp = b.getAttribute("data-ftop") || null; ui.ftOpen = null; ui.ftEdit = null; renderFeatures(); return; }
-    if ((b = e.target.closest("[data-ftopen]"))) { var id = b.getAttribute("data-ftopen"); ui.ftOpen = ui.ftOpen === id ? null : id; ui.ftEdit = null; renderFeatures(); if (ui.ftOpen) { var el = document.querySelector('[data-ftopen="' + id + '"]'); if (el) el.scrollIntoView({ behavior: "smooth", block: "start" }); } return; }
+    if ((b = e.target.closest("[data-ftopen]"))) { var id = b.getAttribute("data-ftopen"); ui.ftOpen = ui.ftOpen === id ? null : id; ui.ftEdit = null; renderFeatures(); return; }
     if ((b = e.target.closest("[data-ftedit]"))) { ui.ftEdit = b.getAttribute("data-ftedit") || null; renderFeatures(); return; }
     if ((b = e.target.closest("[data-lb]"))) { var x0 = findItem(b.getAttribute("data-lb")); if (x0) { lb = { pics: offerPics(x0).filter(Boolean), i: +(b.getAttribute("data-lbi") || 0) }; if (lb.pics.length) showLightbox(); } return; }
     if ((b = e.target.closest("[data-ftdel]"))) {
@@ -2279,34 +2332,24 @@ footer { color: var(--muted); font-size: 12px; margin-top: 24px; text-align: cen
     return x.bannerThumb || ""; // never a terms or pop-up screenshot
   }
   function renderPromosPage() {
-    var all = state.promos || [], ops = state.operators.filter(function (o) { return all.some(function (x) { return x.opId === o.id; }); });
-    var cnt = function (id) { return all.filter(function (x) { return (!id || x.opId === id) && x.kind !== "terms"; }).length; };
-    document.getElementById("pmCasinos").innerHTML = '<button type="button" class="opitem' + (!ui.pmOp ? " on" : "") + '" data-pmop=""><span class="avatar" style="background:var(--accent)">' + svg('<rect x="3" y="4" width="6" height="12" rx="1.5"/><rect x="11" y="4" width="6" height="12" rx="1.5"/>', "#FFFFFF") + '</span><span class="meta2"><b>All casinos</b><small>' + plural(cnt(""), "promotion", "promotions") + "</small></span></button>" +
-      ops.map(function (o) { return '<button type="button" class="opitem' + (ui.pmOp === o.id ? " on" : "") + '" data-pmop="' + o.id + '"><span class="avatar" style="background:' + opColor(o) + '">' + esc(o.name.charAt(0).toUpperCase()) + '</span><span class="meta2"><b>' + esc(o.name) + "</b><small>" + plural(cnt(o.id), "promotion", "promotions") + "</small></span></button>"; }).join("");
     var main = document.getElementById("pmMain"), op = ui.pmOp ? findOp(ui.pmOp) : null;
-    var kinds = []; promosOf(op).forEach(function (p) { if (p.kind !== "terms" && kinds.indexOf(p.kind) < 0) kinds.push(p.kind); });
-    if (ui.pmKind && kinds.indexOf(ui.pmKind) < 0) ui.pmKind = null;
-    var list = promosOf(op).slice(), order = state.operators.map(function (o) { return o.id; });
-    list.sort(function (a, b) { return order.indexOf(a.opId) - order.indexOf(b.opId) || (a.order || 0) - (b.order || 0); });
     document.getElementById("pmNav").innerHTML = "";
     var busy = promoBusy ? '<div class="rvprog"><b>' + esc(promoBusy.title) + '</b><div class="scanbar" style="margin:8px 0"><i style="width:' + Math.round(100 * promoBusy.done / Math.max(1, promoBusy.total)) + '%"></i></div><p class="small" style="margin:0">' + esc(promoBusy.text) + "</p></div>" : "";
+    var KO = OFFER_KINDS.map(function (k) { return k[0]; }).concat(["tournament", "terms"]);
+    var dn = function (x) { if (x.kind === "terms") return 99; var n = depNoOf(x); return n || 50; };
+    var list = promosOf(op).slice().sort(function (a, b) { return dn(a) - dn(b) || KO.indexOf(a.kind) - KO.indexOf(b.kind) || (a.order || 0) - (b.order || 0); });
     if (!list.length) { main.innerHTML = busy + '<div class="panel empty-c">No promotions yet. Open ' + (op ? esc(op.name) + "'s" : "a casino's") + " website and click <b>Research this casino</b> in the extension: every promotion is opened and written up here with its terms.</div>"; return; }
-    // grouped under what each one is: welcome offer, 2nd deposit offer…
-    var KORDER = OFFER_KINDS.map(function (k) { return k[0]; }).concat(["tournament", "terms"]);
-    var groups = KORDER.map(function (k) { return { k: k, items: list.filter(function (p) { return p.kind === k; }) }; }).filter(function (g) { return g.items.length; });
-    list.filter(function (p) { return KORDER.indexOf(p.kind) < 0; }).forEach(function (p) { var g = groups.filter(function (x) { return x.k === "other_offer"; })[0]; if (!g) { g = { k: "other_offer", items: [] }; groups.push(g); } g.items.push(p); });
-    main.innerHTML = busy + '<div class="sechead"><h3>' + (op ? "Promotions at " + esc(op.name) : "All promotions") + ' <span class="small" style="font-weight:400">' + plural(list.filter(function (p) { return p.kind !== "terms"; }).length, "promotion", "promotions") + "</span></h3><button class=\"btn\" type=\"button\" data-promocsv=\"1\">Download list (CSV)</button></div>" +
-      groups.map(function (g) {
-        return '<section class="pgroup"><h3 class="pgh">' + esc(promoKind(g.k)) + ' <span class="small">' + g.items.length + '</span></h3><div class="plist2">' + g.items.map(function (p) {
-          var o = findOp(p.opId) || { name: "?" }, t = p.terms || {}, src = bannerSrc(p), open = ui.pmOpen === p.id;
-          var chips = PROMO_TERMS.filter(function (k) { return t[k[0]]; }).slice(0, 3).map(function (k) { return '<span class="pchip"><small>' + k[1] + "</small>" + esc(t[k[0]]) + "</span>"; }).join("");
-          return '<div class="prow' + (open ? " open" : "") + '"><button type="button" class="pbtn" data-pmopen="' + p.id + '" aria-expanded="' + open + '">' + (src ? '<img class="pthumb" src="' + src + '" alt="">' : '<span class="pthumb pnone">' + esc(promoKind(p.kind)) + "</span>") +
-            '<span class="pmain">' + (op ? "" : '<span><span class="kindpill">' + esc(o.name) + "</span></span>") + "<b>" + esc(p.title || "Promotion") + "</b>" +
-            (p.status === "reading" ? "<small>Claude is reading this promotion…</small>" : p.status === "error" ? '<small style="color:var(--bad)">' + esc(p.error || "Couldn't read it.") + "</small>" : "<small>" + esc(p.summary || "") + "</small>") +
-            (chips && !open ? '<span class="pchips">' + chips + "</span>" : "") + '</span><span class="pgo" aria-hidden="true">' + (open ? "⌃" : "⌄") + "</span></button>" +
-            (open ? '<div class="pfull">' + (ui.pmEdit === p.id ? promoEditor(p) : promoBody(p)) + "</div>" : "") + "</div>";
-        }).join("") + "</div></section>";
-      }).join("");
+    var x = list.filter(function (q) { return q.id === ui.pmSel; })[0] || list[0]; ui.pmSel = x.id;
+    var t = x.terms || {}, pics = offerPics(x), shots = pics.filter(Boolean), ban = bannerSrc(x);
+    if (!shots.length && ban) shots = [ban];
+    var open = ui.pmOpen === x.id;
+    main.innerHTML = busy + itemPicker(list.map(function (q) { return { id: q.id, label: q.title || "Promotion", kicker: promoKind(q.kind), src: bannerSrc(q) }; }), x.id, "pm") +
+      screenView({ key: x.id, sel: (ui.shotIdx || {})[x.id] || 0, shots: shots, lb: pics.filter(Boolean).length ? x.id : "", url: x.url, kicker: promoKind(x.kind), title: x.title || "Promotion", lead: esc(x.summary || "") + (x.status === "reading" ? '<span class="where">Claude is reading this promotion…</span>' : ""),
+        notes: x.kind === "terms" ? (x.other_conditions || []) : (x.how_it_works || []), shotLabel: "Screen",
+        facts: [["Min deposit", t.min_deposit], ["Wagering", t.wagering], ["Max bet", t.max_bet], ["Valid for", t.validity]],
+        noShot: x.kind === "terms" ? "Text only" : pics.length ? "Loading screenshot…" : "No screenshot",
+        actions: '<button type="button" class="linkbtn" data-pmopen="' + x.id + '">' + (open ? "Hide the full terms" : "Full terms and conditions") + '</button><span class="dot">·</span><button type="button" class="linkbtn" data-promocsv="1">Download all (CSV)</button>',
+        full: open ? (ui.pmEdit === x.id ? promoEditor(x) : promoBody(x)) : "" });
   }
   // the full version of one promotion, opened inside its preview
   function promoBody(x) {
@@ -2340,7 +2383,7 @@ footer { color: var(--muted); font-size: 12px; margin-top: 24px; text-align: cen
     if ((b = e.target.closest("[data-pmop]"))) { ui.pmOp = b.getAttribute("data-pmop") || null; ui.pmOpen = null; ui.pmEdit = null; renderPromosPage(); return; }
     if ((b = e.target.closest("[data-pmedit]"))) { ui.pmEdit = b.getAttribute("data-pmedit") || null; renderPromosPage(); return; }
     if ((b = e.target.closest("[data-pmkind]"))) { ui.pmKind = b.getAttribute("data-pmkind") || null; renderPromosPage(); return; }
-    if ((b = e.target.closest("[data-pmopen]"))) { var pid = b.getAttribute("data-pmopen"); ui.pmOpen = ui.pmOpen === pid ? null : pid; ui.pmEdit = null; renderPromosPage(); if (ui.pmOpen) { var el = document.querySelector('[data-pmopen="' + pid + '"]'); if (el) el.scrollIntoView({ behavior: "smooth", block: "start" }); } return; }
+    if ((b = e.target.closest("[data-pmopen]"))) { var pid = b.getAttribute("data-pmopen"); ui.pmOpen = ui.pmOpen === pid ? null : pid; ui.pmEdit = null; renderPromosPage(); return; }
     if ((b = e.target.closest("[data-pmedit]"))) { ui.pmEdit = b.getAttribute("data-pmedit") || null; renderPromosPage(); return; }
     if ((b = e.target.closest("[data-promocsv]"))) { promosCsv(); return; }
     if ((b = e.target.closest("[data-lb]"))) { var x = findItem(b.getAttribute("data-lb")); if (x) { lb = { pics: offerPics(x).filter(Boolean), i: +(b.getAttribute("data-lbi") || 0) }; if (lb.pics.length) showLightbox(); } return; }
@@ -3056,6 +3099,8 @@ footer { color: var(--muted); font-size: 12px; margin-top: 24px; text-align: cen
   });
   document.getElementById("offersApp").addEventListener("click", function (e) {
     var b = e.target.closest("[data-castab]"); if (b) { ui.casTab = b.getAttribute("data-castab"); renderCompetitors(); return; }
+    b = e.target.closest("[data-scr-pick]"); if (b) { var pk = b.getAttribute("data-scr-pick").split(":"); if (pk[0] === "pm") { ui.pmSel = pk[1]; ui.pmOpen = null; ui.pmEdit = null; renderPromosPage(); } else { ui.ftSel = pk[1]; ui.ftOpen = null; ui.ftEdit = null; renderFeatures(); } return; }
+    b = e.target.closest("[data-scr-shot]"); if (b) { ui.shotIdx = ui.shotIdx || {}; ui.shotIdx[b.getAttribute("data-scr-for")] = +b.getAttribute("data-scr-shot"); if (ui.casTab === "promos") renderPromosPage(); else renderFeatures(); return; }
     b = e.target.closest("#casOverview [data-op]"); if (b) { selectOp(b.getAttribute("data-op")); window.scrollTo(0, 0); return; }
     b = e.target.closest("[data-openemails]"); if (b) { ui.trkSel = b.getAttribute("data-openemails"); location.hash = "#emails"; }
   });
