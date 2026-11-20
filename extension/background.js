@@ -37,6 +37,35 @@ async function navigate(tabId, url) {
   const loaded = waitForLoad(tabId, 25000);
   await chrome.tabs.update(tabId, { url, active: true });
   await loaded;
+  await waitStyled(tabId);
+}
+
+// Runs inside the page: true while the page shows without its styling (style files not loaded:
+// a style file that didn't load, or logos and flag icons blown up to full width).
+function looksUnstyled() {
+  const b = document.body;
+  if (!b) return true;
+  const links = Array.from(document.querySelectorAll('link[rel~="stylesheet"]')).filter((l) => !l.disabled && (!l.media || /all|screen/.test(l.media)));
+  if (links.some((l) => !l.sheet)) return true;
+  const W = window.innerWidth;
+  return Array.from(document.images).some((im) => {
+    const r = im.getBoundingClientRect();
+    return r.width > W * 0.45 && r.top < window.innerHeight && /logo|flag|globe|lang|icon/i.test((im.currentSrc || im.src || "") + " " + (im.alt || "") + " " + String(im.className || ""));
+  });
+}
+
+// waits for the page's styling; reloads once if it doesn't come (a half-loaded page makes useless screenshots)
+async function waitStyled(tabId) {
+  if (scanCtx.styleOff) return true;
+  for (let attempt = 0; attempt < 2; attempt++) {
+    for (let t = 0; t < 10; t++) {
+      if (!(await run(tabId, looksUnstyled).catch(() => false))) return true;
+      await sleep(1500);
+    }
+    if (attempt === 0) { checkStop(); const loaded = waitForLoad(tabId, 25000); await chrome.tabs.reload(tabId); await loaded; }
+  }
+  scanCtx.styleOff = true; // this site always looks like this: don't wait on every page
+  return false;
 }
 
 async function run(tabId, func, args) {
@@ -943,7 +972,7 @@ async function scanFind(tabId, windowId, pg, results, scanned) {
 }
 
 async function runScan({ tabId, pages, run: runLabel, site, skip, blur, kind, part }) {
-  scanCtx.tabId = tabId; scanCtx.blur = Array.isArray(blur) ? blur : []; scanCtx.els = new Map();
+  scanCtx.tabId = tabId; scanCtx.blur = Array.isArray(blur) ? blur : []; scanCtx.els = new Map(); scanCtx.styleOff = false;
   const tab = await chrome.tabs.get(tabId);
   const startUrl = tab.url;
   const total = pages.length;
