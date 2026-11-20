@@ -2162,8 +2162,7 @@ header.top .viewnav a.on .num { background: #FFFFFF; color: var(--accent); }
     el.innerHTML = busy + top + facts +
       '<div class="ovgrid">' + blk("Offers", offersB || '<p class="muted">Not found</p>') + blk("What stands out", stand || '<p class="muted">Nothing noted</p>') + "</div>" +
       blk("What keeps players", journey, "wide") +
-      '<div class="ovgrid">' + blk("Games", games) + blk("Payments", pays) + "</div>" + details +
-      (arr(p.uncertain).length ? '<p class="small" style="color:var(--warn);margin-top:10px">Not confirmed on the site: ' + esc(arr(p.uncertain).map(function (u) { return String(u).replace(/^.*\./, "").replace(/_/g, " "); }).join(", ")) + ".</p>" : "");
+      '<div class="ovgrid">' + blk("Games", games) + blk("Payments", pays) + "</div>";
   }
   // all casinos side by side on the main facts
   function renderCompareAll() {
