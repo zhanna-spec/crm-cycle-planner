@@ -262,11 +262,12 @@ const LIST = { type: "array", items: { type: "string" } };
 const TXT = { type: "string" };
 const RESEARCH_SCHEMA = {
   type: "object", additionalProperties: false,
-  required: ["summary", "positioning", "stands_out", "market", "products", "payments", "offers", "support", "other", "uncertain"],
+  required: ["glance", "summary", "positioning", "stands_out", "market", "products", "payments", "offers", "support", "other", "uncertain"],
   properties: {
     summary: { type: "string" },
     positioning: { type: "string" },
     stands_out: LIST,
+    glance: { type: "object", additionalProperties: false, required: ["one_liner", "tags", "licence", "welcome", "vip", "withdrawal"], properties: { one_liner: { type: "string" }, tags: LIST, licence: { type: "string" }, welcome: { type: "string" }, vip: { type: "string" }, withdrawal: { type: "string" } } },
     other: { type: "array", items: { type: "object", additionalProperties: false, required: ["name", "what_it_is", "where"], properties: { name: { type: "string" }, what_it_is: { type: "string" }, where: { type: "string" } } } },
     market: {
       type: "object", additionalProperties: false,
@@ -298,7 +299,8 @@ const RESEARCH_SCHEMA = {
 };
 const RESEARCH_SYSTEM = [
   "You research an online casino from the text of its website pages (homepage and footer, terms, payments, help, promotions, loyalty, missions, tournaments, store, cashier) and a few screenshots, for a CRM team.",
-  "summary: what this casino is, in two plain sentences. positioning: who it seems to target and how it presents itself (theme, tone, focus), one or two sentences. stands_out: up to five things that make it distinct.",
+  "glance: very short values for a dashboard. one_liner: what the casino is in at most 20 words. tags: 3 to 5 tags of 1 to 3 words (e.g. 'Crypto-friendly', 'High rollers', 'Sportsbook', 'Vegas theme'). licence: the regulator only (e.g. 'Anjouan', 'Curaçao', 'MGA'). welcome: the welcome offer in at most 8 words (e.g. 'Up to €2,000 + 100 FS over 4 deposits'). vip: the loyalty programme in at most 8 words. withdrawal: withdrawal time in at most 4 words. Empty string when not shown.",
+  "summary: what this casino is, in two plain sentences. positioning: who it seems to target and how it presents itself (theme, tone, focus), one or two sentences. stands_out: up to five things that make it distinct, each at most 12 words.",
   "market: markets / countries it targets (from licence, languages, currencies, payment methods, wording), licence and regulator with number if shown, operating company, languages offered, currencies, restricted countries, year founded.",
   "products: verticals (casino, live casino, sportsbook, poker, bingo, lottery, esports, virtuals…), game providers named or shown as logos, special game types (crash, originals, Megaways, jackpots…), notes.",
   "payments: methods for deposits and withdrawals (cards, e-wallets, bank, vouchers, crypto by name), crypto support, minimum deposit / withdrawal, maximum withdrawal, withdrawal time, fees, KYC / verification rules.",

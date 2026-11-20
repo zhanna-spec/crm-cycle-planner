@@ -506,6 +506,32 @@ textarea.inp { resize: vertical; min-height: 70px; }
 .pfsum .pflead { color: var(--ink); font-size: 16px; }
 .pfchips { display: flex; flex-wrap: wrap; gap: 6px; }
 .pfchips span { background: var(--accent-soft); color: var(--accent); border-radius: 99px; padding: 3px 10px; font-size: 12.5px; font-weight: 500; }
+.ktiles { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 10px; }
+.kt { background: var(--surface); border-radius: 16px; padding: 12px 14px; box-shadow: var(--shadow-sm); display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.kt small { color: var(--muted); font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: .04em; }
+.kt b { font-size: 17px; overflow-wrap: anywhere; }
+.kt span { color: var(--muted); font-size: 12.5px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.kt .muted, .rcard .muted { color: var(--muted); font-weight: 400; }
+.rcards { display: grid; grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); gap: 10px; }
+.rcard { font: inherit; text-align: left; display: flex; gap: 12px; align-items: flex-start; background: var(--surface); border: 0; border-radius: 16px; padding: 14px; box-shadow: var(--shadow-sm); cursor: pointer; color: var(--ink); min-width: 0; }
+.rcard:hover { box-shadow: 0 0 0 2px var(--accent-soft), var(--shadow-sm); }
+.rcard .ri { flex: none; width: 36px; height: 36px; border-radius: 11px; background: var(--accent-soft); color: var(--accent); display: grid; place-items: center; }
+.rcard .ri svg { width: 20px; height: 20px; }
+.rcard .rt { display: flex; flex-direction: column; gap: 3px; min-width: 0; }
+.rcard .rt b i { font-style: normal; font-size: 11px; background: var(--sunk); color: var(--accent); border-radius: 99px; padding: 1px 7px; margin-left: 4px; }
+.rcard .rt span { color: var(--muted); font-size: 13px; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+.rcard.off { opacity: .55; }
+.rcard.off .ri { background: var(--sunk); color: var(--muted); }
+.outs { margin: 0; padding-left: 18px; display: grid; gap: 4px; font-size: 14px; }
+.pfchips .more { background: var(--sunk); color: var(--muted); }
+.pfdets { display: grid; gap: 8px; }
+.pfdet { background: var(--surface); border-radius: 16px; box-shadow: var(--shadow-sm); padding: 0 16px; }
+.pfdet summary { cursor: pointer; font-weight: 700; padding: 13px 0; }
+.pfdet dl { margin: 0 0 14px; display: grid; grid-template-columns: minmax(110px, 26%) minmax(0, 1fr); gap: 8px 14px; font-size: 14px; }
+.pfdet dt { color: var(--muted); font-size: 13px; }
+.pfdet dd { margin: 0; min-width: 0; overflow-wrap: anywhere; }
+.pfdet .muted { color: var(--muted); }
+@media (max-width: 600px) { .pfdet dl { grid-template-columns: minmax(0, 1fr); gap: 2px; } .pfdet dd { margin-bottom: 8px; } }
 .pfgrid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; }
 .pfblock { background: var(--surface); border-radius: 20px; padding: 16px 18px; box-shadow: var(--shadow-sm); min-width: 0; }
 .pfblock h3 { margin: 0 0 10px; font-size: 16px; }
@@ -1772,17 +1798,56 @@ footer { color: var(--muted); font-size: 12px; margin-top: 24px; text-align: cen
   function renderProfile(op) {
     var el = document.getElementById("casOverview"), p = state.profiles[op.id];
     var busy = researchBusy && researchBusy.op === op.id ? '<div class="rvprog"><b>Researching ' + esc(op.name) + '</b><div class="scanbar" style="margin:8px 0"><i style="width:' + Math.round(100 * researchBusy.done / Math.max(1, researchBusy.total)) + '%"></i></div><p class="small" style="margin:0">' + esc(researchBusy.text) + "</p></div>" : "";
-    if (!p) { el.innerHTML = busy + '<div class="panel empty-c"><b>' + esc(op.name) + " hasn't been researched yet.</b><br>Open its website" + (op.website ? " (" + esc(op.website) + ")" : "") + ", click the scanner extension and choose <b>Research this casino</b>. CRM Studio then fills in its market and licence, products and games, payments, and offers and retention, plus its promotions and features.</div>"; return; }
-    var lists = { verticals: 1, providers: 1, special_games: 1, languages: 1, currencies: 1, markets: 1, restricted_countries: 1, deposit_methods: 1, withdrawal_methods: 1, channels: 1, rg_tools: 1 };
-    var blocks = PROFILE.map(function (b) {
-      var d = p[b[0]] || {};
-      return '<section class="pfblock"><h3>' + esc(b[1]) + '</h3><dl>' + b[2].map(function (f) { return "<dt>" + esc(f[1]) + "</dt><dd>" + pval(d[f[0]], lists[f[0]]) + "</dd>"; }).join("") + "</dl></section>";
-    }).join("");
-    el.innerHTML = busy + '<section class="pfsum"><p class="pflead">' + esc(p.summary || "") + "</p>" + (p.positioning ? "<p>" + esc(p.positioning) + "</p>" : "") +
-      ((p.stands_out || []).length ? '<div class="pfchips">' + p.stands_out.map(function (x) { return "<span>" + esc(x) + "</span>"; }).join("") + "</div>" : "") + "</section>" +
-      '<div class="pfgrid">' + blocks + ((p.other || []).length ? '<section class="pfblock"><h3>Other</h3><dl>' + p.other.map(function (o) { return "<dt>" + esc(o.name) + "</dt><dd>" + esc(o.what_it_is || "") + "</dd>"; }).join("") + "</dl></section>" : "") + "</div>" +
-      ((p.uncertain || []).length ? '<p class="small" style="color:var(--warn)">Not confirmed on the site: ' + esc(p.uncertain.map(function (u) { return String(u).replace(/^.*\./, "").replace(/_/g, " "); }).join(", ")) + ".</p>" : "") +
-      '<details class="ptextbox"><summary>Pages read (' + (p.sources || []).length + ")</summary><ul class=\"small\">" + (p.sources || []).map(function (src) { return '<li>' + esc(src.label) + ' · <a href="' + esc(src.url) + '" target="_blank" rel="noopener">' + esc(src.url) + "</a></li>"; }).join("") + "</ul></details>" +
+    if (!p) { el.innerHTML = busy + '<div class="panel empty-c"><b>' + esc(op.name) + " hasn't been researched yet.</b><br>Open its website" + (op.website ? " (" + esc(op.website) + ")" : "") + ", click the scanner extension and choose <b>Research this casino</b>.</div>"; return; }
+    var g = p.glance || {}, m = p.market || {}, pr = p.products || {}, pay = p.payments || {}, of = p.offers || {}, sup = p.support || {};
+    var arr = function (v) { return Array.isArray(v) ? v.filter(Boolean) : v ? [v] : []; };
+    var firstSentence = function (t) { t = String(t || ""); var i = t.search(/[.!?](\s|$)/); return i > 0 && i < 220 ? t.slice(0, i + 1) : t; };
+    var chips = function (list, n) { list = arr(list); if (!list.length) return '<span class="muted">Not found</span>'; n = n || list.length; return '<span class="pfchips">' + list.slice(0, n).map(function (x) { return "<span>" + esc(x) + "</span>"; }).join("") + (list.length > n ? '<span class="more">+' + (list.length - n) + "</span>" : "") + "</span>"; };
+    var val = function (v) { return arr(v).length ? esc(arr(v).join(", ")) : '<span class="muted">Not found</span>'; };
+    // 1. one line on what it is, with short tags
+    var tags = arr(g.tags).length ? arr(g.tags) : [];
+    var head = '<section class="pfsum"><p class="pflead">' + esc(g.one_liner || firstSentence(p.summary)) + "</p>" + (tags.length ? chips(tags) : "") + "</section>";
+    // 2. key facts as tiles
+    var shortLic = g.licence || (m.licence ? String(m.licence).split(/[,–(-]/)[0].trim() : "");
+    var cur = arr(m.currencies), crypto = pay.crypto || (cur.some(function (c) { return /btc|eth|usdt|ltc|xrp|doge|crypto/i.test(c); }) ? "Yes" : "");
+    var tile = function (label, value, sub) { return '<div class="kt"><small>' + label + "</small><b>" + (value ? esc(value) : '<span class="muted">–</span>') + "</b>" + (sub ? "<span>" + esc(sub) + "</span>" : "") + "</div>"; };
+    var tiles = '<div class="ktiles">' +
+      tile("Licence", shortLic) +
+      tile("Markets", arr(m.markets).slice(0, 2).join(", "), arr(m.markets).length > 2 ? "+" + (arr(m.markets).length - 2) + " more" : "") +
+      tile("Languages", arr(m.languages).length ? String(arr(m.languages).length) : "", arr(m.languages).slice(0, 3).join(", ")) +
+      tile("Currencies", cur.slice(0, 3).join(" · "), cur.length > 3 ? "+" + (cur.length - 3) + " more" : "") +
+      tile("Crypto", crypto ? (/^(no|none)\b/i.test(crypto) ? "No" : "Yes") : "", crypto && !/^(yes|no)$/i.test(crypto) ? crypto : "") +
+      tile("Min deposit", pay.min_deposit) +
+      tile("Withdrawal time", g.withdrawal || pay.withdrawal_time) +
+      tile("Products", arr(pr.verticals).length ? String(arr(pr.verticals).length) : "", arr(pr.verticals).slice(0, 3).join(", ")) + "</div>";
+    // 3. what it offers to keep players: one card each, click to open its tab
+    var fcount = function (k) { return featuresOf(op).filter(function (x) { return x.part === k; }).length; };
+    var nPromos = promosOf(op).filter(function (x) { return x.kind !== "terms"; }).length, nOther = featuresOf(op).filter(function (x) { return x.part === "custom"; }).length + arr(p.other).length;
+    var I = { gift: '<rect x="3" y="8" width="14" height="9" rx="1.5"/><path d="M10 8v9M3 11h14M10 8C8 4 5 5 6 7s4 1 4 1 3 1 4-1-2-3-4 1"/>', crown: '<path d="M3 15l1-9 4 4 2-5 2 5 4-4 1 9z"/>', target: '<circle cx="10" cy="10" r="7"/><circle cx="10" cy="10" r="3.5"/><circle cx="10" cy="10" r=".8"/>', trophy: '<path d="M6 3h8v4a4 4 0 01-8 0zM6 5H3v1a3 3 0 003 3M14 5h3v1a3 3 0 01-3 3M10 11v3M7 17h6"/>', bag: '<path d="M4 7h12l-1 10H5zM7 7a3 3 0 016 0"/>', tag: '<path d="M3 10V4h6l8 8-6 6z"/><circle cx="7" cy="7" r="1"/>', dots: '<circle cx="5" cy="10" r="1"/><circle cx="10" cy="10" r="1"/><circle cx="15" cy="10" r="1"/>' };
+    var card = function (icon, label, text, tab, n) { var has = !!(text && !/^(none|no|not offered|not found)\b/i.test(text)) || n > 0; return '<button type="button" class="rcard' + (has ? "" : " off") + '"' + (tab ? ' data-castab="' + tab + '"' : "") + "><span class=\"ri\">" + svg(I[icon]) + '</span><span class="rt"><b>' + label + (n ? " <i>" + n + "</i>" : "") + "</b><span>" + (text ? esc(text) : has ? "See the write-up" : "Not found") + "</span></span></button>"; };
+    var rcards = '<div class="rcards">' +
+      card("gift", "Welcome offer", g.welcome || of.welcome_offer, "promos", 0) +
+      card("tag", "Promotions", arr(of.promotions).slice(0, 3).join(" · "), "promos", nPromos) +
+      card("crown", "Loyalty / VIP", g.vip || of.loyalty, "f:vip", fcount("vip")) +
+      card("target", "Missions", of.missions, "f:missions", fcount("missions")) +
+      card("trophy", "Tournaments", of.tournaments, "f:tournaments", fcount("tournaments")) +
+      card("bag", "Store", of.store, "f:shop", fcount("shop")) +
+      card("dots", "Other", arr(p.other).map(function (o) { return o.name; }).concat(arr(of.other_features)).slice(0, 3).join(" · "), "f:other", nOther) + "</div>";
+    // 4. what stands out, short
+    var outs = arr(p.stands_out);
+    var stand = outs.length ? '<section class="pfblock"><h3>What stands out</h3><ul class="outs">' + outs.map(function (x) { return "<li>" + esc(x) + "</li>"; }).join("") + "</ul></section>" : "";
+    // 5. the full detail, folded away
+    var det = function (title, rows) { return '<details class="pfdet"><summary>' + title + '</summary><dl>' + rows.map(function (r) { return "<dt>" + r[0] + "</dt><dd>" + r[1] + "</dd>"; }).join("") + "</dl></details>"; };
+    var details = '<div class="sechead" style="margin-top:4px"><h3>Details</h3></div><div class="pfdets">' +
+      det("Market &amp; licence", [["Licence", val(m.licence)], ["Operator", val(m.operator)], ["Markets", chips(m.markets)], ["Languages", chips(m.languages)], ["Currencies", chips(m.currencies)], ["Restricted countries", chips(m.restricted_countries, 12)], ["Founded", val(m.founded)]]) +
+      det("Products &amp; games", [["Products", chips(pr.verticals)], ["Game providers", chips(pr.providers, 40)], ["Special games", chips(pr.special_games)], ["Notes", val(pr.notes)]]) +
+      det("Payments", [["Deposit methods", chips(pay.deposit_methods)], ["Withdrawal methods", chips(pay.withdrawal_methods)], ["Crypto", val(pay.crypto)], ["Min deposit", val(pay.min_deposit)], ["Min withdrawal", val(pay.min_withdrawal)], ["Max withdrawal", val(pay.max_withdrawal)], ["Withdrawal time", val(pay.withdrawal_time)], ["Fees", val(pay.fees)], ["Verification (KYC)", val(pay.kyc)]]) +
+      det("Offers &amp; bonus rules", [["Welcome offer", val(of.welcome_offer)], ["Promotions", chips(of.promotions)], ["Loyalty / VIP", val(of.loyalty)], ["Missions", val(of.missions)], ["Tournaments", val(of.tournaments)], ["Store", val(of.store)], ["Bonus rules", '<ul class="outs">' + arr(of.bonus_rules).map(function (x) { return "<li>" + esc(x) + "</li>"; }).join("") + "</ul>"]]) +
+      det("Support &amp; responsible gambling", [["Support", chips(sup.channels)], ["Hours", val(sup.hours)], ["Responsible-gambling tools", chips(sup.rg_tools)], ["App", val(sup.app)]]) +
+      det("About this casino", [["Summary", esc(p.summary || "")], ["Positioning", esc(p.positioning || "")]].concat(arr(p.other).map(function (o) { return [esc(o.name), esc(o.what_it_is || "") + (o.where ? ' <span class="muted">· ' + esc(o.where) + "</span>" : "")]; }))) +
+      det("Pages read (" + arr(p.sources).length + ")", arr(p.sources).map(function (src) { return [esc(src.label), '<a href="' + esc(src.url) + '" target="_blank" rel="noopener">' + esc(src.url) + "</a>"]; })) + "</div>";
+    el.innerHTML = busy + head + tiles + '<div class="sechead"><h3>Retention &amp; offers</h3></div>' + rcards + stand + details +
+      (arr(p.uncertain).length ? '<p class="small" style="color:var(--warn)">Not confirmed on the site: ' + esc(arr(p.uncertain).map(function (u) { return String(u).replace(/^.*\./, "").replace(/_/g, " "); }).join(", ")) + ".</p>" : "") +
       '<p class="small">Researched ' + esc(new Date(p.at).toLocaleDateString()) + " while " + (p.run === "logged-in" ? "logged in" : "logged out") + ". Research again with the extension to update it.</p>";
   }
   // all casinos side by side on the main facts
