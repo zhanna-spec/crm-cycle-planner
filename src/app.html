@@ -6,23 +6,23 @@
 <style>
 /* Layout: violet hero band, cycle tabs, then a channel palette beside a horizontal day-by-day board; an edit drawer slides in from the right. */
 :root {
-  --bg: #F6F7F9; --surface: #FFFFFF; --sunk: #F2F3F6; --ink: #1C1F2A; --muted: #667085; --line: #E4E7EC;
-  --accent: #5B4BD8; --accent-2: #8F83F0; --accent-soft: #EFEDFC; --on-accent: #FFFFFF; --hero: #6A5AE0;
+  --bg: #F1F0FB; --surface: #FFFFFF; --sunk: #EFEDFC; --ink: #1E1B3A; --muted: #6E6A8F; --line: #E6E3F7;
+  --accent: #6A5AE0; --accent-2: #8F83F0; --accent-soft: #E8E5FD; --on-accent: #FFFFFF; --hero: #6A5AE0;
   --coral: #E5566F; --coral-bg: #FF8FA2; --coral-soft: #FFE5EA;
   --mint: #18936F; --mint-bg: #4CC9A0; --mint-soft: #DBF5EC; --sky-bg: #5AA9F5; --sun: #FFC94D;
   --c-email: #8F83F0; --c-sms: #FF8FA2; --c-push: #5AA9F5; --c-popup: #4CC9A0; --c-mission: #FFC94D; --c-call: #C08AF5;
   --warn: #C27A00; --bad: #E5566F;
-  --shadow: 0 1px 2px rgba(16, 24, 40, 0.05); --shadow-sm: 0 1px 2px rgba(16, 24, 40, 0.04);
+  --shadow: 0 8px 24px rgba(74, 58, 190, 0.08); --shadow-sm: 0 2px 8px rgba(74, 58, 190, 0.08);
   --font: "Rubik", "Segoe UI", system-ui, sans-serif;
   color-scheme: light;
 }
 @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
-  --bg: #121318; --surface: #1A1C23; --sunk: #22252E; --ink: #ECEDF2; --muted: #9AA0AE; --line: #2E313B;
+  --bg: #14112B; --surface: #201B44; --sunk: #2A2455; --ink: #F2F0FF; --muted: #A9A4CF; --line: #332C63;
   --accent: #9184F5; --accent-2: #A79CF8; --accent-soft: #2F2868; --on-accent: #14112B; --hero: #4F42C4;
   --coral: #FF8FA2; --coral-soft: #4A2237; --mint: #5ED6AE; --mint-soft: #173E36;
   --warn: #FFC94D; --bad: #FF8FA2; --shadow: 0 8px 24px rgba(0,0,0,.25); --shadow-sm: 0 2px 8px rgba(0,0,0,.25); color-scheme: dark; } }
 :root[data-theme="dark"] {
-  --bg: #121318; --surface: #1A1C23; --sunk: #22252E; --ink: #ECEDF2; --muted: #9AA0AE; --line: #2E313B;
+  --bg: #14112B; --surface: #201B44; --sunk: #2A2455; --ink: #F2F0FF; --muted: #A9A4CF; --line: #332C63;
   --accent: #9184F5; --accent-2: #A79CF8; --accent-soft: #2F2868; --on-accent: #14112B; --hero: #4F42C4;
   --coral: #FF8FA2; --coral-soft: #4A2237; --mint: #5ED6AE; --mint-soft: #173E36;
   --warn: #FFC94D; --bad: #FF8FA2; --shadow: 0 8px 24px rgba(0,0,0,.25); --shadow-sm: 0 2px 8px rgba(0,0,0,.25); color-scheme: dark; }
@@ -909,119 +909,6 @@ details.guide ol { margin: 8px 0 0; padding-left: 18px; font-size: 12px; color: 
 .toast { position: fixed; left: 50%; transform: translateX(-50%); bottom: calc(18px + env(safe-area-inset-bottom, 0px)); background: var(--ink); color: var(--bg); padding: 10px 16px; border-radius: 14px; font-weight: 500; z-index: 80; box-shadow: var(--shadow); }
 footer { color: var(--muted); font-size: 12px; margin-top: 24px; text-align: center; }
 @media (prefers-reduced-motion: reduce) { .block, .card { transition: none; } }
-
-/* ===== Research-tool theme: neutral surfaces, thin borders, purple only for navigation and selection ===== */
-body { font-size: 14px; }
-.panel, .stat, .chap, .pcard, .phero, .prow, .pfdet, .ccmp, .rpanel, .caswrap, #boardwrap { box-shadow: none; border: 1px solid var(--line); border-radius: 10px; }
-.panel { padding: 16px; }
-header.top { background: var(--surface); color: var(--ink); border: 1px solid var(--line); border-radius: 10px; padding: 10px 16px; margin-bottom: 14px; }
-header.top::before, header.top::after { display: none; }
-header.top .logo { width: 34px; height: 34px; border-radius: 9px; box-shadow: none; background: var(--accent-soft); }
-header.top .logo svg { width: 20px; height: 20px; }
-header.top h1 { font-size: 17px; font-weight: 600; } header.top .sub { color: var(--muted); }
-header.top .viewnav { background: transparent; padding: 0; gap: 2px; }
-header.top .viewnav a { color: var(--muted); border-radius: 8px; padding: 7px 12px; }
-header.top .viewnav a:hover { background: var(--sunk); color: var(--ink); }
-header.top .viewnav a.on { background: var(--accent-soft); color: var(--accent); box-shadow: none; }
-header.top .viewnav .num { background: var(--sunk); color: var(--muted); }
-header.top .viewnav a.on .num { background: #FFFFFF; color: var(--accent); }
-.hbtn { background: var(--surface); color: var(--ink); border: 1px solid var(--line); border-radius: 8px; }
-.hbtn.ico { width: 34px; height: 34px; }
-.hbtn.solid { background: var(--surface); color: var(--ink); }
-.savestate { color: var(--muted) !important; }
-.acct button, .acct .btn { border-radius: 8px; }
-.btn { border-radius: 8px; background: var(--surface); border: 1px solid var(--line); color: var(--ink); padding: 7px 12px; }
-.btn:hover { background: var(--sunk); }
-.btn.primary { background: var(--accent); border-color: var(--accent); color: #FFFFFF; }
-.btn.danger { color: var(--bad); }
-.inp, select.inp, textarea.inp { border-radius: 8px; }
-.ptitle { font-size: 13px; text-transform: uppercase; letter-spacing: .04em; color: var(--muted); font-weight: 600; }
-/* builder */
-.stat { border-radius: 10px; padding: 12px 14px; }
-.stat.feature { background: var(--surface); color: var(--ink); }
-.stat.feature .k, .stat.feature .n { color: var(--muted); }
-.tab { border-radius: 8px; box-shadow: none; border: 1px solid var(--line); }
-.tab.on { background: var(--accent-soft); color: var(--accent); border-color: transparent; }
-/* casino list */
-.opitem { background: transparent; border-radius: 8px; padding: 7px 8px; }
-.opitem:hover { background: var(--sunk); }
-.opitem.on { background: var(--accent-soft); color: var(--accent); }
-.opitem .avatar { width: 28px; height: 28px; font-size: 12px; border-radius: 8px; }
-.opitem.on .avatar { box-shadow: none; }
-/* casino header and tabs */
-.caswrap { border-radius: 10px; }
-.caswrap > #opHead { border: 0; padding: 14px 16px 6px; }
-#opHead .avatar { width: 40px; height: 40px; border-radius: 10px; font-size: 17px; }
-#opHead h2 { font-size: 19px; }
-.caswrap > .castabs { border-top: 0; padding: 0 12px; gap: 4px; }
-.castabs button { border-radius: 0; padding: 10px 8px 9px; margin: 0 4px; border-bottom: 2px solid transparent; color: var(--muted); font-weight: 500; }
-.castabs button.on { background: none; color: var(--accent); border-bottom-color: var(--accent); }
-.castabs button i { background: var(--sunk); color: var(--muted); }
-.castabs button.on i { background: var(--accent-soft); color: var(--accent); }
-.castabs button.none:not(.on) { opacity: .5; }
-.subtabs { display: inline-flex; gap: 2px; background: var(--sunk); border-radius: 8px; padding: 3px; margin-bottom: 4px; flex-wrap: wrap; }
-.subtabs button { font: inherit; border: 0; background: none; padding: 6px 12px; border-radius: 6px; cursor: pointer; color: var(--muted); font-weight: 500; }
-.subtabs button.on { background: var(--surface); color: var(--accent); box-shadow: 0 1px 2px rgba(16,24,40,.08); }
-.subtabs button.none:not(.on) { opacity: .55; }
-.gamsum { margin: 10px 2px 0; color: var(--ink); font-size: 14px; }
-/* research sections */
-.rpanel { background: var(--surface); border-radius: 10px; }
-.rsec { padding: 16px 18px; border-top: 1px solid var(--line); }
-.rsec:first-child { border-top: 0; }
-.rsh { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 10px; }
-.rsh h3 { margin: 0; font-size: 12px; text-transform: uppercase; letter-spacing: .05em; color: var(--muted); font-weight: 600; }
-.rsh .linkbtn { font-size: 12.5px; }
-.rsum { display: grid; grid-template-columns: minmax(0, 1fr) 260px; gap: 20px; align-items: start; }
-.rlead { margin: 0 0 8px; font-size: 15.5px; font-weight: 500; line-height: 1.45; }
-.rnotes { margin: 10px 0 0; padding-left: 18px; color: var(--muted); display: grid; gap: 3px; }
-.rshot { width: 100%; aspect-ratio: 16 / 10; object-fit: cover; object-position: top; border-radius: 8px; border: 1px solid var(--line); background: #111; }
-.kv { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); column-gap: 32px; }
-.kv.one { grid-template-columns: minmax(0, 1fr); }
-.kvr { display: grid; grid-template-columns: 150px minmax(0, 1fr); gap: 12px; padding: 8px 0; border-bottom: 1px solid var(--line); align-items: baseline; }
-.kvl { color: var(--muted); font-size: 13px; }
-.kvv { min-width: 0; overflow-wrap: anywhere; }
-.nf { color: var(--muted); font-weight: 400; }
-.tags { display: inline-flex; flex-wrap: wrap; gap: 4px; }
-.tags span { background: var(--sunk); border-radius: 6px; padding: 1px 8px; font-size: 12.5px; white-space: nowrap; }
-.tags .more { color: var(--muted); }
-.rtwrap { overflow-x: auto; }
-.rt { width: 100%; border-collapse: collapse; font-size: 13.5px; }
-.rt th { text-align: left; font-weight: 600; font-size: 12px; color: var(--muted); padding: 8px 10px; border-bottom: 1px solid var(--line); white-space: nowrap; background: var(--sunk); }
-.rt td { padding: 9px 10px; border-bottom: 1px solid var(--line); vertical-align: top; }
-.rt tr:last-child td { border-bottom: 0; }
-.rt tbody tr[data-castab], .rt tbody tr[data-gamgo], .rt tbody tr[data-pmgo] { cursor: pointer; }
-.rt tbody tr[data-castab]:hover td, .rt tbody tr[data-gamgo]:hover td, .rt tbody tr[data-pmgo]:hover td { background: var(--sunk); }
-.rt .nowrap { white-space: nowrap; }
-.cmpt td { min-width: 70px; } .cmpt td:first-child { white-space: nowrap; }
-.yes { color: var(--mint); font-weight: 600; } .no { color: var(--muted); }
-.rtext { margin: 0; }
-.rlist { margin: 0; padding-left: 18px; display: grid; gap: 4px; }
-.rfoot { margin: 10px 2px 0; }
-.rsub { font-size: 12px; text-transform: uppercase; letter-spacing: .05em; color: var(--muted); font-weight: 600; margin: 18px 2px 8px; }
-/* offers as a list with thin rows */
-.plist2 { gap: 0; border: 1px solid var(--line); border-radius: 10px; overflow: hidden; background: var(--surface); margin-bottom: 14px; }
-.plist2 .prow { border: 0; border-radius: 0; border-top: 1px solid var(--line); }
-.plist2 .prow:first-child { border-top: 0; }
-.prow.open { box-shadow: none; background: var(--surface); }
-.pbtn { border-radius: 0; padding: 10px 14px; gap: 12px; }
-.pbtn:hover { box-shadow: none; background: var(--sunk); }
-.pthumb { width: 84px; height: 48px; border-radius: 6px; }
-.pmain b { font-size: 14px; font-weight: 600; }
-.pchip { border-radius: 6px; }
-.kindpill { background: var(--sunk); color: var(--muted); border-radius: 6px; }
-.pgh { font-size: 12px; text-transform: uppercase; letter-spacing: .05em; color: var(--muted); font-weight: 600; margin: 8px 2px 6px; }
-.pgh .small { background: none; color: var(--muted); padding: 0; }
-.sechead h3 { font-size: 15px; }
-/* empty states */
-.plistp .pgroup { padding: 12px 16px 14px; border-top: 1px solid var(--line); }
-.plistp .pgroup:first-child { border-top: 0; }
-.plistp .pgh { margin: 0 0 8px; }
-.plistp .plist2 { margin: 0 -16px -14px; border: 0; border-radius: 0; border-top: 1px solid var(--line); }
-.daybtn { background: var(--surface); color: var(--ink); border: 1px solid var(--line); box-shadow: 0 0 0 5px var(--surface); border-radius: 8px; height: 36px; }
-.daybtn.on, .daybtn[aria-pressed="true"] { border-color: var(--accent); color: var(--accent); }
-.empty-c::before { width: 40px; height: 40px; border-radius: 10px; background-size: 22px; }
-.rvprog { border: 1px solid var(--line); border-radius: 10px; box-shadow: none; }
-@media (max-width: 900px) { .rsum { grid-template-columns: minmax(0, 1fr); } .kv { grid-template-columns: minmax(0, 1fr); } .kvr { grid-template-columns: 120px minmax(0, 1fr); } }
 </style>
 
 <div class="wrap">
@@ -1957,41 +1844,21 @@ header.top .viewnav a.on .num { background: #FFFFFF; color: var(--accent); }
       renderKeyPanel(); renderOpList(); document.getElementById("keyWrap").hidden = aiReady();
       var opC = curOp(); renderOpHead(opC);
       var tab = opC ? (ui.casTab || "overview") : "all";
-      // tabs follow the research: summary, offers and their terms, gamification, market, payments, the rest
-      var GAM = [["vip", "Loyalty / VIP"], ["missions", "Missions"], ["tournaments", "Tournaments"], ["shop", "Store"]];
-      if (/^f:(vip|missions|tournaments|shop)$/.test(tab)) { ui.gamPart = tab.slice(2); tab = ui.casTab = "gam"; }
-      else if (tab === "f:deposit") tab = ui.casTab = "pay";
-      else if (tab.indexOf("f:") === 0) tab = ui.casTab = "other";
-      var tabs = [["overview", "Overview"], ["promos", "Offers"], ["terms", "Bonus terms"], ["gam", "Gamification"], ["market", "Market"], ["pay", "Payments"], ["other", "Other"]];
+      // one tab per part of the casino: promotions (with any offers added by hand), then each feature
+      var tabs = [["overview", "Overview"], ["promos", "Promotions"]].concat(FEATURE_TABS.map(function (k) { return ["f:" + k[0], k[1]]; })).concat([["f:other", "Other"]]);
+      if (tab.indexOf("f:c:") === 0) tab = ui.casTab = "f:other";
       if (opC && !tabs.some(function (t) { return t[0] === tab; })) tab = ui.casTab = "overview";
-      var prof = opC ? state.profiles[opC.id] : null;
-      var has = function (id) {
-        if (id === "promos") return promosOf(opC).length || offersOf(opC).length;
-        if (id === "terms") return promosOf(opC).length || (prof && prof.offers && (prof.offers.bonus_rules || []).length);
-        if (id === "gam") return featuresOf(opC).some(function (x) { return /^(vip|missions|tournaments|shop)$/.test(x.part); }) || !!prof;
-        if (id === "other") return featuresOf(opC).some(function (x) { return x.part === "custom"; }) || !!prof;
-        return id === "overview" || !!prof;
-      };
+      var has = function (id) { if (id === "promos") return promosOf(opC).length || offersOf(opC).length; if (id === "f:other") return featuresOf(opC).some(function (x) { return x.part === "custom"; }) || ((state.profiles[opC.id] || {}).other || []).length; if (id.indexOf("f:") !== 0) return true; var k = id.slice(2); return featuresOf(opC).some(function (x) { return x.part === k; }); };
       var tabsEl = document.getElementById("casTabs"); tabsEl.hidden = !opC;
-      tabsEl.innerHTML = opC ? tabs.map(function (t) { var n = t[0] === "promos" ? promosOf(opC).filter(function (x) { return x.kind !== "terms"; }).length : 0; return '<button type="button" class="' + (tab === t[0] ? "on" : "") + (has(t[0]) ? "" : " none") + '" data-castab="' + t[0] + '">' + esc(t[1]) + (n ? " <i>" + n + "</i>" : "") + "</button>"; }).join("") : "";
-      var withF = tab === "gam" || tab === "pay" || tab === "other";
-      document.getElementById("casOverview").hidden = tab === "promos";
-      document.getElementById("promosApp").hidden = tab !== "promos"; document.getElementById("featuresApp").hidden = !withF;
+      var TABI = { overview: '<path d="M3 10l7-6 7 6v7H3z"/><path d="M8 17v-4h4v4"/>', promos: RI.tag, "f:vip": RI.crown, "f:missions": RI.target, "f:tournaments": RI.trophy, "f:shop": RI.bag, "f:deposit": RI.wallet, "f:other": RI.dots };
+      tabsEl.innerHTML = opC ? tabs.map(function (t) { return '<button type="button" class="' + (tab === t[0] ? "on" : "") + (has(t[0]) ? "" : " none") + '" data-castab="' + t[0] + '">' + (TABI[t[0]] ? svg(TABI[t[0]]) : "") + esc(t[1]) + "</button>"; }).join("") : "";
+      var isF = tab.indexOf("f:") === 0;
+      document.getElementById("casOverview").hidden = !(tab === "overview" || tab === "all");
+      document.getElementById("promosApp").hidden = tab !== "promos"; document.getElementById("featuresApp").hidden = !isF;
       document.getElementById("casEmails").hidden = true; document.getElementById("casOffers").hidden = !(tab === "promos" && offersOf(opC).length);
-      ui.ftQuiet = false;
       if (tab === "all") { renderCompareAll(); return; }
       if (tab === "overview") { renderProfile(opC); return; }
-      if (tab === "terms") { renderTermsTab(opC); return; }
-      if (tab === "market") { renderMarketTab(opC); return; }
-      if (tab === "pay") { renderPayTab(opC); ui.ftOp = opC.id; ui.ftPart = "deposit"; ui.ftPartLabel = "Deposit"; ui.ftQuiet = true; renderFeatures(); return; }
-      if (tab === "other") { renderOtherTab(opC); ui.ftOp = opC.id; ui.ftPart = "other"; ui.ftPartLabel = "Other"; ui.ftQuiet = true; renderFeatures(); return; }
-      if (tab === "gam") {
-        var gp = GAM.some(function (g) { return g[0] === ui.gamPart; }) ? ui.gamPart : "vip"; ui.gamPart = gp;
-        var of0 = (prof && prof.offers) || {}, txt = { vip: of0.loyalty, missions: of0.missions, tournaments: of0.tournaments, shop: of0.store };
-        document.getElementById("casOverview").innerHTML = '<div class="subtabs">' + GAM.map(function (g) { var n = featuresOf(opC).filter(function (x) { return x.part === g[0]; }).length, on = n > 0 || (txt[g[0]] && !/^(none|no|not offered|not found)\b/i.test(txt[g[0]])); return '<button type="button" class="' + (gp === g[0] ? "on" : "") + (on ? "" : " none") + '" data-gam="' + g[0] + '">' + g[1] + "</button>"; }).join("") + "</div>" +
-          (txt[gp] ? '<div class="rpanel" style="margin-top:10px">' + rsec("Summary", '<p class="rtext">' + esc(txt[gp]) + "</p>") + "</div>" + (featuresOf(opC).some(function (x) { return x.part === gp; }) ? '<h3 class="rsub">Write-up</h3>' : "") : "");
-        ui.ftQuiet = !!txt[gp]; ui.ftOp = opC.id; ui.ftPart = gp; ui.ftPartLabel = (GAM.filter(function (g) { return g[0] === gp; })[0] || [])[1]; renderFeatures(); return;
-      }
+      if (isF) { ui.ftOp = opC.id; ui.ftPart = tab.slice(2); ui.ftPartLabel = (tabs.filter(function (t) { return t[0] === tab; })[0] || [])[1]; renderFeatures(); return; }
       ui.pmOp = opC.id; renderPromosPage();
       if (!offersOf(opC).length) return;
     }
@@ -2104,103 +1971,124 @@ header.top .viewnav a.on .num { background: #FFFFFF; color: var(--accent); }
   function short(v, n) { v = String(v || "").replace(/\s*\(.*?\)\s*/g, " ").replace(/\s+/g, " ").trim(); n = n || 40; return v.length > n ? v.slice(0, n - 1).replace(/[\s,;–-]+\S*$/, "") + "…" : v; }
   function profileHero(p) { if (p.hero) { if (signed[p.hero]) return signed[p.hero]; if (cloud) requestSign([p.hero]); return ""; } return p.heroThumb || ""; }
 
-  // ---- research views: compact sections and tables ----
-  function pArr(v) { return Array.isArray(v) ? v.filter(Boolean) : v ? [v] : []; }
-  var NF = '<span class="nf">Not found</span>';
-  function pv(v) { return pArr(v).length ? esc(pArr(v).join(", ")) : NF; }
-  function ptags(list, n, flags) { list = pArr(list); if (!list.length) return NF; n = n || list.length; return '<span class="tags">' + list.slice(0, n).map(function (x) { var f = flags ? flagOf(x) : ""; return "<span>" + (f ? f + " " : "") + esc(x) + "</span>"; }).join("") + (list.length > n ? '<span class="more">+' + (list.length - n) + "</span>" : "") + "</span>"; }
-  function kv(rows, cols) { return '<div class="kv' + (cols === 1 ? " one" : "") + '">' + rows.map(function (r) { return '<div class="kvr"><span class="kvl">' + r[0] + '</span><span class="kvv">' + r[1] + "</span></div>"; }).join("") + "</div>"; }
-  function rsec(title, body, extra) { return '<section class="rsec"><div class="rsh"><h3>' + title + "</h3>" + (extra || "") + "</div>" + body + "</section>"; }
-  function researchBusyHtml(op) { return researchBusy && researchBusy.op === op.id ? '<div class="rvprog"><b>Researching ' + esc(op.name) + '</b><div class="scanbar" style="margin:8px 0"><i style="width:' + Math.round(100 * researchBusy.done / Math.max(1, researchBusy.total)) + '%"></i></div><p class="small" style="margin:0">' + esc(researchBusy.text) + "</p></div>" : ""; }
-  function notResearched(op) { return '<div class="panel empty-c"><b>' + esc(op.name) + " hasn't been researched yet.</b><br>Open its website" + (op.website ? " (" + esc(op.website) + ")" : "") + ", click the scanner extension and choose <b>Research this casino</b>.</div>"; }
-  function isOn(t, n) { return n > 0 || !!(t && !/^(none|no|not offered|not found|n\/a)\b/i.test(String(t))); }
-  function depNoOf(x) { if (x.kind === "welcome") { var w = /(\d)(st|nd|rd|th)\s+deposit/i.exec(x.title || ""); return w ? +w[1] : 1; } if (x.kind === "second") return 2; if (x.kind === "third") return 3; var mm = /(\d)(st|nd|rd|th)\s+deposit/i.exec((x.title || "") + " " + (x.reward || "")); return mm ? +mm[1] : 0; }
-  function welcomeSteps(op) {
-    return promosOf(op).filter(function (x) { return x.kind !== "terms"; }).map(function (x) { return { n: depNoOf(x), x: x }; }).filter(function (d) { return d.n > 0 && d.n < 10; }).sort(function (a, b) { return a.n - b.n; }).filter(function (d, i, all) { return !i || all[i - 1].n !== d.n; });
-  }
-  function ord(n) { return n + (["th", "st", "nd", "rd"][n] || "th"); }
-  function termCell(x, k) { var v = (x.terms || {})[k]; return v ? esc(v) : '<span class="nf">–</span>'; }
-
   function renderProfile(op) {
-    var el = document.getElementById("casOverview"), p = state.profiles[op.id], busy = researchBusyHtml(op);
-    if (!p) { el.innerHTML = busy + notResearched(op); return; }
-    var g = p.glance || {}, m = p.market || {}, pr = p.products || {}, pay = p.payments || {}, of = p.offers || {};
+    var el = document.getElementById("casOverview"), p = state.profiles[op.id];
+    var busy = researchBusy && researchBusy.op === op.id ? '<div class="rvprog"><b>Researching ' + esc(op.name) + '</b><div class="scanbar" style="margin:8px 0"><i style="width:' + Math.round(100 * researchBusy.done / Math.max(1, researchBusy.total)) + '%"></i></div><p class="small" style="margin:0">' + esc(researchBusy.text) + "</p></div>" : "";
+    if (!p) { el.innerHTML = busy + '<div class="panel empty-c"><b>' + esc(op.name) + " hasn't been researched yet.</b><br>Open its website" + (op.website ? " (" + esc(op.website) + ")" : "") + ", click the scanner extension and choose <b>Research this casino</b>.</div>"; return; }
+    var g = p.glance || {}, m = p.market || {}, pr = p.products || {}, pay = p.payments || {}, of = p.offers || {}, sup = p.support || {};
+    var arr = function (v) { return Array.isArray(v) ? v.filter(Boolean) : v ? [v] : []; };
     var firstSentence = function (t) { t = String(t || ""); var i = t.search(/[.!?](\s|$)/); return i > 0 && i < 220 ? t.slice(0, i + 1) : t; };
-    var shot = profileHero(p), cur = pArr(m.currencies), isCrypto = CRYPTO_RE.test(cur.join(" ") + " " + (pay.crypto || "")) && !/^no\b/i.test(pay.crypto || "");
-    var summary = '<div class="rsum"><div><p class="rlead">' + esc(g.one_liner || firstSentence(p.summary)) + "</p>" + (pArr(g.tags).length ? ptags(g.tags) : "") +
-      (pArr(p.stands_out).length ? '<ul class="rnotes">' + pArr(p.stands_out).slice(0, 4).map(function (x) { return "<li>" + esc(x) + "</li>"; }).join("") + "</ul>" : "") + "</div>" +
-      (shot ? '<img class="rshot" src="' + shot + '" alt="' + esc(op.name) + ' homepage">' : "") + "</div>";
-    var facts = kv([["Licence", esc(g.licence || short(String(m.licence || "").split(/[,–]/)[0], 30)) || NF], ["Markets", ptags(m.markets, 4, true)], ["Languages", ptags(m.languages, 5, true)], ["Currencies", ptags(cur, 6)],
-      ["Products", ptags(pr.verticals, 5)], ["Game providers", pArr(pr.providers).length ? esc(String(pArr(pr.providers).length)) : NF], ["Min deposit", pv(short(pay.min_deposit, 30))], ["Withdrawal time", pv(g.withdrawal || short(pay.withdrawal_time, 30))], ["Crypto", isCrypto ? "Accepted" : pay.crypto ? "No" : NF]]);
-    var steps = welcomeSteps(op), wel;
-    if (steps.length) {
-      wel = '<table class="rt"><thead><tr><th>Deposit</th><th>Offer</th><th>Min deposit</th><th>Wagering</th><th>Max bet</th><th>Valid for</th></tr></thead><tbody>' +
-        steps.map(function (d) { return '<tr data-castab="promos"><td class="nowrap">' + ord(d.n) + "</td><td><b>" + esc(d.x.title || "") + "</b></td><td>" + termCell(d.x, "min_deposit") + "</td><td>" + termCell(d.x, "wagering") + "</td><td>" + termCell(d.x, "max_bet") + "</td><td>" + termCell(d.x, "validity") + "</td></tr>"; }).join("") + "</tbody></table>";
-    } else wel = '<p class="rtext">' + pv(of.welcome_offer) + "</p>";
-    var fc = function (k) { return featuresOf(op).filter(function (x) { return x.part === k; }).length; };
-    var gam = [["vip", "Loyalty / VIP", g.vip || of.loyalty], ["missions", "Missions", of.missions], ["tournaments", "Tournaments", of.tournaments], ["shop", "Store", of.store]];
-    var gamT = '<table class="rt"><tbody>' + gam.map(function (r) { var on = isOn(r[2], fc(r[0])); return '<tr data-gamgo="' + r[0] + '"><td class="nowrap"><b>' + r[1] + '</b></td><td class="nowrap">' + (on ? '<span class="yes">Yes</span>' : '<span class="no">Not found</span>') + "</td><td>" + (on ? esc(short(r[2], 120)) : "") + "</td></tr>"; }).join("") +
-      (pArr(p.other).length ? '<tr data-castab="other"><td class="nowrap"><b>Other</b></td><td class="nowrap"><span class="yes">' + pArr(p.other).length + "</span></td><td>" + esc(pArr(p.other).map(function (o) { return o.name; }).join(", ")) + "</td></tr>" : "") + "</tbody></table>";
-    el.innerHTML = busy + '<div class="rpanel">' + rsec("Summary", summary) + rsec("Key facts", facts, '<button type="button" class="linkbtn" data-castab="market">Market details</button>') +
-      rsec("Welcome offer", wel, '<button type="button" class="linkbtn" data-castab="terms">All bonus terms</button>') + rsec("Gamification", gamT, '<button type="button" class="linkbtn" data-castab="gam">Write-ups</button>') + "</div>" +
-      '<p class="small rfoot">Researched ' + esc(new Date(p.at).toLocaleDateString()) + " while " + (p.run === "logged-in" ? "logged in" : "logged out") + ". Research again with the extension to update it.</p>";
-  }
-  function renderTermsTab(op) {
-    var el = document.getElementById("casOverview"), p = state.profiles[op.id] || {}, of = p.offers || {};
-    var list = promosOf(op).filter(function (x) { return x.kind !== "terms"; }), gen = promosOf(op).filter(function (x) { return x.kind === "terms"; });
-    var KO = OFFER_KINDS.map(function (k) { return k[0]; }).concat(["tournament"]);
-    list.sort(function (a, b) { return (depNoOf(a) || 99) - (depNoOf(b) || 99) || KO.indexOf(a.kind) - KO.indexOf(b.kind); });
-    var cols = [["min_deposit", "Min deposit"], ["wagering", "Wagering"], ["max_bet", "Max bet"], ["validity", "Valid for"], ["max_win", "Max win"], ["eligible_games", "Games"], ["opt_in", "Opt-in / code"]];
-    var table = list.length ? '<div class="rtwrap"><table class="rt"><thead><tr><th>Offer</th><th>Type</th>' + cols.map(function (c) { return "<th>" + c[1] + "</th>"; }).join("") + "</tr></thead><tbody>" +
-      list.map(function (x) { var t = x.terms || {}; return '<tr data-pmgo="' + x.id + '"><td><b>' + esc(x.title || "Promotion") + '</b></td><td class="nowrap">' + esc(promoKind(x.kind)) + "</td>" + cols.map(function (c) { var v = c[0] === "opt_in" ? [t.opt_in, t.bonus_code].filter(Boolean).join(" · ") : t[c[0]]; return "<td>" + (v ? esc(v) : '<span class="nf">–</span>') + "</td>"; }).join("") + "</tr>"; }).join("") + "</tbody></table></div>" : '<p class="rtext nf">No promotions read yet.</p>';
-    var rules = pArr(of.bonus_rules), other = []; list.forEach(function (x) { pArr(x.other_conditions).forEach(function (c) { if (other.indexOf(c) < 0) other.push(c); }); });
-    el.innerHTML = '<div class="rpanel">' + rsec("Terms per offer", table) +
-      rsec("General bonus rules", rules.length ? '<ul class="rlist">' + rules.map(function (r) { return "<li>" + esc(r) + "</li>"; }).join("") + "</ul>" : '<p class="rtext nf">Not found</p>') +
-      (other.length ? rsec("Other conditions seen", '<ul class="rlist">' + other.slice(0, 12).map(function (r) { return "<li>" + esc(r) + "</li>"; }).join("") + "</ul>") : "") +
-      (gen.length ? rsec("General terms page", gen.map(function (x) { return '<p class="rtext">' + esc(x.summary || x.title || "") + "</p>"; }).join("")) : "") + "</div>";
-  }
-  function renderMarketTab(op) {
-    var el = document.getElementById("casOverview"), p = state.profiles[op.id];
-    if (!p) { el.innerHTML = notResearched(op); return; }
-    var m = p.market || {}, pr = p.products || {};
-    el.innerHTML = '<div class="rpanel">' + rsec("Market &amp; licence", kv([["Markets", ptags(m.markets, 0, true)], ["Licence", pv(m.licence)], ["Operator", pv(m.operator)], ["Languages", ptags(m.languages, 0, true)], ["Currencies", ptags(m.currencies)], ["Restricted countries", ptags(m.restricted_countries)], ["Founded", pv(m.founded)]], 1)) +
-      rsec("Products &amp; games", kv([["Products", ptags(pr.verticals)], ["Game providers", pArr(pr.providers).length ? '<span class="rtext">' + esc(pArr(pr.providers).join(", ")) + "</span>" : NF], ["Special games", ptags(pr.special_games)], ["Notes", pv(pr.notes)]], 1)) + "</div>";
-  }
-  function renderPayTab(op) {
-    var el = document.getElementById("casOverview"), p = state.profiles[op.id];
-    if (!p) { el.innerHTML = notResearched(op); return; }
-    var pay = p.payments || {};
-    el.innerHTML = '<div class="rpanel">' + rsec("Deposits", kv([["Methods", ptags(pay.deposit_methods)], ["Min deposit", pv(pay.min_deposit)], ["Crypto", pv(pay.crypto)]], 1)) +
-      rsec("Withdrawals", kv([["Methods", ptags(pay.withdrawal_methods)], ["Min withdrawal", pv(pay.min_withdrawal)], ["Max withdrawal", pv(pay.max_withdrawal)], ["Withdrawal time", pv(pay.withdrawal_time)], ["Fees", pv(pay.fees)], ["Verification (KYC)", pv(pay.kyc)]], 1)) + "</div>" +
-      (featuresOf(op).some(function (x) { return x.part === "deposit"; }) ? '<h3 class="rsub">Cashier write-up</h3>' : "");
-  }
-  function renderOtherTab(op) {
-    var el = document.getElementById("casOverview"), p = state.profiles[op.id];
-    if (!p) { el.innerHTML = notResearched(op); return; }
-    var sup = p.support || {}, oth = pArr(p.other);
-    el.innerHTML = '<div class="rpanel">' + rsec("Other features", oth.length ? '<table class="rt"><tbody>' + oth.map(function (o) { return '<tr><td class="nowrap"><b>' + esc(o.name) + "</b></td><td>" + esc(o.what_it_is || "") + '</td><td class="nowrap nf">' + esc(o.where || "") + "</td></tr>"; }).join("") + "</tbody></table>" : '<p class="rtext nf">Nothing else found.</p>') +
-      rsec("Support &amp; responsible gambling", kv([["Support", ptags(sup.channels)], ["Hours", pv(sup.hours)], ["Responsible-gambling tools", ptags(sup.rg_tools)], ["App", pv(sup.app)]], 1)) +
-      rsec("About", kv([["Summary", pv(p.summary)], ["Positioning", pv(p.positioning)]], 1)) +
-      rsec("Pages read", '<ul class="rlist small">' + pArr(p.sources).map(function (src) { return "<li>" + esc(src.label) + ' · <a href="' + esc(src.url) + '" target="_blank" rel="noopener">' + esc(src.url) + "</a></li>"; }).join("") + "</ul>") +
-      (pArr(p.uncertain).length ? '<p class="small rfoot" style="color:var(--warn)">Not confirmed on the site: ' + esc(pArr(p.uncertain).map(function (u) { return String(u).replace(/^.*\./, "").replace(/_/g, " "); }).join(", ")) + ".</p>" : "") + "</div>" +
-      (featuresOf(op).some(function (x) { return x.part === "custom"; }) ? '<h3 class="rsub">Write-ups</h3>' : "");
+    var chips = function (list, n) { list = arr(list); if (!list.length) return '<span class="muted">Not found</span>'; n = n || list.length; return '<span class="pfchips">' + list.slice(0, n).map(function (x) { return "<span>" + esc(x) + "</span>"; }).join("") + (list.length > n ? '<span class="more">+' + (list.length - n) + "</span>" : "") + "</span>"; };
+    var val = function (v) { return arr(v).length ? esc(arr(v).join(", ")) : '<span class="muted">Not found</span>'; };
+    var ic = function (k) { return '<i class="pic">' + svg(RI[k] || PICON[k]) + "</i>"; };
+
+    // HERO: the homepage, what it is, licence, where and in which languages
+    var shot = profileHero(p), lic = g.licence || short(String(m.licence || "").split(/[,–]/)[0], 24);
+    var places = arr(m.markets).slice(0, 6).map(function (x) { var f = flagOf(x); return '<span class="flag" title="' + esc(x) + '">' + (f || "") + " " + esc(short(x, 18)) + "</span>"; }).join("");
+    var langs = arr(m.languages).map(function (x) { var f = flagOf(x); return f ? '<span class="flagbig" title="' + esc(x) + '">' + f + "</span>" : '<span class="flag">' + esc(x) + "</span>"; }).join("");
+    var hero = '<section class="phero' + (shot ? "" : " noshot") + '">' + (shot ? '<div class="pshot"><div class="pbar"><i></i><i></i><i></i><span>' + esc(String(op.website || "").replace(/^https?:\/\//, "")) + '</span></div><img src="' + shot + '" alt="' + esc(op.name) + ' homepage"></div>' : "") +
+      '<div class="pinfo"><p class="pflead">' + esc(g.one_liner || firstSentence(p.summary)) + "</p>" + (arr(g.tags).length ? chips(g.tags) : "") +
+      '<div class="pbadges">' + (lic ? '<div class="pbadge">' + ic("shield") + "<span><small>Licence</small><b>" + esc(lic) + "</b></span></div>" : "") +
+      (places ? '<div class="pbadge">' + ic("globe") + "<span><small>Markets</small><b class=\"flags\">" + places + "</b></span></div>" : "") +
+      (langs ? '<div class="pbadge">' + ic("chat") + "<span><small>Languages</small><b class=\"flags\">" + langs + "</b></span></div>" : "") + "</div></div></section>";
+
+    // The overview tells one story, in the order a player meets the casino:
+    // in short → 1 joining → 2 playing → 3 staying → 4 cashing out → 5 help & safety
+    var stat = function (icon, label, value, sub) { return '<div class="st">' + ic(icon) + "<span><small>" + label + "</small><b>" + (value ? esc(value) : '<em>Not found</em>') + "</b>" + (sub ? "<i>" + esc(sub) + "</i>" : "") + "</span></div>"; };
+    var chapter = function (n, title, lead, body) { return '<section class="chap"><span class="cnum">' + n + '</span><div class="chead"><h3>' + title + "</h3><p>" + lead + "</p></div>" + body + "</section>"; };
+    var sub = function (t) { return '<p class="csub">' + t + "</p>"; };
+    var fcount = function (k) { return featuresOf(op).filter(function (x) { return x.part === k; }).length; };
+    var promosAll = promosOf(op).filter(function (x) { return x.kind !== "terms"; });
+    var present = function (t, n) { return n > 0 || !!(t && !/^(none|no|not offered|not found|n\/a)\b/i.test(String(t))); };
+
+    // in short
+    var outs = arr(p.stands_out).slice(0, 5);
+    var inShort = outs.length ? '<section class="inshort"><h3>' + ic("spark") + "In short</h3><ol>" + outs.map(function (x) { return "<li>" + esc(x) + "</li>"; }).join("") + "</ol></section>" : "";
+
+    // 1. joining: welcome package, first deposit, how to pay in
+    var depNo = function (x) { if (x.kind === "welcome") { var w = /(\d)(st|nd|rd|th)\s+deposit/i.exec(x.title || ""); return w ? +w[1] : 1; } if (x.kind === "second") return 2; if (x.kind === "third") return 3; var mm = /(\d)(st|nd|rd|th)\s+deposit/i.exec((x.title || "") + " " + (x.reward || "")); return mm ? +mm[1] : 0; };
+    var ladder = promosAll.map(function (x) { return { n: depNo(x), x: x }; }).filter(function (d) { return d.n > 0 && d.n < 10; }).sort(function (a, b) { return a.n - b.n; }).filter(function (d, i, all) { return !i || all[i - 1].n !== d.n; });
+    var welcomeVis = "";
+    if (ladder.length >= 2) {
+      var pct = function (x) { var mm = /(\d{2,3})\s?%/.exec((x.title || "") + " " + (x.reward || "")); return mm ? +mm[1] : 0; }, maxp = Math.max.apply(null, ladder.map(function (d) { return pct(d.x) || 50; }));
+      welcomeVis = '<div class="lsteps">' + ladder.map(function (d) { var v = pct(d.x); var extra = /(\d+)\s*(free spins|fs)\b/i.exec((d.x.title || "") + " " + (d.x.reward || "")); return '<button type="button" class="lstep" data-castab="promos" title="' + esc(d.x.title || "") + '"><div class="lbar" style="height:' + Math.round(40 + 50 * (v || 50) / maxp) + 'px"><b>' + (v ? v + "%" : "✓") + "</b>" + (extra ? "<small>+" + extra[1] + " FS</small>" : "") + "</div><span>" + d.n + (["th", "st", "nd", "rd"][d.n] || "th") + " deposit</span></button>"; }).join("") + "</div>";
+    } else if (g.welcome || of.welcome_offer) welcomeVis = '<button type="button" class="wbox" data-castab="promos">' + ic("gift") + "<b>" + esc(g.welcome || short(of.welcome_offer, 80)) + "</b></button>";
+    var cur = arr(m.currencies), isCrypto = CRYPTO_RE.test(cur.join(" ") + " " + (pay.crypto || "")) && !/^no\b/i.test(pay.crypto || "");
+    var coins = cur.slice(0, 10).map(function (c) { var k = String(c).toUpperCase().replace(/[^A-Z]/g, ""), sym = COIN[k] || k.slice(0, 3); return '<span class="coin' + (CRYPTO_RE.test(k) ? " cr" : "") + '" title="' + esc(c) + '"><b>' + esc(sym) + "</b><small>" + esc(k || c) + "</small></span>"; }).join("") + (cur.length > 10 ? '<span class="coin more"><b>+' + (cur.length - 10) + "</b></span>" : "");
+    var payList = function (list) { list = arr(list); return list.length ? '<div class="pays">' + list.slice(0, 12).map(function (x) { return '<span class="pay ' + payKind(x) + '">' + esc(short(x, 20)) + "</span>"; }).join("") + (list.length > 12 ? '<span class="pay more">+' + (list.length - 12) + "</span>" : "") + "</div>" : '<p class="small">Not found</p>'; };
+    var ch1 = chapter(1, "Joining", "What a new player gets and how they pay in.",
+      sub("Welcome package") + (welcomeVis || '<p class="small">Not found</p>') +
+      '<div class="sts">' + stat("wallet", "Min deposit", short(pay.min_deposit, 20)) + '<div class="st"><i class="pic' + (isCrypto ? " gold" : "") + '"><b>₿</b></i><span><small>Crypto</small><b>' + (isCrypto ? "Accepted" : pay.crypto ? "No" : "<em>Not found</em>") + "</b></span></div></div>" +
+      (coins ? sub("Currencies") + '<div class="coins">' + coins + "</div>" : "") + sub("Deposit methods") + payList(pay.deposit_methods));
+
+    // 2. playing: what there is to play
+    var prods = arr(pr.verticals), provs = arr(pr.providers);
+    var ch2 = chapter(2, "Playing", "What there is to play, and who makes the games.",
+      (prods.length ? '<div class="prods">' + prods.map(function (x) { return '<span class="prod">' + ic(productIcon(x)) + "<small>" + esc(short(x, 16)) + "</small></span>"; }).join("") + "</div>" : '<p class="small">Not found</p>') +
+      '<div class="sts">' + stat("slot", "Game providers", provs.length ? String(provs.length) : "", provs.slice(0, 5).join(", ") + (provs.length > 5 ? "…" : "")) +
+      (arr(pr.special_games).length ? stat("instant", "Special games", arr(pr.special_games).slice(0, 3).join(", ")) : "") + "</div>");
+
+    // 3. staying: what brings players back
+    var steps = [["tag", "Promotions", "promos", present(arr(of.promotions).join(""), promosAll.length), promosAll.length ? plural(promosAll.length, "promotion", "promotions") : arr(of.promotions).join(", ")],
+      ["crown", "Loyalty / VIP", "f:vip", present(of.loyalty, fcount("vip")), g.vip || of.loyalty],
+      ["target", "Missions", "f:missions", present(of.missions, fcount("missions")), of.missions],
+      ["trophy", "Tournaments", "f:tournaments", present(of.tournaments, fcount("tournaments")), of.tournaments],
+      ["bag", "Store", "f:shop", present(of.store, fcount("shop")), of.store],
+      ["dots", "Other", "f:other", present("", arr(p.other).length + fcount("custom")), arr(p.other).map(function (o) { return o.name; }).join(", ")]];
+    var banners = promosAll.map(function (x) { return { x: x, src: bannerSrc(x) }; }).filter(function (b) { return b.src; }).slice(0, 8);
+    var ch3 = chapter(3, "Staying", "What brings players back. Click one to open its write-up.",
+      '<div class="jpath">' + steps.map(function (st) { return '<button type="button" class="jstep' + (st[3] ? " on" : "") + '" data-castab="' + st[2] + '" title="' + esc(st[4] || (st[3] ? "" : "Not found")) + '"><span class="jdot">' + svg(RI[st[0]]) + "</span><b>" + st[1] + "</b><small>" + esc(st[3] ? short(st[4], 34) : "Not found") + "</small></button>"; }).join("") + "</div>" +
+      (banners.length ? sub("Current promotions") + '<div class="bstrip">' + banners.map(function (b) { return '<button type="button" class="bthumb" data-castab="promos" title="' + esc(b.x.title || "") + '"><img src="' + b.src + '" alt=""><span>' + esc(short(b.x.title, 30)) + "</span></button>"; }).join("") + "</div>" : ""));
+
+    // 4. cashing out
+    var ch4 = chapter(4, "Cashing out", "How fast and how much players can withdraw.",
+      '<div class="sts">' + stat("clock", "Withdrawal time", g.withdrawal || short(pay.withdrawal_time, 26)) + stat("wallet", "Min withdrawal", short(pay.min_withdrawal, 20)) + stat("wallet", "Max withdrawal", short(pay.max_withdrawal, 24)) + stat("shield", "Verification", short(pay.kyc, 40)) + "</div>" +
+      sub("Withdrawal methods") + payList(pay.withdrawal_methods));
+
+    // 5. help & safety
+    var ch5 = chapter(5, "Help &amp; safety", "Where players get help and how they can stay in control.",
+      '<div class="sts">' + stat("chat", "Support", arr(sup.channels).slice(0, 3).join(", "), sup.hours ? short(sup.hours, 30) : "") + stat("shield", "Responsible gambling", arr(sup.rg_tools).length ? plural(arr(sup.rg_tools).length, "tool", "tools") : "", arr(sup.rg_tools).slice(0, 3).join(", ")) + stat("slot", "App", short(sup.app, 30)) + "</div>");
+    var story = '<div class="thread">' + ch1 + ch2 + ch3 + ch4 + ch5 + "</div>";
+
+    var det = function (title, rows) { return '<details class="pfdet"><summary>' + title + '</summary><dl>' + rows.map(function (r) { return "<dt>" + r[0] + "</dt><dd>" + r[1] + "</dd>"; }).join("") + "</dl></details>"; };
+    var details = '<div class="sechead" style="margin-top:4px"><h3>All details</h3></div><div class="pfdets">' +
+      det("Market &amp; licence", [["Licence", val(m.licence)], ["Operator", val(m.operator)], ["Markets", chips(m.markets)], ["Languages", chips(m.languages)], ["Currencies", chips(m.currencies)], ["Restricted countries", chips(m.restricted_countries, 12)], ["Founded", val(m.founded)]]) +
+      det("Products &amp; games", [["Products", chips(pr.verticals)], ["Game providers", chips(pr.providers, 60)], ["Special games", chips(pr.special_games)], ["Notes", val(pr.notes)]]) +
+      det("Payments", [["Deposit methods", chips(pay.deposit_methods)], ["Withdrawal methods", chips(pay.withdrawal_methods)], ["Crypto", val(pay.crypto)], ["Min deposit", val(pay.min_deposit)], ["Min withdrawal", val(pay.min_withdrawal)], ["Max withdrawal", val(pay.max_withdrawal)], ["Withdrawal time", val(pay.withdrawal_time)], ["Fees", val(pay.fees)], ["Verification (KYC)", val(pay.kyc)]]) +
+      det("Offers &amp; bonus rules", [["Welcome offer", val(of.welcome_offer)], ["Promotions", chips(of.promotions)], ["Loyalty / VIP", val(of.loyalty)], ["Missions", val(of.missions)], ["Tournaments", val(of.tournaments)], ["Store", val(of.store)], ["Bonus rules", '<ul class="outs">' + arr(of.bonus_rules).map(function (x) { return "<li>" + esc(x) + "</li>"; }).join("") + "</ul>"]]) +
+      det("Support &amp; responsible gambling", [["Support", chips(sup.channels)], ["Hours", val(sup.hours)], ["Responsible-gambling tools", chips(sup.rg_tools)], ["App", val(sup.app)]]) +
+      det("About this casino", [["Summary", esc(p.summary || "")], ["Positioning", esc(p.positioning || "")]].concat(arr(p.other).map(function (o) { return [esc(o.name), esc(o.what_it_is || "") + (o.where ? ' <span class="muted">· ' + esc(o.where) + "</span>" : "")]; }))) +
+      det("Pages read (" + arr(p.sources).length + ")", arr(p.sources).map(function (src) { return [esc(src.label), '<a href="' + esc(src.url) + '" target="_blank" rel="noopener">' + esc(src.url) + "</a>"]; })) + "</div>";
+    el.innerHTML = busy + hero + inShort + story + details +
+      (arr(p.uncertain).length ? '<p class="small" style="color:var(--warn)">Not confirmed on the site: ' + esc(arr(p.uncertain).map(function (u) { return String(u).replace(/^.*\./, "").replace(/_/g, " "); }).join(", ")) + ".</p>" : "") +
+      '<p class="small">Researched ' + esc(new Date(p.at).toLocaleDateString()) + " while " + (p.run === "logged-in" ? "logged in" : "logged out") + ". Research again with the extension to update it.</p>";
   }
   // all casinos side by side on the main facts
   function renderCompareAll() {
     var el = document.getElementById("casOverview");
     var ops = state.operators.slice().sort(function (a, b) { return (b.isOwn ? 1 : 0) - (a.isOwn ? 1 : 0); });
     if (!ops.length) { el.innerHTML = '<div class="panel empty-c"><b>No casinos yet.</b><br>Add a casino on the left, then research it with the extension.</div>'; return; }
-    var yn = function (on) { return on ? '<span class="yes">Yes</span>' : '<span class="nf">–</span>'; };
-    el.innerHTML = '<div class="rpanel"><div class="rtwrap"><table class="rt cmpt"><thead><tr><th>Casino</th><th>Licence</th><th>Markets</th><th>Currencies</th><th>Welcome offer</th><th>Wagering</th><th>Min deposit</th><th>Withdrawal</th><th>VIP</th><th>Missions</th><th>Tournaments</th><th>Store</th></tr></thead><tbody>' +
-      ops.map(function (o) {
-        var p = state.profiles[o.id], name = '<td class="nowrap"><button type="button" class="linkbtn" data-op="' + o.id + '">' + esc(o.name) + "</button>" + (o.isOwn ? ' <span class="ownpill">You</span>' : "") + "</td>";
-        if (!p) return "<tr>" + name + '<td colspan="11" class="nf">Not researched yet</td></tr>';
-        var g = p.glance || {}, m = p.market || {}, pay = p.payments || {}, of = p.offers || {};
-        var w = welcomeSteps(o)[0], wag = w && w.x.terms && w.x.terms.wagering ? w.x.terms.wagering : (pArr(of.bonus_rules).join(" ").match(/\d+\s?x[^,.;]*/i) || [""])[0];
-        var fc = function (k) { return featuresOf(o).filter(function (x) { return x.part === k; }).length; };
-        return "<tr>" + name + "<td>" + esc(g.licence || short(String(m.licence || "").split(/[,–]/)[0], 22)) + "</td><td>" + esc(pArr(m.markets).slice(0, 3).join(", ")) + "</td><td>" + esc(pArr(m.currencies).slice(0, 4).join(", ")) + (pArr(m.currencies).length > 4 ? ' <span class="nf">+' + (pArr(m.currencies).length - 4) + "</span>" : "") + "</td><td>" + esc(g.welcome || short(of.welcome_offer, 60)) + "</td><td>" + esc(short(wag, 24)) + "</td><td>" + esc(short(pay.min_deposit, 16)) + "</td><td>" + esc(g.withdrawal || short(pay.withdrawal_time, 20)) + "</td>" +
-          "<td>" + yn(isOn(of.loyalty, fc("vip"))) + "</td><td>" + yn(isOn(of.missions, fc("missions"))) + "</td><td>" + yn(isOn(of.tournaments, fc("tournaments"))) + "</td><td>" + yn(isOn(of.store, fc("shop"))) + "</td></tr>";
-      }).join("") + "</tbody></table></div></div>";
+    var arr = function (v) { return Array.isArray(v) ? v.filter(Boolean) : v ? [v] : []; };
+    var none = '<span class="muted">–</span>';
+    el.innerHTML = '<div class="cmpgrid">' + ops.map(function (o) {
+      var p = state.profiles[o.id];
+      var head = '<button type="button" class="cchead" data-op="' + o.id + '"><span class="avatar" style="background:' + opColor(o) + '">' + esc(o.name.charAt(0).toUpperCase()) + "</span><b>" + esc(o.name) + "</b>" + (o.isOwn ? '<span class="ownpill">You</span>' : "") + "</button>";
+      if (!p) return '<article class="ccmp">' + head + '<p class="small" style="padding:0 16px 16px">Not researched yet. Open its website and click <b>Research this casino</b> in the extension.</p></article>';
+      var g = p.glance || {}, m = p.market || {}, pr = p.products || {}, pay = p.payments || {}, of = p.offers || {};
+      var shot = profileHero(p), lic = g.licence || short(String(m.licence || "").split(/[,–]/)[0], 22);
+      var flags = arr(m.languages).map(function (x) { return flagOf(x); }).filter(Boolean).join(" ");
+      var cur = arr(m.currencies).slice(0, 6).map(function (c) { var k = String(c).toUpperCase().replace(/[^A-Z]/g, ""); return '<span class="coin sm' + (CRYPTO_RE.test(k) ? " cr" : "") + '" title="' + esc(c) + '"><b>' + esc(COIN[k] || k.slice(0, 3)) + "</b></span>"; }).join("");
+      var prods = arr(pr.verticals).map(function (x) { return '<i class="pic sm" title="' + esc(x) + '">' + svg(PICON[productIcon(x)]) + "</i>"; }).join("");
+      var fc = function (k) { return featuresOf(o).filter(function (x) { return x.part === k; }).length; };
+      var on = function (t, n) { return n > 0 || !!(t && !/^(none|no|not offered|not found|n\/a)\b/i.test(String(t))); };
+      var feats = [["gift", "Welcome offer", on(g.welcome || of.welcome_offer, 0)], ["crown", "Loyalty / VIP", on(of.loyalty, fc("vip"))], ["target", "Missions", on(of.missions, fc("missions"))], ["trophy", "Tournaments", on(of.tournaments, fc("tournaments"))], ["bag", "Store", on(of.store, fc("shop"))]]
+        .map(function (f) { return '<i class="fdot' + (f[2] ? " on" : "") + '" title="' + f[1] + (f[2] ? "" : ": not found") + '">' + svg(RI[f[0]]) + "</i>"; }).join("");
+      var row = function (label, value) { return "<div><small>" + label + "</small><span>" + (value || none) + "</span></div>"; };
+      return '<article class="ccmp">' + (shot ? '<button type="button" class="ccshot" data-op="' + o.id + '"><img src="' + shot + '" alt=""></button>' : "") + head +
+        (g.one_liner ? '<p class="ccline">' + esc(g.one_liner) + "</p>" : "") +
+        '<div class="ccrows">' + row("Licence", lic ? esc(lic) : "") + row("Languages", flags || esc(arr(m.languages).slice(0, 3).join(", "))) + row("Currencies", cur ? '<span class="coins sm">' + cur + "</span>" : "") +
+        row("Products", prods ? '<span class="prodrow">' + prods + "</span>" : "") + row("Welcome", esc(g.welcome || short(of.welcome_offer, 60))) + row("Min deposit", esc(short(pay.min_deposit, 20))) + row("Withdrawal", esc(g.withdrawal || short(pay.withdrawal_time, 24))) + row("Retention", '<span class="fdots">' + feats + "</span>") + "</div></article>";
+    }).join("") + "</div>";
   }
   // the emails received from this casino (Competitor emails, matched by name)
   function casEmailsOf(op) {
@@ -2319,7 +2207,6 @@ header.top .viewnav a.on .num { background: #FFFFFF; color: var(--accent); }
     var busy = featBusy ? '<div class="rvprog"><b>' + esc(featBusy.title) + '</b><p class="small" style="margin:6px 0 0">' + esc(featBusy.text) + "</p></div>" : "";
     var others = fp === "other" && op && state.profiles[op.id] ? (state.profiles[op.id].other || []) : [];
     var otherHtml = others.length ? '<section class="pgroup"><h3 class="pgh">Also on the site <span class="small">' + others.length + '</span></h3><div class="plist2">' + others.map(function (o) { return '<div class="prow" style="padding:12px 16px"><b>' + esc(o.name) + "</b><div class=\"small\" style=\"margin-top:2px\">" + esc(o.what_it_is || "") + (o.where ? " · " + esc(o.where) : "") + "</div></div>"; }).join("") + "</div></section>" : "";
-    if (ui.ftQuiet) { if (!list.length) { main.innerHTML = busy; return; } others = []; otherHtml = ""; }
     if (fp === "other" && !list.length && others.length) { main.innerHTML = busy + otherHtml; return; }
     if (!list.length) { main.innerHTML = busy + '<div class="panel empty-c">' + (fp === "other" ? "Nothing else found" + (op ? " for " + esc(op.name) : "") + " yet. Here go the things that fit none of the other tabs: a wheel of fortune, refer a friend, a blog, sponsorships… The research picks them up from the site's menu and pages." : fp ? "No " + esc(ui.ftPartLabel || "write-up") + " found" + (op ? " for " + esc(op.name) : "") + " yet. The research looks for it on the site; if " + (op ? esc(op.name) : "the casino") + " has one, research it again" + (fp === "deposit" ? " while logged in" : "") + "." : "No features yet. Research " + (op ? esc(op.name) : "a casino") + " with the extension.") + "</div>"; return; }
     // grouped by part: the standard ones, then each unique feature by its name
@@ -2409,7 +2296,7 @@ header.top .viewnav a.on .num { background: #FFFFFF; color: var(--accent); }
     var groups = KORDER.map(function (k) { return { k: k, items: list.filter(function (p) { return p.kind === k; }) }; }).filter(function (g) { return g.items.length; });
     list.filter(function (p) { return KORDER.indexOf(p.kind) < 0; }).forEach(function (p) { var g = groups.filter(function (x) { return x.k === "other_offer"; })[0]; if (!g) { g = { k: "other_offer", items: [] }; groups.push(g); } g.items.push(p); });
     main.innerHTML = busy + '<div class="sechead"><h3>' + (op ? "Promotions at " + esc(op.name) : "All promotions") + ' <span class="small" style="font-weight:400">' + plural(list.filter(function (p) { return p.kind !== "terms"; }).length, "promotion", "promotions") + "</span></h3><button class=\"btn\" type=\"button\" data-promocsv=\"1\">Download list (CSV)</button></div>" +
-      '<div class="rpanel plistp">' + groups.map(function (g) {
+      groups.map(function (g) {
         return '<section class="pgroup"><h3 class="pgh">' + esc(promoKind(g.k)) + ' <span class="small">' + g.items.length + '</span></h3><div class="plist2">' + g.items.map(function (p) {
           var o = findOp(p.opId) || { name: "?" }, t = p.terms || {}, src = bannerSrc(p), open = ui.pmOpen === p.id;
           var chips = PROMO_TERMS.filter(function (k) { return t[k[0]]; }).slice(0, 3).map(function (k) { return '<span class="pchip"><small>' + k[1] + "</small>" + esc(t[k[0]]) + "</span>"; }).join("");
@@ -2419,7 +2306,7 @@ header.top .viewnav a.on .num { background: #FFFFFF; color: var(--accent); }
             (chips && !open ? '<span class="pchips">' + chips + "</span>" : "") + '</span><span class="pgo" aria-hidden="true">' + (open ? "⌃" : "⌄") + "</span></button>" +
             (open ? '<div class="pfull">' + (ui.pmEdit === p.id ? promoEditor(p) : promoBody(p)) + "</div>" : "") + "</div>";
         }).join("") + "</div></section>";
-      }).join("") + "</div>";
+      }).join("");
   }
   // the full version of one promotion, opened inside its preview
   function promoBody(x) {
@@ -3169,9 +3056,6 @@ header.top .viewnav a.on .num { background: #FFFFFF; color: var(--accent); }
   });
   document.getElementById("offersApp").addEventListener("click", function (e) {
     var b = e.target.closest("[data-castab]"); if (b) { ui.casTab = b.getAttribute("data-castab"); renderCompetitors(); return; }
-    b = e.target.closest("[data-gam]"); if (b) { ui.gamPart = b.getAttribute("data-gam"); renderCompetitors(); return; }
-    b = e.target.closest("[data-gamgo]"); if (b) { ui.gamPart = b.getAttribute("data-gamgo"); ui.casTab = "gam"; renderCompetitors(); return; }
-    b = e.target.closest("[data-pmgo]"); if (b) { ui.pmOpen = b.getAttribute("data-pmgo"); ui.casTab = "promos"; renderCompetitors(); return; }
     b = e.target.closest("#casOverview [data-op]"); if (b) { selectOp(b.getAttribute("data-op")); window.scrollTo(0, 0); return; }
     b = e.target.closest("[data-openemails]"); if (b) { ui.trkSel = b.getAttribute("data-openemails"); location.hash = "#emails"; }
   });
