@@ -1055,6 +1055,32 @@ header.top .viewnav a.on .num { background: #FFFFFF; color: var(--accent); }
 .ovr .prods { grid-template-columns: repeat(auto-fill, minmax(84px, 92px)); margin: 0; }
 .ovr .ovsub { margin-top: 10px; }
 @media (max-width: 900px) { .ovsum, .ovr { grid-template-columns: minmax(0, 1fr); gap: 14px; } }
+
+/* overview timeline: Discover → Join → Play → Stay → Cash out */
+.tl { position: relative; margin-top: 6px; }
+.tl::before { content: ""; position: absolute; left: 21px; top: 30px; bottom: 30px; width: 2px; background: linear-gradient(#5AA9F5, #4CC9A0, #FFB347, var(--accent), #2BB5A8); opacity: .45; }
+.tls { position: relative; display: grid; grid-template-columns: 44px 200px minmax(0, 1fr); gap: 0 22px; padding: 22px 0; }
+.tlmark { position: relative; z-index: 1; width: 44px; height: 44px; border-radius: 50%; display: grid; place-items: center; color: #FFFFFF; box-shadow: 0 0 0 6px var(--bg); }
+.tlmark svg { width: 21px; height: 21px; }
+.tls.discover .tlmark { background: #5AA9F5; } .tls.join .tlmark { background: #3DBB8F; } .tls.play .tlmark { background: #F5A23C; } .tls.stay .tlmark { background: var(--accent); } .tls.cash .tlmark { background: #2BA79B; }
+.tlhead small { display: block; font-size: 11px; font-weight: 600; letter-spacing: .07em; text-transform: uppercase; color: var(--muted); margin-top: 2px; }
+.tlhead h3 { margin: 2px 0 4px; font-size: 18px; } .tlhead p { margin: 0; color: var(--muted); font-size: 12.5px; line-height: 1.4; }
+.tls.discover .tlhead small { color: #2F7FD0; } .tls.join .tlhead small { color: #23986F; } .tls.play .tlhead small { color: #C77700; } .tls.stay .tlhead small { color: var(--accent); } .tls.cash .tlhead small { color: #1E8A80; }
+.tlbody { min-width: 0; padding: 4px 0 4px 22px; border-left: 1px solid var(--line); }
+.tlms { display: flex; flex-wrap: wrap; gap: 14px 36px; }
+.tlm small { display: block; color: var(--muted); font-size: 11.5px; font-weight: 600; letter-spacing: .05em; text-transform: uppercase; margin-bottom: 4px; }
+.tlm b { font-size: 15.5px; font-weight: 600; }
+.tlm .coins.sm { display: flex; flex-wrap: wrap; gap: 4px; }
+.tlsub { margin: 16px 0 8px; font-size: 12px; color: var(--muted); font-weight: 600; }
+.tlbody > .tlsub:first-child { margin-top: 0; }
+.tlbody .ovline { margin: 0 0 12px; }
+.tlbody .lsteps { margin: 0 0 16px; }
+.tlbody .prods { grid-template-columns: repeat(auto-fill, minmax(84px, 92px)); margin: 0; }
+.tlbody .bstrip { margin: 0; }
+@media (max-width: 900px) { .tls { grid-template-columns: 44px minmax(0, 1fr); gap: 10px 16px; } .tlbody { grid-column: 2; padding-left: 0; border-left: 0; } }
+
+.tlbody .kpath { gap: 8px 6px; flex-wrap: nowrap; overflow-x: auto; }
+.tlbody .kstep { width: 100px; flex: none; }
 </style>
 
 <style>body{margin:0}[hidden]{display:none!important}</style>
@@ -2178,13 +2204,20 @@ header.top .viewnav a.on .num { background: #FFFFFF; color: var(--accent); }
     var methods = []; arr(pay.deposit_methods).concat(arr(pay.withdrawal_methods)).forEach(function (x) { if (!methods.some(function (y) { return y.toLowerCase() === String(x).toLowerCase(); })) methods.push(x); });
     var pays = methods.length || isCrypto ? (methods.length ? '<div class="pays">' + methods.slice(0, 10).map(function (x) { return '<span class="pay ' + payKind(x) + '">' + esc(short(x, 20)) + "</span>"; }).join("") + (methods.length > 10 ? '<span class="pay more">+' + (methods.length - 10) + "</span>" : "") + "</div>" : "") + (isCrypto ? '<p class="ovsub"><b>Crypto accepted</b></p>' : "") : "";
 
-    el.innerHTML = busy + summary +
-      row("Basics", "Licence, markets and money", basics) +
-      row("Welcome offer", "What a new player gets", welcome) +
-      row("Promotions", plural(promos.length, "promotion", "promotions") + " · click one to open", promoRow) +
-      row("What keeps players", "Click one to open its write-up", keepRow) +
-      row("Games", "What there is to play", games) +
-      row("Payments", "How players pay in and out", pays);
+    // one timeline in the order a player meets the casino
+    var depM = arr(pay.deposit_methods), wdM = arr(pay.withdrawal_methods);
+    var badges = function (list) { return list.length ? '<div class="pays">' + list.slice(0, 8).map(function (x) { return '<span class="pay ' + payKind(x) + '">' + esc(short(x, 20)) + "</span>"; }).join("") + (list.length > 8 ? '<span class="pay more">+' + (list.length - 8) + "</span>" : "") + "</div>" : ""; };
+    var mini = function (label, value) { return value ? '<div class="tlm"><small>' + label + "</small><b>" + value + "</b></div>" : ""; };
+    var stepT = function (n, cls, icon, title, hint, body) { return body ? '<section class="tls ' + cls + '"><div class="tlmark">' + svg(RI[icon]) + '</div><div class="tlhead"><small>Step ' + n + "</small><h3>" + title + "</h3><p>" + hint + '</p></div><div class="tlbody">' + body + "</div></section>" : ""; };
+    var discover = (lic || arr(m.markets).length || arr(m.languages).length) ? '<div class="tlms">' + mini("Licence", lic ? esc(lic) : "") + mini("Markets", arr(m.markets).length ? flags(m.markets, 3) : "") + mini("Languages", arr(m.languages).length ? flags(m.languages, 4) : "") + "</div>" : "";
+    var join = (wt || steps || pay.min_deposit || coins || depM.length) ? (wt ? '<p class="ovline"><b>' + esc(short(wt, 90)) + "</b></p>" : "") + steps +
+      '<div class="tlms">' + mini("Min deposit", pay.min_deposit ? esc(short(pay.min_deposit, 22)) : "") + mini("Currencies", coins ? '<span class="coins sm">' + coins + "</span>" : "") + "</div>" + (depM.length ? '<p class="tlsub">Pay in with</p>' + badges(depM) : "") : "";
+    var play = games;
+    var stay = (promoRow || keep.some(function (k) { return k[3]; })) ? (promoRow ? '<p class="tlsub">' + plural(promos.length, "promotion", "promotions") + "</p>" + promoRow : "") + '<p class="tlsub">Retention features</p>' + keepRow : "";
+    var cash = (g.withdrawal || pay.withdrawal_time || wdM.length || isCrypto) ? '<div class="tlms">' + mini("Payout time", (g.withdrawal || pay.withdrawal_time) ? esc(g.withdrawal || short(pay.withdrawal_time, 26)) : "") + mini("Min withdrawal", pay.min_withdrawal ? esc(short(pay.min_withdrawal, 20)) : "") + mini("Crypto", isCrypto ? "Accepted" : "") + "</div>" + (wdM.length ? '<p class="tlsub">Withdraw with</p>' + badges(wdM) : "") : "";
+    var n = 0, tl = [["discover", "globe", "Discover", "Who runs it and where it plays", discover], ["join", "gift", "Join", "What a new player gets and how they pay in", join], ["play", "slot", "Play", "What there is to play", play], ["stay", "crown", "Stay", "What brings players back · click to open", stay], ["cash", "clock", "Cash out", "How players get their money", cash]]
+      .filter(function (t) { return t[4]; }).map(function (t) { n++; return stepT(n, t[0], t[1], t[2], t[3], t[4]); }).join("");
+    el.innerHTML = busy + summary + '<div class="tl">' + tl + "</div>";
   }
   // all casinos side by side on the main facts
   function renderCompareAll() {
