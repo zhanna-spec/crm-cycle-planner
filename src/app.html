@@ -501,6 +501,32 @@ textarea.inp { resize: vertical; min-height: 70px; }
 .pfsum .pflead { color: var(--ink); font-size: 16px; }
 .pfchips { display: flex; flex-wrap: wrap; gap: 6px; }
 .pfchips span { background: var(--accent-soft); color: var(--accent); border-radius: 99px; padding: 3px 10px; font-size: 12.5px; font-weight: 500; }
+.inshort { background: linear-gradient(135deg, var(--accent), #8F82F0); color: #FFF; border-radius: 22px; padding: 18px 20px; box-shadow: var(--shadow-sm); }
+.inshort h3 { margin: 0 0 10px; font-size: 16px; display: flex; align-items: center; gap: 10px; }
+.inshort h3 .pic { background: rgba(255,255,255,.2); color: #FFF; width: 28px; height: 28px; border-radius: 9px; } .inshort h3 .pic svg { width: 16px; height: 16px; }
+.inshort ol { margin: 0; padding-left: 22px; display: grid; gap: 6px; font-size: 14.5px; line-height: 1.45; }
+.thread { position: relative; display: grid; gap: 16px; padding-left: 50px; }
+.thread::before { content: ""; position: absolute; left: 17px; top: 24px; bottom: 24px; width: 3px; border-radius: 3px; background: linear-gradient(var(--accent), var(--accent-soft)); }
+.chap { position: relative; background: var(--surface); border-radius: 22px; padding: 18px 20px 20px; box-shadow: var(--shadow-sm); min-width: 0; }
+.cnum { position: absolute; left: -50px; top: 16px; width: 37px; height: 37px; border-radius: 50%; background: var(--accent); color: #FFF; font-weight: 800; display: grid; place-items: center; box-shadow: 0 0 0 5px var(--bg, #F4F3FB); }
+.chead { margin-bottom: 14px; } .chead h3 { margin: 0; font-size: 18px; } .chead p { margin: 2px 0 0; color: var(--muted); font-size: 13.5px; }
+.csub { margin: 16px 0 8px; color: var(--muted); font-size: 11.5px; font-weight: 700; text-transform: uppercase; letter-spacing: .05em; }
+.chead + .csub { margin-top: 0; }
+.sts { display: grid; grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); gap: 12px; margin-top: 14px; }
+.st { display: flex; gap: 10px; align-items: flex-start; min-width: 0; background: var(--sunk); border-radius: 14px; padding: 10px 12px; }
+.st > span { display: flex; flex-direction: column; min-width: 0; }
+.st small { color: var(--muted); font-size: 11.5px; font-weight: 600; }
+.st b { font-size: 15px; overflow-wrap: anywhere; } .st b em { font-style: normal; font-weight: 400; color: var(--muted); font-size: 13.5px; }
+.st i:not(.pic) { font-style: normal; color: var(--muted); font-size: 12px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.st .pic { background: var(--surface); }
+.pic.gold { background: #FFF1D6 !important; color: #C77700; } .pic > b { font-size: 16px; }
+.wbox { font: inherit; display: flex; gap: 12px; align-items: center; background: var(--accent-soft); border: 0; border-radius: 14px; padding: 12px 14px; cursor: pointer; color: var(--ink); text-align: left; width: 100%; }
+.wbox b { font-size: 15.5px; }
+.lstep { font: inherit; background: none; border: 0; padding: 0; cursor: pointer; }
+.lstep:hover .lbar { filter: brightness(1.08); }
+.jpath { grid-template-columns: repeat(6, minmax(0, 1fr)); }
+.jdot { width: 52px; height: 52px; }
+@media (max-width: 900px) { .thread { padding-left: 0; } .thread::before { display: none; } .cnum { position: static; display: inline-grid; width: 30px; height: 30px; margin-bottom: 8px; box-shadow: none; } .jpath { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
 .phero { display: grid; grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr); gap: 20px; background: var(--surface); border-radius: 22px; padding: 16px; box-shadow: var(--shadow-sm); align-items: center; }
 .phero.noshot { grid-template-columns: minmax(0, 1fr); padding: 20px; }
 .pshot { border-radius: 14px; overflow: hidden; background: #111; box-shadow: 0 6px 20px rgba(40,30,90,.18); }
@@ -1866,7 +1892,7 @@ footer { color: var(--muted); font-size: 12px; margin-top: 24px; text-align: cen
   var PICON = { slot: '<rect x="3" y="4" width="14" height="12" rx="2"/><path d="M7 4v12M13 4v12"/><circle cx="5" cy="10" r=".6"/><circle cx="10" cy="10" r=".6"/><circle cx="15" cy="10" r=".6"/>', live: '<rect x="2.5" y="5" width="11" height="9" rx="2"/><path d="M13.5 8.5l4-2.5v8l-4-2.5"/>', sport: '<circle cx="10" cy="10" r="7"/><path d="M10 6.5l3 2.2-1.2 3.6H8.2L7 8.7z"/>', esport: '<path d="M6 7h8a4 4 0 014 4v1a2.5 2.5 0 01-4.5 1.5L12.5 12h-5l-1 1.5A2.5 2.5 0 012 12v-1a4 4 0 014-4z"/><path d="M6 9.5v2M5 10.5h2"/>', show: '<circle cx="10" cy="10" r="7"/><path d="M10 3v14M3 10h14M5 5l10 10M15 5L5 15"/>', instant: '<path d="M11 2L4 11h5l-1 7 7-9h-5z"/>', table: '<rect x="4" y="3" width="9" height="13" rx="1.5"/><path d="M8.5 7.5l1.5 2-1.5 2-1.5-2z"/><path d="M14 5.5l2.5.7-2.3 9.2"/>', poker: '<path d="M10 3c3 3.5 6 5.5 6 8a3 3 0 01-6 0 3 3 0 01-6 0c0-2.5 3-4.5 6-8zM10 13v4M8 17h4"/>', bingo: '<circle cx="10" cy="10" r="7"/><path d="M8 7.5h2.5a1.3 1.3 0 010 2.5H8h3a1.3 1.3 0 010 2.5H8z"/>', lottery: '<rect x="3" y="5" width="14" height="10" rx="1.5"/><path d="M12 5v10" stroke-dasharray="1.5 1.5"/>', game: '<rect x="3" y="3" width="14" height="14" rx="3"/><circle cx="7" cy="7" r=".8"/><circle cx="13" cy="13" r=".8"/><circle cx="10" cy="10" r=".8"/>' };
   function productIcon(v) { v = String(v).toLowerCase(); return /live/.test(v) ? "live" : /sport/.test(v) ? "sport" : /e-?sport|virtual/.test(v) ? "esport" : /show/.test(v) ? "show" : /instant|crash|original|mini/.test(v) ? "instant" : /table|roulette|blackjack|baccarat/.test(v) ? "table" : /poker/.test(v) ? "poker" : /bingo/.test(v) ? "bingo" : /lott|keno|scratch/.test(v) ? "lottery" : /casino|slot/.test(v) ? "slot" : "game"; }
   function payKind(v) { v = String(v).toLowerCase(); return CRYPTO_RE.test(v) || /coin|binance/.test(v) ? "crypto" : /visa|master|card|maestro|amex|apple|google/.test(v) ? "card" : /bank|transfer|sepa|trustly|sofort|klarna|interac|ideal|pix|giropay|blik|eps|przelewy/.test(v) ? "bank" : /voucher|paysafe|neosurf|cashlib|flexepin/.test(v) ? "voucher" : "wallet"; }
-  var RI = { gift: '<rect x="3" y="8" width="14" height="9" rx="1.5"/><path d="M10 8v9M3 11h14M10 8C8 4 5 5 6 7s4 1 4 1 3 1 4-1-2-3-4 1"/>', crown: '<path d="M3 15l1-9 4 4 2-5 2 5 4-4 1 9z"/>', target: '<circle cx="10" cy="10" r="7"/><circle cx="10" cy="10" r="3.5"/><circle cx="10" cy="10" r=".8"/>', trophy: '<path d="M6 3h8v4a4 4 0 01-8 0zM6 5H3v1a3 3 0 003 3M14 5h3v1a3 3 0 01-3 3M10 11v3M7 17h6"/>', bag: '<path d="M4 7h12l-1 10H5zM7 7a3 3 0 016 0"/>', tag: '<path d="M3 10V4h6l8 8-6 6z"/><circle cx="7" cy="7" r="1"/>', dots: '<circle cx="5" cy="10" r="1"/><circle cx="10" cy="10" r="1"/><circle cx="15" cy="10" r="1"/>', shield: '<path d="M10 2.5l6 2.5v5c0 3.5-2.6 6-6 7.5-3.4-1.5-6-4-6-7.5V5z"/><path d="M7.5 10l2 2 3.5-4"/>', clock: '<circle cx="10" cy="10" r="7"/><path d="M10 6v4l2.5 2"/>', wallet: '<rect x="3" y="5" width="14" height="11" rx="2"/><path d="M13 10.5h4M3 8h14"/>', spark: '<path d="M10 2v4M10 14v4M2 10h4M14 10h4M4.5 4.5l2.5 2.5M13 13l2.5 2.5M15.5 4.5L13 7M7 13l-2.5 2.5"/>', globe: '<circle cx="10" cy="10" r="7"/><path d="M3 10h14M10 3c2 2 3 4.5 3 7s-1 5-3 7c-2-2-3-4.5-3-7s1-5 3-7z"/>', chat: '<path d="M4 4h12v9H8l-4 3z"/>' };
+  var RI = { gift: '<rect x="3" y="8" width="14" height="9" rx="1.5"/><path d="M10 8v9M3 11h14M10 8C8 4 5 5 6 7s4 1 4 1 3 1 4-1-2-3-4 1"/>', crown: '<path d="M3 15l1-9 4 4 2-5 2 5 4-4 1 9z"/>', target: '<circle cx="10" cy="10" r="7"/><circle cx="10" cy="10" r="3.5"/><circle cx="10" cy="10" r=".8"/>', trophy: '<path d="M6 3h8v4a4 4 0 01-8 0zM6 5H3v1a3 3 0 003 3M14 5h3v1a3 3 0 01-3 3M10 11v3M7 17h6"/>', bag: '<path d="M4 7h12l-1 10H5zM7 7a3 3 0 016 0"/>', tag: '<path d="M3 10V4h6l8 8-6 6z"/><circle cx="7" cy="7" r="1"/>', dots: '<circle cx="5" cy="10" r="1"/><circle cx="10" cy="10" r="1"/><circle cx="15" cy="10" r="1"/>', shield: '<path d="M10 2.5l6 2.5v5c0 3.5-2.6 6-6 7.5-3.4-1.5-6-4-6-7.5V5z"/><path d="M7.5 10l2 2 3.5-4"/>', clock: '<circle cx="10" cy="10" r="7"/><path d="M10 6v4l2.5 2"/>', wallet: '<rect x="3" y="5" width="14" height="11" rx="2"/><path d="M13 10.5h4M3 8h14"/>', spark: '<path d="M10 2v4M10 14v4M2 10h4M14 10h4M4.5 4.5l2.5 2.5M13 13l2.5 2.5M15.5 4.5L13 7M7 13l-2.5 2.5"/>', globe: '<circle cx="10" cy="10" r="7"/><path d="M3 10h14M10 3c2 2 3 4.5 3 7s-1 5-3 7c-2-2-3-4.5-3-7s1-5 3-7z"/>', chat: '<path d="M4 4h12v9H8l-4 3z"/>', slot: '<rect x="3" y="4" width="14" height="12" rx="2"/><path d="M7 4v12M13 4v12"/>', instant: '<path d="M11 2L4 11h5l-1 7 7-9h-5z"/>' };
   function short(v, n) { v = String(v || "").replace(/\s*\(.*?\)\s*/g, " ").replace(/\s+/g, " ").trim(); n = n || 40; return v.length > n ? v.slice(0, n - 1).replace(/[\s,;–-]+\S*$/, "") + "…" : v; }
   function profileHero(p) { if (p.hero) { if (signed[p.hero]) return signed[p.hero]; if (cloud) requestSign([p.hero]); return ""; } return p.heroThumb || ""; }
 
@@ -1891,48 +1917,63 @@ footer { color: var(--muted); font-size: 12px; margin-top: 24px; text-align: cen
       (places ? '<div class="pbadge">' + ic("globe") + "<span><small>Markets</small><b class=\"flags\">" + places + "</b></span></div>" : "") +
       (langs ? '<div class="pbadge">' + ic("chat") + "<span><small>Languages</small><b class=\"flags\">" + langs + "</b></span></div>" : "") + "</div></div></section>";
 
-    // MONEY: coins, crypto, deposit / withdrawal, how to pay
-    var cur = arr(m.currencies), isCrypto = CRYPTO_RE.test(cur.join(" ") + " " + (pay.crypto || "")) && !/^no\b/i.test(pay.crypto || "");
-    var coins = cur.slice(0, 10).map(function (c) { var k = String(c).toUpperCase().replace(/[^A-Z]/g, ""), sym = COIN[k] || k.slice(0, 3); return '<span class="coin' + (CRYPTO_RE.test(k) ? " cr" : "") + '" title="' + esc(c) + '"><b>' + esc(sym) + "</b><small>" + esc(k || c) + "</small></span>"; }).join("") + (cur.length > 10 ? '<span class="coin more"><b>+' + (cur.length - 10) + "</b></span>" : "");
-    var methods = []; arr(pay.deposit_methods).concat(arr(pay.withdrawal_methods)).forEach(function (x) { if (!methods.some(function (y) { return y.toLowerCase() === String(x).toLowerCase(); })) methods.push(x); });
-    var money = '<section class="pcard"><h3>' + ic("wallet") + "Money</h3>" + (coins ? '<div class="coins">' + coins + "</div>" : "") +
-      '<div class="pstats"><div>' + ic("wallet") + "<span><small>Min deposit</small><b>" + esc(short(pay.min_deposit, 18) || "–") + "</b></span></div><div>" + ic("clock") + "<span><small>Withdrawal</small><b>" + esc(g.withdrawal || short(pay.withdrawal_time, 22) || "–") + "</b></span></div>" +
-      '<div><i class="pic ' + (isCrypto ? "ok" : "") + '"><b style="font-size:15px">₿</b></i><span><small>Crypto</small><b>' + (isCrypto ? "Yes" : pay.crypto ? "No" : "–") + "</b></span></div></div>" +
-      (methods.length ? '<div class="pays">' + methods.slice(0, 12).map(function (x) { return '<span class="pay ' + payKind(x) + '">' + esc(short(x, 20)) + "</span>"; }).join("") + (methods.length > 12 ? '<span class="pay more">+' + (methods.length - 12) + "</span>" : "") + "</div>" : "") + "</section>";
-
-    // GAMES: product icons and providers
-    var prods = arr(pr.verticals), provs = arr(pr.providers);
-    var games = '<section class="pcard"><h3>' + ic("slot") + "Games</h3>" + (prods.length ? '<div class="prods">' + prods.map(function (x) { return '<span class="prod">' + ic(productIcon(x)) + "<small>" + esc(short(x, 16)) + "</small></span>"; }).join("") + "</div>" : '<p class="small">Not found</p>') +
-      (provs.length ? '<div class="provs"><b>' + provs.length + "</b> providers <span>" + esc(provs.slice(0, 6).join(" · ")) + (provs.length > 6 ? " …" : "") + "</span></div>" : "") +
-      (arr(pr.special_games).length ? '<div class="pfchips" style="margin-top:8px">' + arr(pr.special_games).slice(0, 6).map(function (x) { return "<span>" + esc(short(x, 22)) + "</span>"; }).join("") + "</div>" : "") + "</section>";
-
-    // PLAYER JOURNEY: what keeps players, as a path of icons
+    // The overview tells one story, in the order a player meets the casino:
+    // in short → 1 joining → 2 playing → 3 staying → 4 cashing out → 5 help & safety
+    var stat = function (icon, label, value, sub) { return '<div class="st">' + ic(icon) + "<span><small>" + label + "</small><b>" + (value ? esc(value) : '<em>Not found</em>') + "</b>" + (sub ? "<i>" + esc(sub) + "</i>" : "") + "</span></div>"; };
+    var chapter = function (n, title, lead, body) { return '<section class="chap"><span class="cnum">' + n + '</span><div class="chead"><h3>' + title + "</h3><p>" + lead + "</p></div>" + body + "</section>"; };
+    var sub = function (t) { return '<p class="csub">' + t + "</p>"; };
     var fcount = function (k) { return featuresOf(op).filter(function (x) { return x.part === k; }).length; };
     var promosAll = promosOf(op).filter(function (x) { return x.kind !== "terms"; });
     var present = function (t, n) { return n > 0 || !!(t && !/^(none|no|not offered|not found|n\/a)\b/i.test(String(t))); };
-    var steps = [["gift", "Welcome", "promos", present(g.welcome || of.welcome_offer, promosAll.filter(function (x) { return x.kind === "welcome"; }).length), g.welcome || of.welcome_offer],
-      ["tag", "Promotions", "promos", present(arr(of.promotions).join(""), promosAll.length), promosAll.length ? plural(promosAll.length, "promotion", "promotions") : arr(of.promotions).join(", ")],
+
+    // in short
+    var outs = arr(p.stands_out).slice(0, 5);
+    var inShort = outs.length ? '<section class="inshort"><h3>' + ic("spark") + "In short</h3><ol>" + outs.map(function (x) { return "<li>" + esc(x) + "</li>"; }).join("") + "</ol></section>" : "";
+
+    // 1. joining: welcome package, first deposit, how to pay in
+    var depNo = function (x) { if (x.kind === "welcome") { var w = /(\d)(st|nd|rd|th)\s+deposit/i.exec(x.title || ""); return w ? +w[1] : 1; } if (x.kind === "second") return 2; if (x.kind === "third") return 3; var mm = /(\d)(st|nd|rd|th)\s+deposit/i.exec((x.title || "") + " " + (x.reward || "")); return mm ? +mm[1] : 0; };
+    var ladder = promosAll.map(function (x) { return { n: depNo(x), x: x }; }).filter(function (d) { return d.n > 0 && d.n < 10; }).sort(function (a, b) { return a.n - b.n; }).filter(function (d, i, all) { return !i || all[i - 1].n !== d.n; });
+    var welcomeVis = "";
+    if (ladder.length >= 2) {
+      var pct = function (x) { var mm = /(\d{2,3})\s?%/.exec((x.title || "") + " " + (x.reward || "")); return mm ? +mm[1] : 0; }, maxp = Math.max.apply(null, ladder.map(function (d) { return pct(d.x) || 50; }));
+      welcomeVis = '<div class="lsteps">' + ladder.map(function (d) { var v = pct(d.x); var extra = /(\d+)\s*(free spins|fs)\b/i.exec((d.x.title || "") + " " + (d.x.reward || "")); return '<button type="button" class="lstep" data-castab="promos" title="' + esc(d.x.title || "") + '"><div class="lbar" style="height:' + Math.round(40 + 50 * (v || 50) / maxp) + 'px"><b>' + (v ? v + "%" : "✓") + "</b>" + (extra ? "<small>+" + extra[1] + " FS</small>" : "") + "</div><span>" + d.n + (["th", "st", "nd", "rd"][d.n] || "th") + " deposit</span></button>"; }).join("") + "</div>";
+    } else if (g.welcome || of.welcome_offer) welcomeVis = '<button type="button" class="wbox" data-castab="promos">' + ic("gift") + "<b>" + esc(g.welcome || short(of.welcome_offer, 80)) + "</b></button>";
+    var cur = arr(m.currencies), isCrypto = CRYPTO_RE.test(cur.join(" ") + " " + (pay.crypto || "")) && !/^no\b/i.test(pay.crypto || "");
+    var coins = cur.slice(0, 10).map(function (c) { var k = String(c).toUpperCase().replace(/[^A-Z]/g, ""), sym = COIN[k] || k.slice(0, 3); return '<span class="coin' + (CRYPTO_RE.test(k) ? " cr" : "") + '" title="' + esc(c) + '"><b>' + esc(sym) + "</b><small>" + esc(k || c) + "</small></span>"; }).join("") + (cur.length > 10 ? '<span class="coin more"><b>+' + (cur.length - 10) + "</b></span>" : "");
+    var payList = function (list) { list = arr(list); return list.length ? '<div class="pays">' + list.slice(0, 12).map(function (x) { return '<span class="pay ' + payKind(x) + '">' + esc(short(x, 20)) + "</span>"; }).join("") + (list.length > 12 ? '<span class="pay more">+' + (list.length - 12) + "</span>" : "") + "</div>" : '<p class="small">Not found</p>'; };
+    var ch1 = chapter(1, "Joining", "What a new player gets and how they pay in.",
+      sub("Welcome package") + (welcomeVis || '<p class="small">Not found</p>') +
+      '<div class="sts">' + stat("wallet", "Min deposit", short(pay.min_deposit, 20)) + '<div class="st"><i class="pic' + (isCrypto ? " gold" : "") + '"><b>₿</b></i><span><small>Crypto</small><b>' + (isCrypto ? "Accepted" : pay.crypto ? "No" : "<em>Not found</em>") + "</b></span></div></div>" +
+      (coins ? sub("Currencies") + '<div class="coins">' + coins + "</div>" : "") + sub("Deposit methods") + payList(pay.deposit_methods));
+
+    // 2. playing: what there is to play
+    var prods = arr(pr.verticals), provs = arr(pr.providers);
+    var ch2 = chapter(2, "Playing", "What there is to play, and who makes the games.",
+      (prods.length ? '<div class="prods">' + prods.map(function (x) { return '<span class="prod">' + ic(productIcon(x)) + "<small>" + esc(short(x, 16)) + "</small></span>"; }).join("") + "</div>" : '<p class="small">Not found</p>') +
+      '<div class="sts">' + stat("slot", "Game providers", provs.length ? String(provs.length) : "", provs.slice(0, 5).join(", ") + (provs.length > 5 ? "…" : "")) +
+      (arr(pr.special_games).length ? stat("instant", "Special games", arr(pr.special_games).slice(0, 3).join(", ")) : "") + "</div>");
+
+    // 3. staying: what brings players back
+    var steps = [["tag", "Promotions", "promos", present(arr(of.promotions).join(""), promosAll.length), promosAll.length ? plural(promosAll.length, "promotion", "promotions") : arr(of.promotions).join(", ")],
       ["crown", "Loyalty / VIP", "f:vip", present(of.loyalty, fcount("vip")), g.vip || of.loyalty],
       ["target", "Missions", "f:missions", present(of.missions, fcount("missions")), of.missions],
       ["trophy", "Tournaments", "f:tournaments", present(of.tournaments, fcount("tournaments")), of.tournaments],
       ["bag", "Store", "f:shop", present(of.store, fcount("shop")), of.store],
       ["dots", "Other", "f:other", present("", arr(p.other).length + fcount("custom")), arr(p.other).map(function (o) { return o.name; }).join(", ")]];
-    var journey = '<section class="pcard"><h3>' + ic("spark") + 'Player journey <span class="small" style="font-weight:400">what it offers to win and keep players · click to open</span></h3><div class="jpath">' +
-      steps.map(function (st) { return '<button type="button" class="jstep' + (st[3] ? " on" : "") + '" data-castab="' + st[2] + '" title="' + esc(st[4] || (st[3] ? "" : "Not found")) + '"><span class="jdot">' + svg(RI[st[0]]) + '<i>' + (st[3] ? "✓" : "–") + "</i></span><b>" + st[1] + "</b><small>" + esc(st[3] ? short(st[4], 34) : "Not found") + "</small></button>"; }).join("") + "</div>";
-    // the welcome package as deposit steps
-    var depNo = function (x) { if (x.kind === "welcome") { var w = /(\d)(st|nd|rd|th)\s+deposit/i.exec(x.title || ""); return w ? +w[1] : 1; } if (x.kind === "second") return 2; if (x.kind === "third") return 3; var mm = /(\d)(st|nd|rd|th)\s+deposit/i.exec((x.title || "") + " " + (x.reward || "")); return mm ? +mm[1] : 0; };
-    var ladder = promosAll.map(function (x) { return { n: depNo(x), x: x }; }).filter(function (d) { return d.n > 0 && d.n < 10; }).sort(function (a, b) { return a.n - b.n; }).filter(function (d, i, all) { return !i || all[i - 1].n !== d.n; });
-    if (ladder.length >= 2) {
-      var pct = function (x) { var mm = /(\d{2,3})\s?%/.exec((x.title || "") + " " + (x.reward || "")); return mm ? +mm[1] : 0; }, maxp = Math.max.apply(null, ladder.map(function (d) { return pct(d.x) || 50; }));
-      journey += '<div class="ladder"><small class="lt">Welcome package</small><div class="lsteps">' + ladder.map(function (d) { var v = pct(d.x); var extra = /(\d+)\s*(free spins|fs)\b/i.exec((d.x.title || "") + " " + (d.x.reward || "")); return '<div class="lstep"><div class="lbar" style="height:' + Math.round(34 + 56 * (v || 50) / maxp) + 'px"><b>' + (v ? v + "%" : "✓") + "</b>" + (extra ? "<small>+" + extra[1] + " FS</small>" : "") + "</div><span>" + d.n + (["th", "st", "nd", "rd"][d.n] || "th") + " deposit</span></div>"; }).join("") + "</div></div>";
-    }
-    // the real promotion banners
     var banners = promosAll.map(function (x) { return { x: x, src: bannerSrc(x) }; }).filter(function (b) { return b.src; }).slice(0, 8);
-    if (banners.length) journey += '<div class="bstrip">' + banners.map(function (b) { return '<button type="button" class="bthumb" data-castab="promos" title="' + esc(b.x.title || "") + '"><img src="' + b.src + '" alt=""><span>' + esc(short(b.x.title, 30)) + "</span></button>"; }).join("") + "</div>";
-    journey += "</section>";
+    var ch3 = chapter(3, "Staying", "What brings players back. Click one to open its write-up.",
+      '<div class="jpath">' + steps.map(function (st) { return '<button type="button" class="jstep' + (st[3] ? " on" : "") + '" data-castab="' + st[2] + '" title="' + esc(st[4] || (st[3] ? "" : "Not found")) + '"><span class="jdot">' + svg(RI[st[0]]) + "</span><b>" + st[1] + "</b><small>" + esc(st[3] ? short(st[4], 34) : "Not found") + "</small></button>"; }).join("") + "</div>" +
+      (banners.length ? sub("Current promotions") + '<div class="bstrip">' + banners.map(function (b) { return '<button type="button" class="bthumb" data-castab="promos" title="' + esc(b.x.title || "") + '"><img src="' + b.src + '" alt=""><span>' + esc(short(b.x.title, 30)) + "</span></button>"; }).join("") + "</div>" : ""));
 
-    var outs = arr(p.stands_out);
-    var stand = outs.length ? '<section class="pcard"><h3>' + ic("spark") + 'What stands out</h3><div class="outs2">' + outs.map(function (x) { return '<div class="out">' + ic("spark") + "<span>" + esc(x) + "</span></div>"; }).join("") + "</div></section>" : "";
+    // 4. cashing out
+    var ch4 = chapter(4, "Cashing out", "How fast and how much players can withdraw.",
+      '<div class="sts">' + stat("clock", "Withdrawal time", g.withdrawal || short(pay.withdrawal_time, 26)) + stat("wallet", "Min withdrawal", short(pay.min_withdrawal, 20)) + stat("wallet", "Max withdrawal", short(pay.max_withdrawal, 24)) + stat("shield", "Verification", short(pay.kyc, 40)) + "</div>" +
+      sub("Withdrawal methods") + payList(pay.withdrawal_methods));
+
+    // 5. help & safety
+    var ch5 = chapter(5, "Help &amp; safety", "Where players get help and how they can stay in control.",
+      '<div class="sts">' + stat("chat", "Support", arr(sup.channels).slice(0, 3).join(", "), sup.hours ? short(sup.hours, 30) : "") + stat("shield", "Responsible gambling", arr(sup.rg_tools).length ? plural(arr(sup.rg_tools).length, "tool", "tools") : "", arr(sup.rg_tools).slice(0, 3).join(", ")) + stat("slot", "App", short(sup.app, 30)) + "</div>");
+    var story = '<div class="thread">' + ch1 + ch2 + ch3 + ch4 + ch5 + "</div>";
 
     var det = function (title, rows) { return '<details class="pfdet"><summary>' + title + '</summary><dl>' + rows.map(function (r) { return "<dt>" + r[0] + "</dt><dd>" + r[1] + "</dd>"; }).join("") + "</dl></details>"; };
     var details = '<div class="sechead" style="margin-top:4px"><h3>All details</h3></div><div class="pfdets">' +
@@ -1943,7 +1984,7 @@ footer { color: var(--muted); font-size: 12px; margin-top: 24px; text-align: cen
       det("Support &amp; responsible gambling", [["Support", chips(sup.channels)], ["Hours", val(sup.hours)], ["Responsible-gambling tools", chips(sup.rg_tools)], ["App", val(sup.app)]]) +
       det("About this casino", [["Summary", esc(p.summary || "")], ["Positioning", esc(p.positioning || "")]].concat(arr(p.other).map(function (o) { return [esc(o.name), esc(o.what_it_is || "") + (o.where ? ' <span class="muted">· ' + esc(o.where) + "</span>" : "")]; }))) +
       det("Pages read (" + arr(p.sources).length + ")", arr(p.sources).map(function (src) { return [esc(src.label), '<a href="' + esc(src.url) + '" target="_blank" rel="noopener">' + esc(src.url) + "</a>"]; })) + "</div>";
-    el.innerHTML = busy + hero + journey + '<div class="pgrid2">' + money + games + "</div>" + stand + details +
+    el.innerHTML = busy + hero + inShort + story + details +
       (arr(p.uncertain).length ? '<p class="small" style="color:var(--warn)">Not confirmed on the site: ' + esc(arr(p.uncertain).map(function (u) { return String(u).replace(/^.*\./, "").replace(/_/g, " "); }).join(", ")) + ".</p>" : "") +
       '<p class="small">Researched ' + esc(new Date(p.at).toLocaleDateString()) + " while " + (p.run === "logged-in" ? "logged in" : "logged out") + ". Research again with the extension to update it.</p>";
   }
