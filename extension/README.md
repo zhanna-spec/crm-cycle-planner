@@ -44,9 +44,8 @@ Open the casino's website and click **Research this casino**. The scanner reads 
 In CRM Studio, under **Competitor review**, each casino gets a profile:
 
 - **Overview**: a short summary, what stands out, and the facts found on the site: market and licence, products and games, payments, offers and retention, and support and responsible gambling. Anything the site didn't confirm is listed separately.
-- **Promotions**: every promotion grouped by type (welcome offer, 2nd deposit offer…), with how it works and its terms.
-- **Features**: loyalty / VIP, missions, tournaments, store and deposit written up.
-- **Offer terms** and **Emails**: offers added by hand, and the emails received from that casino.
+- **Promotions**: every promotion grouped by type (welcome offer, 2nd deposit offer…), with how it works and its terms, plus any offers you added by hand.
+- **Loyalty / VIP**, **Missions**, **Tournaments**, **Store** and **Deposit**: each written up on its own tab. A tab is greyed out when it wasn't found on the site.
 
 **All casinos** at the top of the list compares the main facts of every casino side by side. Researching a casino again updates its profile.
 
