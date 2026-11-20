@@ -694,7 +694,9 @@ body:not([data-view="builder"]) #csvBtn { display: none; }
 header.top::after { display: none; }
 header.top .hero-actions { align-items: center; flex-wrap: nowrap; }
 .hbtn.ico { width: 38px; height: 38px; padding: 0; justify-content: center; }
-@media (max-width: 1240px) { header.top .sub { display: none; } }
+@media (max-width: 1400px) { header.top .sub { display: none; } }
+header.top .viewnav a { padding: 8px 12px; }
+header.top .savestate { white-space: nowrap; }
 .castabs { gap: 2px; } .castabs button { padding: 8px 11px; }
 @media (max-width: 1100px) { header.top .viewnav { order: 3; margin: 0; width: 100%; } }
 /* Empty states: an icon, then the text */
@@ -711,6 +713,24 @@ header.top .hero-actions { align-items: center; flex-wrap: nowrap; }
 .sechead .btn { margin-left: auto; }
 .pgh { display: flex; align-items: center; gap: 8px; }
 .pgh .small { background: var(--accent-soft); color: var(--accent); border-radius: 99px; padding: 1px 8px; font-weight: 600; font-size: 11.5px; }
+/* Calmer layout: more room, fewer boxes */
+.setdet > summary { list-style: none; cursor: pointer; display: flex; flex-direction: column; gap: 2px; }
+.setdet > summary::-webkit-details-marker { display: none; }
+.setdet > summary small { color: var(--muted); font-size: 12.5px; }
+.setdet > summary::after { content: "Show"; position: absolute; right: 18px; top: 18px; font-size: 12.5px; font-weight: 600; color: var(--accent); }
+.setdet { position: relative; } .setdet[open] > summary::after { content: "Hide"; }
+.ownlink { font-size: 13px; font-weight: 600; color: var(--accent); align-self: center; padding: 4px; }
+.btn.icob { width: 38px; height: 38px; padding: 0; justify-content: center; }
+.btn.icob svg { width: 17px; height: 17px; }
+#offersApp .cmain, #offersApp > .main { gap: 22px; }
+.chap { padding: 22px 24px 24px; }
+.thread { gap: 22px; }
+.sts { gap: 8px 20px; }
+.st { background: none; padding: 4px 0; }
+.st .pic { background: var(--accent-soft); }
+.chead { margin-bottom: 18px; }
+.prow .pmain > span:first-child:empty { display: none; }
+.opitem small:empty { display: none; }
 /* Competitors */
 .capp { display: grid; grid-template-columns: 300px minmax(0, 1fr); gap: 18px; align-items: start; }
 @media (max-width: 860px) { .capp { grid-template-columns: minmax(0, 1fr); } }
@@ -927,11 +947,12 @@ footer { color: var(--muted); font-size: 12px; margin-top: 24px; text-align: cen
     <div class="side">
       <section class="panel" id="palette" aria-labelledby="palH">
         <h2 class="ptitle" id="palH">Add a step</h2>
-        <p class="phint">Drag onto a day, or click to add to the selected day. Click a step to edit it. On a phone, press and hold to drag.</p>
+        <p class="phint">Drag a step onto a day, or click it to add it to the selected day.</p>
         <div class="blocks" id="blocks"></div>
       </section>
-      <section class="panel stack" id="settings" aria-labelledby="setH">
-        <h2 class="ptitle" id="setH">Cycle settings</h2>
+      <details class="panel setdet" id="settings">
+        <summary><span class="ptitle" id="setH">Cycle settings</span><small>Name, start, goal, length</small></summary>
+        <div class="stack" style="margin-top:14px">
         <label class="field"><span>Name</span><input class="inp" id="cName" type="text"></label>
         <label class="field"><span>Starts when</span><input class="inp" id="cEntry" type="text"></label>
         <label class="field"><span>Goal</span><input class="inp" id="cGoal" type="text"></label>
@@ -946,7 +967,8 @@ footer { color: var(--muted); font-size: 12px; margin-top: 24px; text-align: cen
           <button class="btn" id="dupCycle" type="button">Duplicate</button>
           <button class="btn danger" id="delCycle" type="button">Delete cycle</button>
         </div>
-      </section>
+        </div>
+      </details>
     </div>
     <section class="panel boardwrap" id="boardwrap" aria-label="Cycle timeline">
       <div class="board" id="board"></div>
@@ -990,15 +1012,15 @@ footer { color: var(--muted); font-size: 12px; margin-top: 24px; text-align: cen
             <div class="row"><button class="btn primary" type="submit">Add casino</button><button class="btn" type="button" id="opCancel">Cancel</button></div>
           </form>
           <button class="btn primary" type="button" id="opAdd">+ Add casino</button>
-          <button class="btn ownbtn" type="button" id="ownAdd">+ Add your own website</button>
-          <p class="scanhint">Open a casino's website and click <b>Research this casino</b> in the <a href="https://github.com/zhanna-spec/crm-cycle-planner/blob/main/extension/README.md" target="_blank" rel="noopener">site scanner extension</a>.</p>
+          <button class="linkbtn ownlink" type="button" id="ownAdd">+ Add your own website</button>
+          <p class="scanhint" id="resHint">Open a casino's website and click <b>Research this casino</b> in the <a href="https://github.com/zhanna-spec/crm-cycle-planner/blob/main/extension/README.md" target="_blank" rel="noopener">site scanner extension</a>.</p>
         </section>
         <section class="panel stack" aria-labelledby="keyH" id="keyWrap">
           <h2 class="ptitle" id="keyH">AI</h2>
           <div id="keyPanel" class="stack"></div>
         </section>
       </div>
-      <div class="stack" style="gap:18px;min-width:0">
+      <div class="stack" style="gap:24px;min-width:0">
         <section class="panel stack" id="scanPanel" hidden aria-live="polite"></section>
         <div class="caswrap"><section class="panel" id="opHead"></section>
         <nav class="castabs" id="casTabs" aria-label="Casino profile"></nav></div>
@@ -1760,8 +1782,9 @@ footer { color: var(--muted); font-size: 12px; margin-top: 24px; text-align: cen
   function renderOpList() {
     var ops = state.operators, el = document.getElementById("opList"), total = state.competitors.length;
     el.innerHTML = '<button type="button" class="opitem' + (!ui.opSel ? " on" : "") + '" data-op=""><span class="avatar" style="background:var(--accent)">' + svg('<rect x="3" y="4" width="6" height="12" rx="1.5"/><rect x="11" y="4" width="6" height="12" rx="1.5"/>', "#FFFFFF") + '</span><span class="meta2"><b>All casinos</b><small>Compare side by side</small></span></button>' +
-      ops.slice().sort(function (a, b) { return (b.isOwn ? 1 : 0) - (a.isOwn ? 1 : 0); }).map(function (o) { var n = offersOf(o).length, np = pagesOf(o).length; return '<button type="button" class="opitem' + (ui.opSel === o.id ? " on" : "") + '" data-op="' + o.id + '"><span class="avatar" style="background:' + opColor(o) + '">' + esc(o.name.charAt(0).toUpperCase()) + '</span><span class="meta2"><b>' + esc(o.name) + (o.isOwn ? ' <span class="ownpill">Your brand</span>' : "") + "</b><small>" + (state.profiles[o.id] ? "Researched" : "Not researched yet") + (o.market ? " · " + esc(o.market) : "") + "</small></span></button>"; }).join("");
+      ops.slice().sort(function (a, b) { return (b.isOwn ? 1 : 0) - (a.isOwn ? 1 : 0); }).map(function (o) { var n = offersOf(o).length, np = pagesOf(o).length; return '<button type="button" class="opitem' + (ui.opSel === o.id ? " on" : "") + '" data-op="' + o.id + '"><span class="avatar" style="background:' + opColor(o) + '">' + esc(o.name.charAt(0).toUpperCase()) + '</span><span class="meta2"><b>' + esc(o.name) + (o.isOwn ? ' <span class="ownpill">Your brand</span>' : "") + "</b>" + (state.profiles[o.id] ? "" : "<small>Not researched yet</small>") + "</span></button>"; }).join("");
     if (!ops.length) el.innerHTML += '<p class="small">Add the casinos you want to follow, then research each one with the extension.</p>';
+    var rh = document.getElementById("resHint"); if (rh) rh.hidden = Object.keys(state.profiles || {}).length > 0;
     var ob = document.getElementById("ownAdd"), own = ownOp();
     if (ob && document.getElementById("opForm").hidden) { ob.hidden = false; ob.textContent = own ? "Go to your website (" + own.name + ")" : "+ Add your own website"; }
   }
@@ -1779,8 +1802,8 @@ footer { color: var(--muted); font-size: 12px; margin-top: 24px; text-align: cen
       return;
     }
     var n = offersOf(op).length + pagesOf(op).length, url = siteUrl(op.website);
-    el.innerHTML = '<div class="ophead"><span class="avatar" style="background:' + opColor(op) + '">' + esc(op.name.charAt(0).toUpperCase()) + '</span><div class="grow"><h2>' + esc(op.name) + (op.isOwn ? ' <span class="ownpill">Your brand</span>' : "") + '</h2><div class="sub2"><span>' + (state.profiles[op.id] ? "Researched " + esc(new Date(state.profiles[op.id].at).toLocaleDateString()) : "Not researched yet") + "</span>" + (url ? '<a href="' + esc(url) + '" target="_blank" rel="noopener">' + esc(op.website) + "</a>" : "") + (op.market ? "<span>" + esc(op.market) + "</span>" : "") + "</div></div>" +
-      '<div class="row"><button class="btn" type="button" data-opact="edit">Edit details</button><button class="btn danger' + (ui.armed === "op" ? " armed" : "") + '" type="button" data-opact="delete">' + (ui.armed === "op" ? "Click again to delete" + (n ? " with " + plural(n, "item", "items") : "") : "Delete") + "</button></div></div>" +
+    el.innerHTML = '<div class="ophead"><span class="avatar" style="background:' + opColor(op) + '">' + esc(op.name.charAt(0).toUpperCase()) + '</span><div class="grow"><h2>' + esc(op.name) + (op.isOwn ? ' <span class="ownpill">Your brand</span>' : "") + '</h2><div class="sub2"><span>' + (state.profiles[op.id] ? "Researched " + esc(new Date(state.profiles[op.id].at).toLocaleDateString()) : "Not researched yet") + "</span>" + (url ? '<a href="' + esc(url) + '" target="_blank" rel="noopener">' + esc(String(op.website).replace(/^https?:\/\//, "").replace(/\/$/, "")) + "</a>" : "") + "</div></div>" +
+      '<div class="row"><button class="btn icob" type="button" data-opact="edit" title="Edit details" aria-label="Edit details">' + svg('<path d="M4 16l1-4 8-8 3 3-8 8z"/><path d="M11 6l3 3"/>') + '</button><button class="btn danger' + (ui.armed === "op" ? " armed" : " icob") + '" type="button" data-opact="delete" title="Delete" aria-label="Delete">' + (ui.armed === "op" ? "Click again to delete" + (n ? " with " + plural(n, "item", "items") : "") : svg('<path d="M4 6h12M8 6V4h4v2M6 6l1 10h6l1-10"/>')) + "</button></div></div>" +
       (op.notes ? '<p class="opnotes">' + esc(op.notes) + "</p>" : "");
   }
 
@@ -2145,7 +2168,7 @@ footer { color: var(--muted); font-size: 12px; margin-top: 24px; text-align: cen
   }
   function featurePreview(x, showOp) {
     var o = findOp(x.opId) || { name: "?" }, pic = offerPics(x).filter(Boolean)[0], open = ui.ftOpen === x.id;
-    var chips = (x.key_facts || []).slice(0, 4).map(function (f) { return '<span class="pchip"><small>' + esc(f.label) + "</small>" + esc(f.value) + "</span>"; }).join("");
+    var chips = (x.key_facts || []).slice(0, 3).map(function (f) { return '<span class="pchip"><small>' + esc(f.label) + "</small>" + esc(f.value) + "</span>"; }).join("");
     return '<div class="prow' + (open ? " open" : "") + '"><button type="button" class="pbtn" data-ftopen="' + x.id + '" aria-expanded="' + open + '">' + (pic ? '<img class="pthumb" src="' + pic + '" alt="">' : '<span class="pthumb pnone">' + esc(x.partLabel || "") + "</span>") +
       '<span class="pmain">' + (showOp ? '<span><span class="kindpill">' + esc(o.name) + "</span></span>" : "") + "<b>" + esc(x.title || x.partLabel || "Feature") + "</b>" +
       (x.status === "reading" ? "<small>Claude is writing it up…</small>" : x.status === "error" ? '<small style="color:var(--bad)">' + esc(x.error || "Couldn't read it.") + "</small>" : "<small>" + esc(x.summary || "") + "</small>") +
@@ -2276,7 +2299,7 @@ footer { color: var(--muted); font-size: 12px; margin-top: 24px; text-align: cen
       groups.map(function (g) {
         return '<section class="pgroup"><h3 class="pgh">' + esc(promoKind(g.k)) + ' <span class="small">' + g.items.length + '</span></h3><div class="plist2">' + g.items.map(function (p) {
           var o = findOp(p.opId) || { name: "?" }, t = p.terms || {}, src = bannerSrc(p), open = ui.pmOpen === p.id;
-          var chips = PROMO_TERMS.filter(function (k) { return t[k[0]]; }).slice(0, 5).map(function (k) { return '<span class="pchip"><small>' + k[1] + "</small>" + esc(t[k[0]]) + "</span>"; }).join("");
+          var chips = PROMO_TERMS.filter(function (k) { return t[k[0]]; }).slice(0, 3).map(function (k) { return '<span class="pchip"><small>' + k[1] + "</small>" + esc(t[k[0]]) + "</span>"; }).join("");
           return '<div class="prow' + (open ? " open" : "") + '"><button type="button" class="pbtn" data-pmopen="' + p.id + '" aria-expanded="' + open + '">' + (src ? '<img class="pthumb" src="' + src + '" alt="">' : '<span class="pthumb pnone">' + esc(promoKind(p.kind)) + "</span>") +
             '<span class="pmain">' + (op ? "" : '<span><span class="kindpill">' + esc(o.name) + "</span></span>") + "<b>" + esc(p.title || "Promotion") + "</b>" +
             (p.status === "reading" ? "<small>Claude is reading this promotion…</small>" : p.status === "error" ? '<small style="color:var(--bad)">' + esc(p.error || "Couldn't read it.") + "</small>" : "<small>" + esc(p.summary || "") + "</small>") +
