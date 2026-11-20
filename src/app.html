@@ -455,8 +455,8 @@ textarea.inp { resize: vertical; min-height: 70px; }
 .pmnav b { display: block; font-size: 13px; font-weight: 600; line-height: 1.3; }
 .pmnav small { color: var(--muted); font-size: 11px; }
 .pmnav:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
-.pgroup { display: flex; flex-direction: column; gap: 8px; margin-bottom: 6px; }
-.pgh { margin: 6px 2px 0; font-size: 16px; }
+.pgroup { display: flex; flex-direction: column; gap: 8px; margin-bottom: 0; }
+.pgh { margin: 4px 2px 0; font-size: 15px; }
 .prow.open { box-shadow: 0 0 0 2px var(--accent-soft), var(--shadow-sm); }
 .pfull { padding: 4px 16px 16px; display: flex; flex-direction: column; gap: 14px; border-top: 1px solid var(--line); padding-top: 14px; --gr: #2FBF8A; --co: #F26D7D; }
 .pfull h3 { margin: 0 0 8px; font-size: 15px; }
@@ -527,6 +527,23 @@ textarea.inp { resize: vertical; min-height: 70px; }
 .jpath { grid-template-columns: repeat(6, minmax(0, 1fr)); }
 .jdot { width: 52px; height: 52px; }
 @media (max-width: 900px) { .thread { padding-left: 0; } .thread::before { display: none; } .cnum { position: static; display: inline-grid; width: 30px; height: 30px; margin-bottom: 8px; box-shadow: none; } .jpath { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+.cmpgrid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 16px; align-items: start; }
+.ccmp { background: var(--surface); border-radius: 22px; box-shadow: var(--shadow-sm); overflow: hidden; min-width: 0; }
+.ccshot { display: block; width: 100%; border: 0; padding: 0; cursor: pointer; background: #111; }
+.ccshot img { display: block; width: 100%; aspect-ratio: 16 / 8; object-fit: cover; object-position: top; }
+.cchead { font: inherit; display: flex; align-items: center; gap: 10px; width: 100%; border: 0; background: none; cursor: pointer; padding: 14px 16px 6px; text-align: left; color: var(--ink); }
+.cchead b { font-size: 17px; } .cchead:hover b { color: var(--accent); }
+.ccline { margin: 0 16px 8px; color: var(--muted); font-size: 13px; }
+.ccrows { display: grid; padding: 4px 16px 14px; }
+.ccrows > div { display: grid; grid-template-columns: 96px minmax(0, 1fr); gap: 10px; align-items: center; padding: 7px 0; border-top: 1px solid var(--line); font-size: 13.5px; }
+.ccrows small { color: var(--muted); font-size: 12px; font-weight: 600; }
+.ccrows .muted { color: var(--muted); }
+.coin.sm { width: 30px; height: 30px; } .coin.sm b { font-size: 12.5px; }
+.coins.sm { display: flex; flex-wrap: wrap; gap: 4px; margin: 0; }
+.pic.sm { width: 28px; height: 28px; border-radius: 9px; } .pic.sm svg { width: 16px; height: 16px; }
+.prodrow, .fdots { display: flex; flex-wrap: wrap; gap: 4px; }
+.fdot { width: 28px; height: 28px; border-radius: 50%; display: grid; place-items: center; background: var(--sunk); color: var(--muted); opacity: .6; }
+.fdot svg { width: 15px; height: 15px; } .fdot.on { background: var(--accent); color: #FFF; opacity: 1; }
 .phero { display: grid; grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr); gap: 20px; background: var(--surface); border-radius: 22px; padding: 16px; box-shadow: var(--shadow-sm); align-items: center; }
 .phero.noshot { grid-template-columns: minmax(0, 1fr); padding: 20px; }
 .pshot { border-radius: 14px; overflow: hidden; background: #111; box-shadow: 0 6px 20px rgba(40,30,90,.18); }
@@ -662,6 +679,38 @@ textarea.inp { resize: vertical; min-height: 70px; }
 .viewnav .num { font-size: 11px; padding: 1px 7px; border-radius: 999px; background: var(--accent-soft); color: var(--accent); }
 .viewnav a.on .num { background: rgba(255,255,255,.25); color: inherit; }
 
+
+/* App bar: brand, the main sections, actions */
+header.top { padding: 14px clamp(16px, 3vw, 24px); border-radius: 22px; gap: 12px 20px; }
+header.top .logo { width: 42px; height: 42px; border-radius: 13px; } header.top .logo svg { width: 24px; height: 24px; }
+header.top h1 { font-size: 21px; } header.top .sub { font-size: 12.5px; margin-top: 1px; }
+header.top .viewnav { position: relative; z-index: 1; margin: 0 auto 0 8px; background: rgba(255,255,255,.14); box-shadow: none; padding: 4px; border-radius: 15px; }
+header.top .viewnav a { color: rgba(255,255,255,.88); padding: 8px 14px; }
+header.top .viewnav a:hover { background: rgba(255,255,255,.12); }
+header.top .viewnav a.on { background: #FFFFFF; color: var(--accent); box-shadow: 0 2px 8px rgba(30,20,90,.15); }
+header.top .viewnav .num { background: rgba(255,255,255,.22); color: #FFFFFF; }
+header.top .viewnav a.on .num { background: var(--accent-soft); color: var(--accent); }
+body:not([data-view="builder"]) #csvBtn { display: none; }
+header.top::after { display: none; }
+header.top .hero-actions { align-items: center; flex-wrap: nowrap; }
+.hbtn.ico { width: 38px; height: 38px; padding: 0; justify-content: center; }
+@media (max-width: 1240px) { header.top .sub { display: none; } }
+.castabs { gap: 2px; } .castabs button { padding: 8px 11px; }
+@media (max-width: 1100px) { header.top .viewnav { order: 3; margin: 0; width: 100%; } }
+/* Empty states: an icon, then the text */
+.empty-c { display: block; padding: 34px 20px; line-height: 1.6; }
+.empty-c::before { content: ""; display: block; margin: 0 auto 12px; width: 54px; height: 54px; border-radius: 18px; background: var(--accent-soft) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%236A5AE0' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='11' cy='11' r='6.5'/%3E%3Cpath d='M16 16l4.5 4.5'/%3E%3Cpath d='M8.5 11h5M11 8.5v5'/%3E%3C/svg%3E") center / 28px no-repeat; margin-bottom: 4px; }
+.empty-c b { color: var(--ink); }
+/* Casino header and its tabs as one card */
+.caswrap { background: var(--surface); border-radius: 22px; box-shadow: var(--shadow-sm); overflow: hidden; }
+.caswrap > #opHead { box-shadow: none; border-radius: 0; margin: 0; }
+.caswrap > .castabs { box-shadow: none; border-radius: 0; border-top: 1px solid var(--line); padding: 6px 10px; background: transparent; }
+.castabs button { display: inline-flex; align-items: center; gap: 7px; }
+.castabs button svg { width: 16px; height: 16px; }
+/* list toolbars */
+.sechead .btn { margin-left: auto; }
+.pgh { display: flex; align-items: center; gap: 8px; }
+.pgh .small { background: var(--accent-soft); color: var(--accent); border-radius: 99px; padding: 1px 8px; font-weight: 600; font-size: 11.5px; }
 /* Competitors */
 .capp { display: grid; grid-template-columns: 300px minmax(0, 1fr); gap: 18px; align-items: start; }
 @media (max-width: 860px) { .capp { grid-template-columns: minmax(0, 1fr); } }
@@ -848,25 +897,26 @@ footer { color: var(--muted); font-size: 12px; margin-top: 24px; text-align: cen
       <div class="logo" aria-hidden="true"><svg viewBox="0 0 32 32"><path d="M16 5a11 11 0 1 0 10.4 7.4" fill="none" stroke="#6A5AE0" stroke-width="3.2" stroke-linecap="round"/><path d="M27.5 5.5l-1 7-6.5-2.5" fill="none" stroke="#6A5AE0" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"/><circle cx="16" cy="16" r="4" fill="#FF8FA2"/></svg></div>
       <div style="min-width:0">
         <h1>CRM Studio</h1>
-        <p class="sub">Plan CRM cycles and research competitors in one place.</p>
+        <p class="sub">CRM cycles and competitor research</p>
       </div>
     </div>
+    <nav class="viewnav" aria-label="Sections">
+      <a href="#builder" id="nav-builder"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="4" height="12" rx="1.5"/><rect x="9" y="4" width="4" height="8" rx="1.5"/><rect x="15" y="4" width="2.5" height="5" rx="1"/></svg>Cycle builder</a>
+      <a href="#competitors" id="nav-competitors"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="7" cy="7" r="3"/><circle cx="14" cy="9" r="2.5"/><path d="M2 17c.6-3 2.6-4.5 5-4.5s4.4 1.5 5 4.5M12.5 13.2c2-.4 4.4.6 5 3.8"/></svg>Competitor review <span class="num" id="compCount">0</span></a>
+      <a href="#emails" id="nav-emails"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="14" height="10" rx="2"/><path d="M3.5 6l6.5 5 6.5-5"/></svg>Competitor emails <span class="num" id="trkCount">0</span></a>
+    </nav>
     <div class="hero-actions">
       <span class="savestate" id="saveState" aria-live="polite"></span>
       <div class="acct" id="acct" hidden></div>
-      <button class="hbtn" id="undoBtn" type="button" title="Undo (Ctrl+Z)"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M5 3L2 6l3 3"/><path d="M2 6h7.5a4 4 0 0 1 0 8H7"/></svg>Undo</button>
-      <button class="hbtn" id="csvBtn" type="button">Copy as CSV</button>
-      <button class="hbtn" id="exportBtn" type="button">Export</button>
-      <button class="hbtn" id="importBtn" type="button">Import</button>
+      <button class="hbtn ico" id="undoBtn" type="button" title="Undo (Ctrl+Z)" aria-label="Undo"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M5 3L2 6l3 3"/><path d="M2 6h7.5a4 4 0 0 1 0 8H7"/></svg></button>
+      <button class="hbtn ico" id="csvBtn" type="button" title="Copy this cycle as CSV" aria-label="Copy this cycle as CSV"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="2.5" y="2.5" width="11" height="11" rx="2"/><path d="M2.5 6.5h11M6.5 6.5v7"/></svg></button>
+      <button class="hbtn ico" id="exportBtn" type="button" title="Export to a file" aria-label="Export to a file"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M8 2v8M5 7l3 3 3-3M3 12.5h10"/></svg></button>
+      <button class="hbtn ico" id="importBtn" type="button" title="Import from a file" aria-label="Import from a file"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M8 10V2M5 5l3-3 3 3M3 12.5h10"/></svg></button>
       <input type="file" id="importFile" accept=".json,application/json" hidden>
     </div>
   </header>
 
-  <nav class="viewnav" aria-label="Sections">
-    <a href="#builder" id="nav-builder"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="4" height="12" rx="1.5"/><rect x="9" y="4" width="4" height="8" rx="1.5"/><rect x="15" y="4" width="2.5" height="5" rx="1"/></svg>Cycle builder</a>
-    <a href="#competitors" id="nav-competitors"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="7" cy="7" r="3"/><circle cx="14" cy="9" r="2.5"/><path d="M2 17c.6-3 2.6-4.5 5-4.5s4.4 1.5 5 4.5M12.5 13.2c2-.4 4.4.6 5 3.8"/></svg>Competitor review <span class="num" id="compCount">0</span></a>
-    <a href="#emails" id="nav-emails"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="14" height="10" rx="2"/><path d="M3.5 6l6.5 5 6.5-5"/></svg>Competitor emails <span class="num" id="trkCount">0</span></a>
-  </nav>
+
 
   <div class="banner" id="importBanner" hidden></div>
   <div id="view-builder">
@@ -943,15 +993,15 @@ footer { color: var(--muted); font-size: 12px; margin-top: 24px; text-align: cen
           <button class="btn ownbtn" type="button" id="ownAdd">+ Add your own website</button>
           <p class="scanhint">Open a casino's website and click <b>Research this casino</b> in the <a href="https://github.com/zhanna-spec/crm-cycle-planner/blob/main/extension/README.md" target="_blank" rel="noopener">site scanner extension</a>.</p>
         </section>
-        <section class="panel stack" aria-labelledby="keyH">
+        <section class="panel stack" aria-labelledby="keyH" id="keyWrap">
           <h2 class="ptitle" id="keyH">AI</h2>
           <div id="keyPanel" class="stack"></div>
         </section>
       </div>
       <div class="stack" style="gap:18px;min-width:0">
         <section class="panel stack" id="scanPanel" hidden aria-live="polite"></section>
-        <section class="panel" id="opHead"></section>
-        <nav class="castabs" id="casTabs" aria-label="Casino profile"></nav>
+        <div class="caswrap"><section class="panel" id="opHead"></section>
+        <nav class="castabs" id="casTabs" aria-label="Casino profile"></nav></div>
         <div id="casOverview" class="stack" style="gap:16px"></div>
         <div id="promosApp" class="stack" style="gap:12px"><div id="pmCasinos" hidden></div><div id="pmNav" class="row" style="justify-content:flex-end"></div><div class="stack" id="pmMain" style="gap:16px;min-width:0"></div></div>
         <div id="featuresApp"><div id="ftCasinos" hidden></div><div class="stack" id="ftMain" style="gap:16px;min-width:0"></div></div>
@@ -1628,6 +1678,7 @@ footer { color: var(--muted); font-size: 12px; margin-top: 24px; text-align: cen
       document.getElementById("view-" + k).hidden = v !== k;
       var a = document.getElementById("nav-" + k); a.classList.toggle("on", v === k); a.setAttribute("aria-current", v === k ? "page" : "false");
     });
+    document.body.setAttribute("data-view", v);
     closeDrawer();
   }
   window.addEventListener("hashchange", setView);
@@ -1767,7 +1818,7 @@ footer { color: var(--muted); font-size: 12px; margin-top: 24px; text-align: cen
     if (!review) {
       // organised by casino: a list on the left, each casino's profile with its tabs on the right
       document.getElementById("compCount").textContent = state.operators.length; document.getElementById("undoBtn").disabled = !history.length;
-      renderKeyPanel(); renderOpList();
+      renderKeyPanel(); renderOpList(); document.getElementById("keyWrap").hidden = aiReady();
       var opC = curOp(); renderOpHead(opC);
       var tab = opC ? (ui.casTab || "overview") : "all";
       // one tab per part of the casino: promotions (with any offers added by hand), then each feature
@@ -1776,7 +1827,8 @@ footer { color: var(--muted); font-size: 12px; margin-top: 24px; text-align: cen
       if (opC && !tabs.some(function (t) { return t[0] === tab; })) tab = ui.casTab = "overview";
       var has = function (id) { if (id === "promos") return promosOf(opC).length || offersOf(opC).length; if (id === "f:other") return featuresOf(opC).some(function (x) { return x.part === "custom"; }) || ((state.profiles[opC.id] || {}).other || []).length; if (id.indexOf("f:") !== 0) return true; var k = id.slice(2); return featuresOf(opC).some(function (x) { return x.part === k; }); };
       var tabsEl = document.getElementById("casTabs"); tabsEl.hidden = !opC;
-      tabsEl.innerHTML = opC ? tabs.map(function (t) { return '<button type="button" class="' + (tab === t[0] ? "on" : "") + (has(t[0]) ? "" : " none") + '" data-castab="' + t[0] + '">' + esc(t[1]) + "</button>"; }).join("") : "";
+      var TABI = { overview: '<path d="M3 10l7-6 7 6v7H3z"/><path d="M8 17v-4h4v4"/>', promos: RI.tag, "f:vip": RI.crown, "f:missions": RI.target, "f:tournaments": RI.trophy, "f:shop": RI.bag, "f:deposit": RI.wallet, "f:other": RI.dots };
+      tabsEl.innerHTML = opC ? tabs.map(function (t) { return '<button type="button" class="' + (tab === t[0] ? "on" : "") + (has(t[0]) ? "" : " none") + '" data-castab="' + t[0] + '">' + (TABI[t[0]] ? svg(TABI[t[0]]) : "") + esc(t[1]) + "</button>"; }).join("") : "";
       var isF = tab.indexOf("f:") === 0;
       document.getElementById("casOverview").hidden = !(tab === "overview" || tab === "all");
       document.getElementById("promosApp").hidden = tab !== "promos"; document.getElementById("featuresApp").hidden = !isF;
@@ -1990,18 +2042,30 @@ footer { color: var(--muted); font-size: 12px; margin-top: 24px; text-align: cen
   }
   // all casinos side by side on the main facts
   function renderCompareAll() {
-    var el = document.getElementById("casOverview"), own = ownOp();
+    var el = document.getElementById("casOverview");
     var ops = state.operators.slice().sort(function (a, b) { return (b.isOwn ? 1 : 0) - (a.isOwn ? 1 : 0); });
-    if (!ops.length) { el.innerHTML = '<div class="panel empty-c">Add a casino on the left, then research it with the extension.</div>'; return; }
-    var short = function (v, n) { if (Array.isArray(v)) return v.length ? esc(v.slice(0, n || 4).join(", ")) + (v.length > (n || 4) ? ' <span class="muted">+' + (v.length - (n || 4)) + "</span>" : "") : '<span class="muted">–</span>'; return v ? esc(v) : '<span class="muted">–</span>'; };
-    var cols = [["Markets", function (p) { return short(p.market && p.market.markets, 3); }], ["Licence", function (p) { return short(p.market && p.market.licence); }], ["Languages", function (p) { return short(p.market && p.market.languages, 3); }], ["Currencies", function (p) { return short(p.market && p.market.currencies, 3); }],
-      ["Products", function (p) { return short(p.products && p.products.verticals, 4); }], ["Payments", function (p) { return short(p.payments && p.payments.deposit_methods, 4); }], ["Crypto", function (p) { return short(p.payments && p.payments.crypto); }], ["Min deposit", function (p) { return short(p.payments && p.payments.min_deposit); }], ["Withdrawal time", function (p) { return short(p.payments && p.payments.withdrawal_time); }],
-      ["Welcome offer", function (p) { return short(p.offers && p.offers.welcome_offer); }], ["Loyalty / VIP", function (p) { return short(p.offers && p.offers.loyalty); }], ["Missions", function (p) { return short(p.offers && p.offers.missions); }], ["Tournaments", function (p) { return short(p.offers && p.offers.tournaments); }], ["Store", function (p) { return short(p.offers && p.offers.store); }], ["Support", function (p) { return short(p.support && p.support.channels, 3); }]];
-    el.innerHTML = '<div class="sechead"><h3>All casinos <span class="small" style="font-weight:400">' + plural(ops.length, "casino", "casinos") + '</span></h3></div><div class="panel cmpwrap"><table class="cmp allcmp"><thead><tr><th>Casino</th>' + cols.map(function (c) { return "<th>" + c[0] + "</th>"; }).join("") + "</tr></thead><tbody>" +
-      ops.map(function (o) {
-        var p = state.profiles[o.id];
-        return '<tr class="' + (o.isOwn ? "you" : "") + '"><td><button type="button" class="linkbtn" data-op="' + o.id + '">' + esc(o.name) + "</button>" + (o.isOwn ? ' <span class="ownpill">You</span>' : "") + "</td>" + (p ? cols.map(function (c) { return "<td>" + c[1](p) + "</td>"; }).join("") : '<td colspan="' + cols.length + '" class="small">Not researched yet</td>') + "</tr>";
-      }).join("") + "</tbody></table></div>";
+    if (!ops.length) { el.innerHTML = '<div class="panel empty-c"><b>No casinos yet.</b><br>Add a casino on the left, then research it with the extension.</div>'; return; }
+    var arr = function (v) { return Array.isArray(v) ? v.filter(Boolean) : v ? [v] : []; };
+    var none = '<span class="muted">–</span>';
+    el.innerHTML = '<div class="cmpgrid">' + ops.map(function (o) {
+      var p = state.profiles[o.id];
+      var head = '<button type="button" class="cchead" data-op="' + o.id + '"><span class="avatar" style="background:' + opColor(o) + '">' + esc(o.name.charAt(0).toUpperCase()) + "</span><b>" + esc(o.name) + "</b>" + (o.isOwn ? '<span class="ownpill">You</span>' : "") + "</button>";
+      if (!p) return '<article class="ccmp">' + head + '<p class="small" style="padding:0 16px 16px">Not researched yet. Open its website and click <b>Research this casino</b> in the extension.</p></article>';
+      var g = p.glance || {}, m = p.market || {}, pr = p.products || {}, pay = p.payments || {}, of = p.offers || {};
+      var shot = profileHero(p), lic = g.licence || short(String(m.licence || "").split(/[,–]/)[0], 22);
+      var flags = arr(m.languages).map(function (x) { return flagOf(x); }).filter(Boolean).join(" ");
+      var cur = arr(m.currencies).slice(0, 6).map(function (c) { var k = String(c).toUpperCase().replace(/[^A-Z]/g, ""); return '<span class="coin sm' + (CRYPTO_RE.test(k) ? " cr" : "") + '" title="' + esc(c) + '"><b>' + esc(COIN[k] || k.slice(0, 3)) + "</b></span>"; }).join("");
+      var prods = arr(pr.verticals).map(function (x) { return '<i class="pic sm" title="' + esc(x) + '">' + svg(PICON[productIcon(x)]) + "</i>"; }).join("");
+      var fc = function (k) { return featuresOf(o).filter(function (x) { return x.part === k; }).length; };
+      var on = function (t, n) { return n > 0 || !!(t && !/^(none|no|not offered|not found|n\/a)\b/i.test(String(t))); };
+      var feats = [["gift", "Welcome offer", on(g.welcome || of.welcome_offer, 0)], ["crown", "Loyalty / VIP", on(of.loyalty, fc("vip"))], ["target", "Missions", on(of.missions, fc("missions"))], ["trophy", "Tournaments", on(of.tournaments, fc("tournaments"))], ["bag", "Store", on(of.store, fc("shop"))]]
+        .map(function (f) { return '<i class="fdot' + (f[2] ? " on" : "") + '" title="' + f[1] + (f[2] ? "" : ": not found") + '">' + svg(RI[f[0]]) + "</i>"; }).join("");
+      var row = function (label, value) { return "<div><small>" + label + "</small><span>" + (value || none) + "</span></div>"; };
+      return '<article class="ccmp">' + (shot ? '<button type="button" class="ccshot" data-op="' + o.id + '"><img src="' + shot + '" alt=""></button>' : "") + head +
+        (g.one_liner ? '<p class="ccline">' + esc(g.one_liner) + "</p>" : "") +
+        '<div class="ccrows">' + row("Licence", lic ? esc(lic) : "") + row("Languages", flags || esc(arr(m.languages).slice(0, 3).join(", "))) + row("Currencies", cur ? '<span class="coins sm">' + cur + "</span>" : "") +
+        row("Products", prods ? '<span class="prodrow">' + prods + "</span>" : "") + row("Welcome", esc(g.welcome || short(of.welcome_offer, 60))) + row("Min deposit", esc(short(pay.min_deposit, 20))) + row("Withdrawal", esc(g.withdrawal || short(pay.withdrawal_time, 24))) + row("Retention", '<span class="fdots">' + feats + "</span>") + "</div></article>";
+    }).join("") + "</div>";
   }
   // the emails received from this casino (Competitor emails, matched by name)
   function casEmailsOf(op) {
@@ -2083,7 +2147,7 @@ footer { color: var(--muted); font-size: 12px; margin-top: 24px; text-align: cen
     var o = findOp(x.opId) || { name: "?" }, pic = offerPics(x).filter(Boolean)[0], open = ui.ftOpen === x.id;
     var chips = (x.key_facts || []).slice(0, 4).map(function (f) { return '<span class="pchip"><small>' + esc(f.label) + "</small>" + esc(f.value) + "</span>"; }).join("");
     return '<div class="prow' + (open ? " open" : "") + '"><button type="button" class="pbtn" data-ftopen="' + x.id + '" aria-expanded="' + open + '">' + (pic ? '<img class="pthumb" src="' + pic + '" alt="">' : '<span class="pthumb pnone">' + esc(x.partLabel || "") + "</span>") +
-      '<span class="pmain"><span><span class="kindpill">' + esc(o.name) + '</span> <span class="small">' + (x.run === "logged-in" ? "logged in" : "logged out") + "</span></span><b>" + esc(x.title || x.partLabel || "Feature") + "</b>" +
+      '<span class="pmain">' + (showOp ? '<span><span class="kindpill">' + esc(o.name) + "</span></span>" : "") + "<b>" + esc(x.title || x.partLabel || "Feature") + "</b>" +
       (x.status === "reading" ? "<small>Claude is writing it up…</small>" : x.status === "error" ? '<small style="color:var(--bad)">' + esc(x.error || "Couldn't read it.") + "</small>" : "<small>" + esc(x.summary || "") + "</small>") +
       (chips && !open ? '<span class="pchips">' + chips + "</span>" : "") + '</span><span class="pgo" aria-hidden="true">' + (open ? "⌃" : "⌄") + "</span></button>" +
       (open ? '<div class="pfull">' + (ui.ftEdit === x.id ? featureEditor(x) : featureBody(x)) + "</div>" : "") + "</div>";
@@ -2128,7 +2192,7 @@ footer { color: var(--muted); font-size: 12px; margin-top: 24px; text-align: cen
     groups = groups.concat(customs).filter(function (g) { return g.items.length; });
     main.innerHTML = busy + (fp ? "" : '<div class="sechead"><h3>' + (op ? "Features at " + esc(op.name) : "All features") + "</h3></div>") + groups.map(function (g) {
       g.items.sort(function (a, b) { return order.indexOf(a.opId) - order.indexOf(b.opId); });
-      return '<section class="pgroup"><h3 class="pgh">' + esc(g.label) + ' <span class="small">' + g.items.length + '</span></h3><div class="plist2">' + g.items.map(function (x) { return featurePreview(x, !op); }).join("") + "</div></section>";
+      return '<section class="pgroup">' + (fp && fp !== "other" ? "" : '<h3 class="pgh">' + esc(g.label) + ' <span class="small">' + g.items.length + "</span></h3>") + '<div class="plist2">' + g.items.map(function (x) { return featurePreview(x, !op); }).join("") + "</div></section>";
     }).join("") + otherHtml;
   }
   document.getElementById("featuresApp").addEventListener("click", function (e) {
@@ -2201,20 +2265,20 @@ footer { color: var(--muted); font-size: 12px; margin-top: 24px; text-align: cen
     if (ui.pmKind && kinds.indexOf(ui.pmKind) < 0) ui.pmKind = null;
     var list = promosOf(op).slice(), order = state.operators.map(function (o) { return o.id; });
     list.sort(function (a, b) { return order.indexOf(a.opId) - order.indexOf(b.opId) || (a.order || 0) - (b.order || 0); });
-    document.getElementById("pmNav").innerHTML = list.length ? '<button class="btn" type="button" data-promocsv="1">Download list (CSV)</button>' : "";
+    document.getElementById("pmNav").innerHTML = "";
     var busy = promoBusy ? '<div class="rvprog"><b>' + esc(promoBusy.title) + '</b><div class="scanbar" style="margin:8px 0"><i style="width:' + Math.round(100 * promoBusy.done / Math.max(1, promoBusy.total)) + '%"></i></div><p class="small" style="margin:0">' + esc(promoBusy.text) + "</p></div>" : "";
     if (!list.length) { main.innerHTML = busy + '<div class="panel empty-c">No promotions yet. Open ' + (op ? esc(op.name) + "'s" : "a casino's") + " website and click <b>Research this casino</b> in the extension: every promotion is opened and written up here with its terms.</div>"; return; }
     // grouped under what each one is: welcome offer, 2nd deposit offer…
     var KORDER = OFFER_KINDS.map(function (k) { return k[0]; }).concat(["tournament", "terms"]);
     var groups = KORDER.map(function (k) { return { k: k, items: list.filter(function (p) { return p.kind === k; }) }; }).filter(function (g) { return g.items.length; });
     list.filter(function (p) { return KORDER.indexOf(p.kind) < 0; }).forEach(function (p) { var g = groups.filter(function (x) { return x.k === "other_offer"; })[0]; if (!g) { g = { k: "other_offer", items: [] }; groups.push(g); } g.items.push(p); });
-    main.innerHTML = busy + '<div class="sechead"><h3>' + (op ? "Promotions at " + esc(op.name) : "All promotions") + ' <span class="small" style="font-weight:400">' + plural(list.filter(function (p) { return p.kind !== "terms"; }).length, "promotion", "promotions") + "</span></h3></div>" +
+    main.innerHTML = busy + '<div class="sechead"><h3>' + (op ? "Promotions at " + esc(op.name) : "All promotions") + ' <span class="small" style="font-weight:400">' + plural(list.filter(function (p) { return p.kind !== "terms"; }).length, "promotion", "promotions") + "</span></h3><button class=\"btn\" type=\"button\" data-promocsv=\"1\">Download list (CSV)</button></div>" +
       groups.map(function (g) {
         return '<section class="pgroup"><h3 class="pgh">' + esc(promoKind(g.k)) + ' <span class="small">' + g.items.length + '</span></h3><div class="plist2">' + g.items.map(function (p) {
           var o = findOp(p.opId) || { name: "?" }, t = p.terms || {}, src = bannerSrc(p), open = ui.pmOpen === p.id;
           var chips = PROMO_TERMS.filter(function (k) { return t[k[0]]; }).slice(0, 5).map(function (k) { return '<span class="pchip"><small>' + k[1] + "</small>" + esc(t[k[0]]) + "</span>"; }).join("");
           return '<div class="prow' + (open ? " open" : "") + '"><button type="button" class="pbtn" data-pmopen="' + p.id + '" aria-expanded="' + open + '">' + (src ? '<img class="pthumb" src="' + src + '" alt="">' : '<span class="pthumb pnone">' + esc(promoKind(p.kind)) + "</span>") +
-            '<span class="pmain"><span><span class="kindpill">' + esc(promoKind(p.kind)) + "</span>" + (op ? "" : ' <span class="small">' + esc(o.name) + "</span>") + "</span><b>" + esc(p.title || "Promotion") + "</b>" +
+            '<span class="pmain">' + (op ? "" : '<span><span class="kindpill">' + esc(o.name) + "</span></span>") + "<b>" + esc(p.title || "Promotion") + "</b>" +
             (p.status === "reading" ? "<small>Claude is reading this promotion…</small>" : p.status === "error" ? '<small style="color:var(--bad)">' + esc(p.error || "Couldn't read it.") + "</small>" : "<small>" + esc(p.summary || "") + "</small>") +
             (chips && !open ? '<span class="pchips">' + chips + "</span>" : "") + '</span><span class="pgo" aria-hidden="true">' + (open ? "⌃" : "⌄") + "</span></button>" +
             (open ? '<div class="pfull">' + (ui.pmEdit === p.id ? promoEditor(p) : promoBody(p)) + "</div>" : "") + "</div>";
@@ -2969,7 +3033,7 @@ footer { color: var(--muted); font-size: 12px; margin-top: 24px; text-align: cen
   });
   document.getElementById("offersApp").addEventListener("click", function (e) {
     var b = e.target.closest("[data-castab]"); if (b) { ui.casTab = b.getAttribute("data-castab"); renderCompetitors(); return; }
-    b = e.target.closest("#casOverview [data-op]"); if (b) { selectOp(b.getAttribute("data-op")); return; }
+    b = e.target.closest("#casOverview [data-op]"); if (b) { selectOp(b.getAttribute("data-op")); window.scrollTo(0, 0); return; }
     b = e.target.closest("[data-openemails]"); if (b) { ui.trkSel = b.getAttribute("data-openemails"); location.hash = "#emails"; }
   });
   document.querySelector(".compmode").addEventListener("click", function (e) { var b = e.target.closest("[data-cmode]"); if (b) { ui.compMode = b.getAttribute("data-cmode"); renderCompetitors(); } });
