@@ -582,7 +582,7 @@ textarea.inp { resize: vertical; min-height: 70px; }
 .pstats > div { display: flex; gap: 8px; align-items: center; min-width: 0; }
 .pstats > div > span { display: flex; flex-direction: column; min-width: 0; }
 .pstats b { font-size: 14.5px; overflow-wrap: anywhere; }
-.pays { display: flex; flex-wrap: wrap; gap: 6px; }
+.pays { display: flex; flex-wrap: wrap; gap: 6px; align-items: flex-start; }
 .pay { font-size: 12px; font-weight: 600; border-radius: 8px; padding: 4px 9px; border-left: 3px solid; background: var(--sunk); }
 .pay.card { border-color: #2F6FED; } .pay.wallet { border-color: #8E44D9; } .pay.crypto { border-color: #E59A00; } .pay.bank { border-color: #19A974; } .pay.voucher { border-color: #E5487A; } .pay.more { border-color: transparent; color: var(--muted); }
 .prods { display: grid; grid-template-columns: repeat(auto-fill, minmax(84px, 1fr)); gap: 10px; margin-bottom: 12px; }
@@ -914,6 +914,44 @@ details.guide ol { margin: 8px 0 0; padding-left: 18px; font-size: 12px; color: 
 .toast { position: fixed; left: 50%; transform: translateX(-50%); bottom: calc(18px + env(safe-area-inset-bottom, 0px)); background: var(--ink); color: var(--bg); padding: 10px 16px; border-radius: 14px; font-weight: 500; z-index: 80; box-shadow: var(--shadow); }
 footer { color: var(--muted); font-size: 12px; margin-top: 24px; text-align: center; }
 @media (prefers-reduced-motion: reduce) { .block, .card { transition: none; } }
+
+/* ===== Editorial overview: open layout, no boxes, visuals and type do the work ===== */
+#casOverview { gap: 0 !important; }
+.phero { background: none; box-shadow: none; padding: 8px 0 28px; gap: 32px; border-radius: 0; }
+.phero .pshot { box-shadow: 0 18px 40px -18px rgba(40,30,90,.45); border-radius: 16px; }
+.pinfo .pflead { font-size: 22px; font-weight: 600; line-height: 1.3; letter-spacing: -0.01em; }
+.pbadges { gap: 14px; margin-top: 6px; }
+.inshort { background: none; color: var(--ink); box-shadow: none; border-radius: 0; padding: 4px 0 4px 20px; border-left: 3px solid var(--accent); margin: 4px 0 40px; }
+.inshort h3 { color: var(--accent); font-size: 13px; text-transform: uppercase; letter-spacing: .08em; margin-bottom: 8px; }
+.inshort h3 .pic { display: none; }
+.inshort ol { font-size: 15.5px; gap: 6px; padding-left: 20px; }
+.thread { padding-left: 0; gap: 0; }
+.thread::before { display: none; }
+.chap { background: none; box-shadow: none; border-radius: 0; padding: 36px 0; border-top: 1px solid var(--line); display: grid; grid-template-columns: 210px minmax(0, 1fr); column-gap: 40px; }
+.chap:first-child { border-top: 0; padding-top: 8px; }
+.cleft { align-self: start; position: sticky; top: 16px; }
+.cnum { position: static; display: block; width: auto; height: auto; background: none; box-shadow: none; font-size: 52px; font-weight: 700; line-height: 1; letter-spacing: -0.03em; -webkit-text-stroke: 1.5px var(--accent); color: transparent; opacity: .5; }
+.chead { margin: 12px 0 0; }
+.chead h3 { font-size: 20px; letter-spacing: -0.01em; }
+.chead p { font-size: 13.5px; line-height: 1.5; margin-top: 6px; }
+.cbody { min-width: 0; }
+.cbody > .csub:first-child { margin-top: 0; }
+.cbody > .sts:first-child, .cbody > .prods:first-child, .cbody > .jpath:first-child { margin-top: 0; }
+.csub { margin: 24px 0 10px; letter-spacing: .07em; }
+.st { background: none; padding: 0; }
+.sts { gap: 18px 28px; margin-top: 22px; }
+.st .pic { background: var(--accent-soft); }
+.lbar { border-radius: 14px 14px 6px 6px; }
+.jpath::before { background: var(--line); }
+.jstep.on .jdot { box-shadow: 0 8px 18px -8px rgba(90,75,220,.7); }
+.bthumb { border-radius: 12px; background: none; }
+.bthumb img { border-radius: 12px; }
+.bthumb span { padding: 6px 2px; }
+.pfdets { gap: 0; border-top: 1px solid var(--line); margin-top: 4px; }
+.pfdet { background: none; box-shadow: none; border-radius: 0; border-bottom: 1px solid var(--line); padding: 0 4px; }
+.pfdet summary { padding: 14px 0; font-weight: 600; }
+#casOverview > .sechead { margin-top: 28px; }
+@media (max-width: 900px) { .chap { grid-template-columns: minmax(0, 1fr); padding: 28px 0; } .cleft { position: static; display: flex; align-items: center; gap: 14px; margin-bottom: 18px; } .cnum { font-size: 38px; } .chead { margin: 0; } }
 </style>
 
 <style>body{margin:0}[hidden]{display:none!important}</style>
@@ -2003,7 +2041,7 @@ footer { color: var(--muted); font-size: 12px; margin-top: 24px; text-align: cen
     // The overview tells one story, in the order a player meets the casino:
     // in short → 1 joining → 2 playing → 3 staying → 4 cashing out → 5 help & safety
     var stat = function (icon, label, value, sub) { return '<div class="st">' + ic(icon) + "<span><small>" + label + "</small><b>" + (value ? esc(value) : '<em>Not found</em>') + "</b>" + (sub ? "<i>" + esc(sub) + "</i>" : "") + "</span></div>"; };
-    var chapter = function (n, title, lead, body) { return '<section class="chap"><span class="cnum">' + n + '</span><div class="chead"><h3>' + title + "</h3><p>" + lead + "</p></div>" + body + "</section>"; };
+    var chapter = function (n, title, lead, body) { return '<section class="chap"><div class="cleft"><span class="cnum">' + (n < 10 ? "0" + n : n) + '</span><div class="chead"><h3>' + title + "</h3><p>" + lead + '</p></div></div><div class="cbody">' + body + "</div></section>"; };
     var sub = function (t) { return '<p class="csub">' + t + "</p>"; };
     var fcount = function (k) { return featuresOf(op).filter(function (x) { return x.part === k; }).length; };
     var promosAll = promosOf(op).filter(function (x) { return x.kind !== "terms"; });
