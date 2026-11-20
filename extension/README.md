@@ -37,19 +37,20 @@ Works in Chrome, Edge and Brave. Only people who run scans need it; everyone in 
 
 For the logged-in run, log in to the site yourself first, then scan again and choose **Logged in**.
 
-## What to scan
+## Research a casino
 
-The website review (all sections in one scan) is switched off for now. Instead you scan one part at a time: choose it under **What to scan** at the top of the popup.
+Open the casino's website and click **Research this casino**. The scanner reads the homepage (including its footer, where the licence, company, payment and provider logos usually are), the site menu, the promotions page, loyalty / VIP, missions, tournaments, store, the bonus and general terms, payments, about, responsible-gambling, help and app pages, and the cashier when you're logged in. With **Open every promotion** ticked (the default) it also opens each promotion one by one, up to 30, to read its terms.
 
-- **Promotions & terms**: every promotion with its terms (see below).
-- **Loyalty / VIP**, **Missions**, **Deposit / cashier** (log in first), **Tournaments** (each tournament is opened), **Store**: that feature in depth, with its tabs, details and pop-ups.
-- **Something else…**: a feature unique to the casino. Give its name (e.g. Wheel of Fortune) and other names it may have.
+In CRM Studio, under **Competitor review**, each casino gets a profile:
 
-In the planner each part is written up per casino on the **Features** tab: what it is, where it lives, how it works, its key details and what stands out, with its screenshots.
+- **Overview**: a short summary, what stands out, and the facts found on the site: market and licence, products and games, payments, offers and retention, and support and responsible gambling. Anything the site didn't confirm is listed separately.
+- **Promotions**: every promotion grouped by type (welcome offer, 2nd deposit offer…), with how it works and its terms.
+- **Features**: loyalty / VIP, missions, tournaments, store and deposit written up.
+- **Offer terms** and **Emails**: offers added by hand, and the emails received from that casino.
 
-## Scan only the promotions
+**All casinos** at the top of the list compares the main facts of every casino side by side. Researching a casino again updates its profile.
 
-Choose **Promotions & terms** at the top of the popup (it's remembered). The scanner finds the promotions page and opens every promotion one by one, up to 30: its pop-up or own page, More info or the ⓘ icon, and the terms inside. Tick **Also read the general bonus terms** to include the page most promotions refer to. In the planner the promotions appear under **Offer terms** as a list: what each one does, how it works, who can take part and its key terms, with the full text and screenshots. **Download list (CSV)** gives the list as a spreadsheet. Scanning again updates the promotions already in the list.
+The website review and the one-part scans are switched off for now; they can be turned back on later.
 
 ## Good to know
 

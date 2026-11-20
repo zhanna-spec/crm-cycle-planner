@@ -69,9 +69,15 @@ function pageInfo() {
     const extra = el.scrollHeight - el.clientHeight;
     if (extra > bestH + 50 && el.clientHeight > window.innerHeight * 0.5 && /(auto|scroll)/.test(getComputedStyle(el).overflowY)) { best = el; bestH = extra; }
   });
+  // the footer carries the licence, the company and the payment / provider logos: always keep it
+  const foot = document.querySelector("footer, [class*=footer], [class*=Footer], [id*=footer]");
+  const footText = foot ? (foot.innerText || "").replace(/\s+\n/g, "\n").replace(/\n{3,}/g, "\n\n").slice(0, 6000) : "";
+  const logos = foot ? Array.from(foot.querySelectorAll("img, svg[aria-label], [role=img]")).map((im) => (im.getAttribute("alt") || im.getAttribute("title") || im.getAttribute("aria-label") || "").trim()).filter((t) => t && t.length < 60) : [];
+  const lang = (document.documentElement.getAttribute("lang") || "").trim();
+  const extra = (footText ? "\n\n--- Footer ---\n" + footText : "") + (logos.length ? "\n\n--- Footer logos ---\n" + Array.from(new Set(logos)).join(", ") : "") + (lang ? "\n\nPage language: " + lang : "");
   return {
     title: document.title,
-    text: (document.body ? document.body.innerText : "").replace(/\n{3,}/g, "\n\n").slice(0, 15000),
+    text: (document.body ? document.body.innerText : "").replace(/\n{3,}/g, "\n\n").slice(0, 15000) + extra,
     scrollHeight: best ? best.scrollHeight : win,
     innerHeight: best ? best.clientHeight : window.innerHeight
   };

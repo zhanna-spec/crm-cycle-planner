@@ -40,6 +40,7 @@ const esc = (s) => String(s == null ? "" : s).replace(/[&<>"]/g, (c) => ({ "&": 
 const reEsc = (s) => s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 let runMode = "logged-out", guessed = false;
 let site = { sugg: [], pages: [] }; // this site's own ticks, kept per site
+let info0 = {};
 let target = null, prefs = { off: [], on: [], custom: [] }, sections = [], suggestions = [], pages = [], base = [];
 
 // Search words typed by the person ("daily wheel, lucky spin") become a pattern.
@@ -161,6 +162,14 @@ function row(item, list, i, extra) {
 
 // The website review (all sections at once) is switched off for now. Set this to true to bring it back.
 const SHOW_REVIEW = false;
+// The part scans (one part per scan) are switched off: the research scan does it all. Set to true to bring them back.
+const SHOW_PARTS = false;
+// Where a research scan looks besides the review sections: general terms, payments, help, about.
+const RESEARCH_EXTRA = [
+  { key: "generalterms", label: "Terms & conditions", words: "^(terms|terms (and|&) conditions|general terms|t&cs?|terms of (use|service))$|terms[\\s_-]*(and|&)?[\\s_-]*conditions|general[\\s_-]*terms", not: "bonus|promotion", help: true },
+  { key: "payments", label: "Payments", words: "payment[\\s_-]*methods?|^payments?$|banking|deposits?[\\s_-]*(and|&)[\\s_-]*withdrawals?|cashier[\\s_-]*info", help: true },
+  { key: "about", label: "About", words: "^about( us)?$|about[\\s_-]*us|who we are", help: true }
+];
 // One part per scan: promotions with their terms, or one feature of the casino in depth.
 const PARTS = [["promos", "Promotions & terms"], ["vip", "Loyalty / VIP"], ["missions", "Missions"], ["deposit", "Deposit / cashier"], ["tournaments", "Tournaments"], ["shop", "Store"], ["custom", "Something else…"]];
 const PART_NOTE = {
@@ -176,6 +185,15 @@ function partSwitch() {
   const m = partOf();
   return "<h2>What to scan</h2>" + '<select id="partSel" style="width:100%">' + (SHOW_REVIEW ? '<option value="review"' + (m === "review" ? " selected" : "") + ">Website review (all sections)</option>" : "") +
     PARTS.map((p) => '<option value="' + p[0] + '"' + (m === p[0] ? " selected" : "") + ">" + esc(p[1]) + "</option>").join("") + "</select>";
+}
+// One scan that researches the whole casino: market, products, payments, offers.
+function renderResearch() {
+  main.innerHTML = "<h2>Research the casino</h2>" + runSwitch() +
+    '<p class="note">Reads the homepage and its footer (licence, company, payment and provider logos), the terms, payments, help and responsible-gambling pages, the promotions, loyalty / VIP, missions, tournaments and store, and the cashier when you are logged in. CRM Studio then builds the casino\'s profile: market and licence, products and games, payments, offers and retention.</p>' +
+    '<label class="opt"><input type="checkbox" id="openCards"' + (prefs.cards !== false ? " checked" : "") + '><span><b>Open every promotion</b><small>Reads each promotion\'s terms and banner (up to 30). Adds about 10 seconds per promotion.</small></span></label>' +
+    blurField() +
+    '<button class="primary" id="go">Research this casino</button>' +
+    "<p class=\"note\">Takes a few minutes. Don't switch tabs until CRM Studio opens. Log in first if you want the cashier and your account's view of the loyalty programme.</p>";
 }
 function renderPart() {
   const k = partOf(), label = PARTS.find((p) => p[0] === k)[1];
@@ -207,6 +225,7 @@ function renderPromos() {
     '<p class="note">About 10 seconds per promotion. Don\'t switch tabs until CRM Studio opens.</p>';
 }
 function render() {
+  if (!SHOW_REVIEW && !SHOW_PARTS) { renderResearch(); return; }
   const part = partOf();
   if (part === "promos") { renderPromos(); return; }
   if (part !== "review") { renderPart(); return; }
@@ -280,6 +299,21 @@ main.addEventListener("click", async (e) => {
   if (t.id === "add") {
     const v = document.getElementById("extra").value.trim();
     try { const u = new URL(v); pages.push({ type: "page", url: u.toString(), cat: "custom", label: "Added by you", sub: u.pathname, checked: true }); await saveSite(); render(); } catch (err) { document.getElementById("extra").focus(); }
+  }
+  if (t.id === "go" && !SHOW_REVIEW && !SHOW_PARTS) {
+    const home = base[0].url, run = document.querySelector('input[name="run"]:checked').value, S = (k) => DEFAULT_SECTIONS.find((x) => x.key === k);
+    const find = (sec, extra) => Object.assign({ type: "find", url: home, label: sec.label, cat: sec.key, words: sec.words, not: sec.not || "", popup: !!sec.popup, details: true, help: !!sec.help }, extra || {});
+    const list = [{ type: "page", url: home, cat: "homepage", label: "Homepage", details: false }];
+    if (info0.menu && info0.menu.length >= 3) list.push({ type: "menu", url: home, cat: "menu", label: "Site menu", menu: info0.menu });
+    list.push(find(S("promotions"), prefs.cards !== false ? { cards: true, cardLabel: "Offer", cardLimit: 30, details: false } : {}));
+    ["vip", "missions", "tournaments", "shop"].forEach((k) => list.push(find(S(k))));
+    if (run === "logged-in") list.push(find(S("deposit")));
+    list.push(find(S("terms")));
+    RESEARCH_EXTRA.forEach((sec) => list.push(find(sec, { details: false })));
+    ["rg", "help", "app"].forEach((k) => list.push(find(S(k), { details: false })));
+    await chrome.runtime.sendMessage({ type: "scan", kind: "research", tabId: target.id, pages: list, run, skip: [], blur: String(prefs.blur || "").split(",").map((w) => w.trim()).filter((w) => w.length >= 3), site: { host: target.info.host, title: target.info.title, url: target.info.url } });
+    showProgress();
+    return;
   }
   if (t.id === "go" && partOf() !== "promos" && partOf() !== "review") {
     const k = partOf(), home = base[0].url, run = document.querySelector('input[name="run"]:checked').value;
@@ -365,7 +399,7 @@ function showProgress() {
   try {
     main.innerHTML = '<p class="note">Looking at the page…</p>';
     const [res] = await chrome.scripting.executeScript({ target: { tabId: tab.id }, func: collectSite });
-    target = { id: tab.id, info: res.result };
+    target = { id: tab.id, info: res.result }; info0 = res.result;
     const ticks = (await chrome.storage.local.get("siteTicks")).siteTicks || {};
     if (ticks[res.result.host]) site = { sugg: ticks[res.result.host].sugg || [], pages: ticks[res.result.host].pages || [] };
     document.getElementById("site").textContent = res.result.host;

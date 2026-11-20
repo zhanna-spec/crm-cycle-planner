@@ -255,6 +255,68 @@ function readFeature(apiKey: string, body: Record<string, unknown>) {
   return askClaude(apiKey, FEATURE_SYSTEM, content, FEATURE_SCHEMA, "low", 8000);
 }
 
+// ---------- the research profile of a casino ----------
+
+const LIST = { type: "array", items: { type: "string" } };
+const RESEARCH_SCHEMA = {
+  type: "object", additionalProperties: false,
+  required: ["summary", "positioning", "stands_out", "market", "products", "payments", "offers", "support", "uncertain"],
+  properties: {
+    summary: { type: "string" },
+    positioning: { type: "string" },
+    stands_out: LIST,
+    market: {
+      type: "object", additionalProperties: false,
+      required: ["markets", "licence", "operator", "languages", "currencies", "restricted_countries", "founded"],
+      properties: { markets: LIST, licence: STR, operator: STR, languages: LIST, currencies: LIST, restricted_countries: LIST, founded: STR },
+    },
+    products: {
+      type: "object", additionalProperties: false,
+      required: ["verticals", "providers", "special_games", "notes"],
+      properties: { verticals: LIST, providers: LIST, special_games: LIST, notes: STR },
+    },
+    payments: {
+      type: "object", additionalProperties: false,
+      required: ["deposit_methods", "withdrawal_methods", "crypto", "min_deposit", "min_withdrawal", "max_withdrawal", "withdrawal_time", "fees", "kyc"],
+      properties: { deposit_methods: LIST, withdrawal_methods: LIST, crypto: STR, min_deposit: STR, min_withdrawal: STR, max_withdrawal: STR, withdrawal_time: STR, fees: STR, kyc: STR },
+    },
+    offers: {
+      type: "object", additionalProperties: false,
+      required: ["welcome_offer", "promotions", "loyalty", "missions", "tournaments", "store", "other_features", "bonus_rules"],
+      properties: { welcome_offer: STR, promotions: LIST, loyalty: STR, missions: STR, tournaments: STR, store: STR, other_features: LIST, bonus_rules: LIST },
+    },
+    support: {
+      type: "object", additionalProperties: false,
+      required: ["channels", "hours", "rg_tools", "app"],
+      properties: { channels: LIST, hours: STR, rg_tools: LIST, app: STR },
+    },
+    uncertain: LIST,
+  },
+};
+const RESEARCH_SYSTEM = [
+  "You research an online casino from the text of its website pages (homepage and footer, terms, payments, help, promotions, loyalty, missions, tournaments, store, cashier) and a few screenshots, for a CRM team.",
+  "summary: what this casino is, in two plain sentences. positioning: who it seems to target and how it presents itself (theme, tone, focus), one or two sentences. stands_out: up to five things that make it distinct.",
+  "market: markets / countries it targets (from licence, languages, currencies, payment methods, wording), licence and regulator with number if shown, operating company, languages offered, currencies, restricted countries, year founded.",
+  "products: verticals (casino, live casino, sportsbook, poker, bingo, lottery, esports, virtuals…), game providers named or shown as logos, special game types (crash, originals, Megaways, jackpots…), notes.",
+  "payments: methods for deposits and withdrawals (cards, e-wallets, bank, vouchers, crypto by name), crypto support, minimum deposit / withdrawal, maximum withdrawal, withdrawal time, fees, KYC / verification rules.",
+  "offers: welcome offer in one line, ongoing promotions (one short line each), loyalty / VIP, missions, tournaments, store, other retention features (wheel, cashback, rakeback, drops…), and the general bonus rules (wagering, max bet, game weighting…), short.",
+  "support: contact channels, hours, responsible-gambling tools, mobile app.",
+  "Use only what the pages show; write values as the site writes them. Use null or an empty list when something isn't shown, and add the field names you couldn't confirm to uncertain.",
+].join("\n");
+
+function researchCasino(apiKey: string, body: Record<string, unknown>) {
+  const images = (Array.isArray(body.images) ? body.images : [])
+    .filter((im: { media_type?: string; data?: string }) => im && IMAGE_TYPES.includes(im.media_type ?? "") && typeof im.data === "string" && im.data.length > 0)
+    .slice(0, 6) as { media_type: "image/jpeg"; data: string }[];
+  const pages = (Array.isArray(body.pages) ? body.pages : []).slice(0, 40) as { label?: string; url?: string; text?: string }[];
+  let budget = 90000;
+  const text = pages.map((p) => { const t = String(p.text ?? "").slice(0, Math.max(0, Math.min(12000, budget))); budget -= t.length; return `=== ${String(p.label ?? "").slice(0, 120)} (${String(p.url ?? "").slice(0, 200)})\n${t}`; }).join("\n\n");
+  if (!text.trim() && !images.length) throw new UserFacingError("bad_request", "The scan has no pages to research.");
+  const content: Anthropic.Beta.BetaContentBlockParam[] = images.map((im) => ({ type: "image", source: { type: "base64", media_type: im.media_type, data: im.data } }));
+  content.push({ type: "text", text: `Casino: ${String(body.casino ?? "").slice(0, 80)}\nWebsite: ${String(body.site ?? "").slice(0, 200)}\nScanned ${body.run === "logged-in" ? "logged in" : "logged out"}.\n\nPages:\n${text}\n\nResearch this casino.` });
+  return askClaude(apiKey, RESEARCH_SYSTEM, content, RESEARCH_SCHEMA, "medium", 12000);
+}
+
 // ---------- which casino sent which emails ----------
 
 const SENDERS_SCHEMA = {
@@ -582,7 +644,7 @@ Deno.serve(async (req) => {
       return reply(await callScript(`${scriptUrl}${sep}${tokenParam}&days=${days}`));
     }
 
-    if (action === "read_offer" || action === "summarise_emails" || action === "analyse_page" || action === "sort_page" || action === "sort_senders" || action === "sort_review_shots" || action === "draft_review_section" || action === "read_promotion" || action === "read_feature") {
+    if (action === "read_offer" || action === "summarise_emails" || action === "analyse_page" || action === "sort_page" || action === "sort_senders" || action === "sort_review_shots" || action === "draft_review_section" || action === "read_promotion" || action === "read_feature" || action === "research_casino") {
       if (!anthropicKey) return reply({ error: "no_ai_key", message: "AI isn't set up yet. Add the ANTHROPIC_API_KEY secret in Supabase." });
       const result = action === "read_offer" ? await readOffer(anthropicKey, body)
         : action === "analyse_page" ? await analysePage(anthropicKey, body)
@@ -592,6 +654,7 @@ Deno.serve(async (req) => {
         : action === "draft_review_section" ? await draftReviewSection(anthropicKey, body)
         : action === "read_promotion" ? await readPromotion(anthropicKey, body)
         : action === "read_feature" ? await readFeature(anthropicKey, body)
+        : action === "research_casino" ? await researchCasino(anthropicKey, body)
         : await summariseEmails(anthropicKey, body);
       return reply({ result });
     }
