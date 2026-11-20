@@ -1,4 +1,4 @@
-// Cycle Planner Site Scanner - does the scanning so it keeps going if the popup closes.
+// CRM Studio Scanner - does the scanning so it keeps going if the popup closes.
 
 const PLANNER_URL = "https://zhanna-spec.github.io/crm-cycle-planner/#scan";
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));

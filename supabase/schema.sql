@@ -1,4 +1,4 @@
--- Conversion Cycle Planner: database setup for Supabase.
+-- CRM Studio: database setup for Supabase.
 -- Paste this whole file into Supabase: SQL Editor -> New query -> Run.
 -- It is safe to run again: it only creates what is missing and replaces the functions.
 
@@ -135,7 +135,7 @@ begin
   end if;
   return jsonb_build_object('error', jsonb_build_object(
     'http_code', 403,
-    'message', 'This email has not been invited to the Conversion Cycle Planner.'));
+    'message', 'This email has not been invited to CRM Studio.'));
 end $$;
 
 grant execute on function public.hook_before_user_created(jsonb) to supabase_auth_admin;

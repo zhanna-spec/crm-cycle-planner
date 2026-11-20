@@ -1,5 +1,5 @@
 /**
- * Conversion Cycle Planner - Google script
+ * CRM Studio - Google script
  *
  * 1. Shares a research Gmail account's recent emails with the planner.
  * 2. Runs the planner's AI features (reading offer screenshots, summarising

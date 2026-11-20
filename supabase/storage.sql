@@ -1,4 +1,4 @@
--- Conversion Cycle Planner: private storage for offer screenshots.
+-- CRM Studio: private storage for offer screenshots.
 -- Paste into Supabase: SQL Editor -> New query -> Run. Safe to run again.
 -- Files are stored as <workspace id>/<offer id>/<file>.jpg and only members
 -- of that workspace can see, add or delete them.

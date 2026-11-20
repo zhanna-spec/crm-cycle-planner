@@ -1,6 +1,6 @@
 # Site scanner extension
 
-Scans a competitor's website in your own browser and sends the screenshots to the Conversion Cycle Planner. Claude then sorts every page into offers (welcome, 2nd deposit, reload…), tournaments and website content (homepage, registration, promotions, VIP…) and reads them, creating the cards for you.
+Scans a competitor's website in your own browser and sends the screenshots to CRM Studio. Claude then sorts every page into offers (welcome, 2nd deposit, reload…), tournaments and website content (homepage, registration, promotions, VIP…) and reads them, creating the cards for you.
 
 Because it runs in your browser, it sees what you see: your VPN's country, and your login when you run it logged in. Nothing is sent anywhere except to the planner.
 
@@ -12,7 +12,7 @@ Works in Chrome, Edge and Brave. Only people who run scans need it; everyone in 
 2. Open `chrome://extensions` (Edge: `edge://extensions`).
 3. Switch on **Developer mode** (top right in Chrome, left side in Edge).
 4. Click **Load unpacked** and choose the unzipped folder.
-5. Click the puzzle icon in the toolbar and pin **Cycle Planner Site Scanner**.
+5. Click the puzzle icon in the toolbar and pin **CRM Studio Scanner**.
 
 ## Scan a site
 
@@ -22,7 +22,7 @@ Works in Chrome, Edge and Brave. Only people who run scans need it; everyone in 
    - **Blur on screenshots**: email addresses are blurred automatically; add your username or name so they're blurred too. They're blurred on the page before each screenshot is taken.
    - **Open every promotion** is off by default. Tick it only when you want each offer's terms for the Offer terms tab.
 4. Click **Load unpacked** and choose the unzipped folder.
-5. Click the puzzle icon in the toolbar and pin **Cycle Planner Site Scanner**.
+5. Click the puzzle icon in the toolbar and pin **CRM Studio Scanner**.
 
 ## Scan a site
 

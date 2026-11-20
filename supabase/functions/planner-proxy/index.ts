@@ -1,4 +1,4 @@
-// Conversion Cycle Planner - the website's server.
+// CRM Studio - the website's server.
 //
 // The signed-in planner calls this function for everything that needs a
 // secret. It checks that the caller is signed in and belongs to the

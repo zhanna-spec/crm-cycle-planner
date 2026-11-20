@@ -1,4 +1,4 @@
-// Runs on the Conversion Cycle Planner page and hands it the latest scan.
+// Runs on the CRM Studio page and hands it the latest scan.
 (async function () {
   const { pendingScan } = await chrome.storage.local.get("pendingScan");
   if (!pendingScan) return;

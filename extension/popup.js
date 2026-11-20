@@ -1,4 +1,4 @@
-// Cycle Planner Site Scanner - popup: a checklist of sections the scanner looks for by clicking around the site.
+// CRM Studio Scanner - popup: a checklist of sections the scanner looks for by clicking around the site.
 
 // The standard checklist. "words" match the text (or address) of a link, button or menu entry.
 // popup: the section usually opens as a pop-up from a button. details: open rules, levels, cards on that page.
@@ -183,7 +183,7 @@ function renderPart() {
     (k === "custom" ? '<label class="opt" style="display:block"><span><b>Feature name</b></span><input type="text" id="partName" value="' + esc(prefs.partName || "") + '" placeholder="e.g. Wheel of Fortune" style="width:100%;margin-top:6px"><span><small>Other names it may have (optional, comma separated)</small></span><input type="text" id="partWords" value="' + esc(prefs.partWords || "") + '" placeholder="e.g. lucky wheel, daily spin" style="width:100%;margin-top:6px"></label>' : "") +
     blurField() +
     '<button class="primary" id="go">Scan ' + esc(k === "custom" ? (prefs.partName || "the feature") : label) + "</button>" +
-    "<p class=\"note\">Don't switch tabs until the planner opens. The planner writes it up: what it is, how it works and its key details.</p>";
+    "<p class=\"note\">Don't switch tabs until CRM Studio opens. CRM Studio writes it up: what it is, how it works and its key details.</p>";
 }
 // two kinds of scan: the website review (sections), or every promotion with its terms
 function modeSwitch() {
@@ -200,11 +200,11 @@ function blurField() {
 }
 function renderPromos() {
   main.innerHTML = modeSwitch() + runSwitch() +
-    '<p class="note">Finds the promotions page and opens every promotion one by one (up to 30): its pop-up or page, More info or the ⓘ icon, and the terms inside. The planner then writes up each one: what it does, how it works and its terms, as a list.</p>' +
+    '<p class="note">Finds the promotions page and opens every promotion one by one (up to 30): its pop-up or page, More info or the ⓘ icon, and the terms inside. CRM Studio then writes up each one: what it does, how it works and its terms, as a list.</p>' +
     '<label class="opt"><input type="checkbox" id="promoTerms"' + (prefs.promoTerms === true ? " checked" : "") + '><span><b>Also read the general bonus terms</b><small>The page most promotions refer to. Its text is kept, not its screenshots.</small></span></label>' +
     blurField() +
     '<button class="primary" id="go">Scan promotions</button>' +
-    '<p class="note">About 10 seconds per promotion. Don\'t switch tabs until the planner opens.</p>';
+    '<p class="note">About 10 seconds per promotion. Don\'t switch tabs until CRM Studio opens.</p>';
 }
 function render() {
   const part = partOf();
@@ -227,7 +227,7 @@ function render() {
     (suggestions.length ? "<h2>Also on this site</h2><p class=\"note\">Menu entries none of your sections cover. Tick any you want scanned too.</p>" +
       '<div class="list">' + suggestions.map((s, i) => row(s, "x", i, '<button class="x keep" data-keep="' + i + '" title="Add to my list for every site">Keep</button>')).join("") + "</div>" : "") +
     '<button class="primary" id="go"></button>' +
-    '<p class="note">For each section it clicks around the site: the page, the side menu, sub-menus and (logged in) the account menu. Then it photographs what opens and, on VIP, promotions and similar pages, opens the details. Sections it can\'t find are listed in the planner. About 15 to 40 seconds per section; don\'t switch tabs until the planner opens.</p>';
+    '<p class="note">For each section it clicks around the site: the page, the side menu, sub-menus and (logged in) the account menu. Then it photographs what opens and, on VIP, promotions and similar pages, opens the details. Sections it can\'t find are listed in CRM Studio. About 15 to 40 seconds per section; don\'t switch tabs until CRM Studio opens.</p>';
   count();
 }
 function chosen() { return base.concat(sections.filter(fits), pages, suggestions).filter((p) => p.checked); }
@@ -341,7 +341,7 @@ function showProgress() {
     const bar = document.getElementById("bar"); if (bar) bar.style.width = pct + "%";
     const p = document.getElementById("prog"); if (!p) return;
     if (st.state === "running") p.textContent = "Section " + Math.min(st.total, (st.done || 0) + 1) + " of " + st.total + (st.current ? ": " + st.current : "");
-    if (st.state === "done") main.innerHTML = '<p class="ok">' + (st.partial ? "Stopped. The " + st.kept + (st.kept === 1 ? " section" : " sections") + " finished so far are in the planner, which has opened in a new tab." : "Done. The planner has opened in a new tab with the scan.") + "</p>";
+    if (st.state === "done") main.innerHTML = '<p class="ok">' + (st.partial ? "Stopped. The " + st.kept + (st.kept === 1 ? " section" : " sections") + " finished so far are in CRM Studio, which has opened in a new tab." : "Done. CRM Studio has opened in a new tab with the scan.") + "</p>";
     if (st.state === "stopped") main.innerHTML = '<p class="ok">' + (st.message ? esc(st.message) : "The scan was cancelled.") + " Click the extension again to start a new scan.</p>";
     if (st.state === "error") main.innerHTML = '<p class="warn">The scan stopped: ' + esc(st.message) + "</p>";
   };

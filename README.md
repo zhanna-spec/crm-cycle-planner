@@ -1,4 +1,4 @@
-# Conversion Cycle Planner
+# CRM Studio
 
 A visual builder for iGaming CRM conversion cycles, plus a competitor offer tracker.
 

@@ -1,4 +1,4 @@
-<title>Conversion Cycle Planner</title>
+<title>CRM Studio</title>
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -707,8 +707,8 @@ footer { color: var(--muted); font-size: 12px; margin-top: 24px; text-align: cen
     <div class="brand">
       <div class="logo" aria-hidden="true"><svg viewBox="0 0 32 32"><path d="M16 5a11 11 0 1 0 10.4 7.4" fill="none" stroke="#6A5AE0" stroke-width="3.2" stroke-linecap="round"/><path d="M27.5 5.5l-1 7-6.5-2.5" fill="none" stroke="#6A5AE0" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"/><circle cx="16" cy="16" r="4" fill="#FF8FA2"/></svg></div>
       <div style="min-width:0">
-        <h1>Conversion Cycle Planner</h1>
-        <p class="sub">Build your cycle day by day. Drag channels onto the timeline.</p>
+        <h1>CRM Studio</h1>
+        <p class="sub">Plan CRM cycles and research competitors in one place.</p>
       </div>
     </div>
     <div class="hero-actions">
@@ -4009,7 +4009,7 @@ footer { color: var(--muted); font-size: 12px; margin-top: 24px; text-align: cen
     var card = document.getElementById("authCard"), wrap = document.getElementById("authScreen");
     var logo = '<div class="logo" aria-hidden="true"><svg viewBox="0 0 32 32"><path d="M16 5a11 11 0 1 0 10.4 7.4" fill="none" stroke="#FFFFFF" stroke-width="3.2" stroke-linecap="round"/><path d="M27.5 5.5l-1 7-6.5-2.5" fill="none" stroke="#FFFFFF" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"/><circle cx="16" cy="16" r="4" fill="#FF8FA2"/></svg></div>';
     var err = msg ? '<div class="autherr" role="alert">' + esc(msg) + "</div>" : "";
-    if (mode === "loading") card.innerHTML = logo + '<h2>Conversion Cycle Planner</h2><div class="row"><div class="spinner" role="status" aria-label="Loading"></div><p>' + esc(msg || "Loading your workspace…") + "</p></div>";
+    if (mode === "loading") card.innerHTML = logo + '<h2>CRM Studio</h2><div class="row"><div class="spinner" role="status" aria-label="Loading"></div><p>' + esc(msg || "Loading your workspace…") + "</p></div>";
     else if (mode === "email") card.innerHTML = logo + "<h2>Sign in</h2><p>Enter your work email. We'll send you a sign-in code. Only invited people can sign in.</p>" + err +
       '<form class="stack" id="authEmailForm"><label class="field"><span>Email</span><input class="inp" id="authEmail" type="email" autocomplete="email" required value="' + esc(authEmail) + '"></label><button class="btn primary" type="submit">Send sign-in code</button></form>';
     else if (mode === "code") card.innerHTML = logo + "<h2>Check your email</h2><p>We sent a code to <b>" + esc(authEmail) + "</b>. Type it below, or click the link in the email.</p>" + err +

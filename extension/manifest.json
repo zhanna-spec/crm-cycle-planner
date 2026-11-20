@@ -1,8 +1,8 @@
 {
   "manifest_version": 3,
-  "name": "Cycle Planner Site Scanner",
-  "version": "3.3.0",
-  "description": "Scans a competitor's website in your own browser and sends the screenshots to the Conversion Cycle Planner.",
+  "name": "CRM Studio Scanner",
+  "version": "3.3.1",
+  "description": "Scans a competitor's website in your own browser and sends the screenshots to CRM Studio.",
   "action": {
     "default_popup": "popup.html",
     "default_title": "Scan this site",
