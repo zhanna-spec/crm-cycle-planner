@@ -499,6 +499,7 @@ textarea.inp { resize: vertical; min-height: 70px; }
 .castabs button { font: inherit; font-weight: 600; border: 0; background: none; color: var(--muted); padding: 9px 16px; border-radius: 12px; cursor: pointer; white-space: nowrap; }
 .castabs button i { font-style: normal; font-size: 11px; background: var(--sunk); color: var(--accent); border-radius: 99px; padding: 1px 7px; margin-left: 4px; }
 .castabs button.on { background: var(--accent); color: #FFFFFF; }
+.castabs button.none:not(.on) { opacity: .55; }
 .castabs button.on i { background: rgba(255,255,255,.25); color: #FFFFFF; }
 .pfsum { background: var(--surface); border-radius: 20px; padding: 18px 20px; box-shadow: var(--shadow-sm); }
 .pfsum p { margin: 0 0 8px; color: var(--muted); }
@@ -846,6 +847,7 @@ footer { color: var(--muted); font-size: 12px; margin-top: 24px; text-align: cen
         <div id="featuresApp"><div id="ftCasinos" hidden></div><div class="stack" id="ftMain" style="gap:16px;min-width:0"></div></div>
         <div id="casEmails" class="stack" style="gap:12px"></div>
         <div id="casOffers" class="stack" style="gap:18px">
+        <div class="sechead"><h3>Offers added by hand</h3></div>
         <section class="panel secnav" id="secNav" aria-label="Sections">
           <div class="secnavtop">
             <div class="seg" id="runSeg" aria-label="Show what players see">
@@ -1658,17 +1660,22 @@ footer { color: var(--muted); font-size: 12px; margin-top: 24px; text-align: cen
       renderKeyPanel(); renderOpList();
       var opC = curOp(); renderOpHead(opC);
       var tab = opC ? (ui.casTab || "overview") : "all";
-      var nP = opC ? promosOf(opC).filter(function (x) { return x.kind !== "terms"; }).length : 0, nF = opC ? featuresOf(opC).length : 0, nO = opC ? offersOf(opC).length : 0, nE = opC ? casEmailsOf(opC).length : 0;
+      // one tab per part of the casino: promotions (with any offers added by hand), then each feature
+      var tabs = [["overview", "Overview"], ["promos", "Promotions"]].concat(FEATURE_TABS.map(function (k) { return ["f:" + k[0], k[1]]; }));
+      if (opC) featuresOf(opC).filter(function (x) { return x.part === "custom"; }).forEach(function (x) { var id = "f:c:" + squash(x.partLabel || "other"); if (!tabs.some(function (t) { return t[0] === id; })) tabs.push([id, x.partLabel || "Other feature"]); });
+      if (opC && !tabs.some(function (t) { return t[0] === tab; })) tab = ui.casTab = "overview";
+      var has = function (id) { if (id === "promos") return promosOf(opC).length || offersOf(opC).length; if (id.indexOf("f:") !== 0) return true; var k = id.slice(2); return featuresOf(opC).some(function (x) { return k.indexOf("c:") === 0 ? x.part === "custom" && "c:" + squash(x.partLabel || "other") === k : x.part === k; }); };
       var tabsEl = document.getElementById("casTabs"); tabsEl.hidden = !opC;
-      tabsEl.innerHTML = opC ? [["overview", "Overview", ""], ["promos", "Promotions", nP], ["features", "Features", nF], ["offers", "Offer terms", nO], ["emails", "Emails", nE]].map(function (t) { return '<button type="button" class="' + (tab === t[0] ? "on" : "") + '" data-castab="' + t[0] + '">' + t[1] + (t[2] !== "" ? " <i>" + t[2] + "</i>" : "") + "</button>"; }).join("") : "";
+      tabsEl.innerHTML = opC ? tabs.map(function (t) { return '<button type="button" class="' + (tab === t[0] ? "on" : "") + (has(t[0]) ? "" : " none") + '" data-castab="' + t[0] + '">' + esc(t[1]) + "</button>"; }).join("") : "";
+      var isF = tab.indexOf("f:") === 0;
       document.getElementById("casOverview").hidden = !(tab === "overview" || tab === "all");
-      document.getElementById("promosApp").hidden = tab !== "promos"; document.getElementById("featuresApp").hidden = tab !== "features";
-      document.getElementById("casEmails").hidden = tab !== "emails"; document.getElementById("casOffers").hidden = tab !== "offers";
+      document.getElementById("promosApp").hidden = tab !== "promos"; document.getElementById("featuresApp").hidden = !isF;
+      document.getElementById("casEmails").hidden = true; document.getElementById("casOffers").hidden = !(tab === "promos" && offersOf(opC).length);
       if (tab === "all") { renderCompareAll(); return; }
       if (tab === "overview") { renderProfile(opC); return; }
-      if (tab === "promos") { ui.pmOp = opC.id; renderPromosPage(); return; }
-      if (tab === "features") { ui.ftOp = opC.id; renderFeatures(); return; }
-      if (tab === "emails") { renderCasEmails(opC); return; }
+      if (isF) { ui.ftOp = opC.id; ui.ftPart = tab.slice(2); ui.ftPartLabel = (tabs.filter(function (t) { return t[0] === tab; })[0] || [])[1]; renderFeatures(); return; }
+      ui.pmOp = opC.id; renderPromosPage();
+      if (!offersOf(opC).length) return;
     }
     if (review) { document.getElementById("compCount").textContent = state.operators.length; document.getElementById("undoBtn").disabled = !history.length; renderKeyPanel(); renderReview(); return; }
     var op = curOp();
@@ -1833,11 +1840,12 @@ footer { color: var(--muted); font-size: 12px; margin-top: 24px; text-align: cen
   }
 
   // ---------- features: one part of a casino per scan, written up per casino ----------
+  var FEATURE_TABS = [["vip", "Loyalty / VIP"], ["missions", "Missions"], ["tournaments", "Tournaments"], ["shop", "Store"], ["deposit", "Deposit"]];
   var FEATURE_PARTS = [["vip", "Loyalty / VIP"], ["missions", "Missions"], ["deposit", "Deposit / cashier"], ["tournaments", "Tournaments"], ["shop", "Store"]];
   var featBusy = null;
   function featuresOf(op) { return (state.features || []).filter(function (x) { return (!op || x.opId === op.id) && runMatch(x); }); }
   async function featuresFromScan(op, pages, run, part, quiet) {
-    if (!quiet) { ui.opSel = op.id; ui.casTab = "features"; ui.ftOp = op.id; }
+    if (!quiet) { ui.opSel = op.id; ui.casTab = "f:" + (part.key === "custom" ? "c:" + squash(part.label || "other") : part.key); ui.ftOp = op.id; }
     var good = pages.filter(function (pg) { return pg.shots && pg.shots.length; });
     if (!good.length) { if (quiet) return; toast("The scanner couldn't find " + part.label + " on that site. Check the name, or open the page yourself and scan again."); renderCompetitors(); return; }
     var x = state.features.filter(function (f) { return f.opId === op.id && f.part === part.key && (f.run || "") === run && (part.key !== "custom" || squash(f.partLabel) === squash(part.label)); })[0];
@@ -1900,14 +1908,14 @@ footer { color: var(--muted); font-size: 12px; margin-top: 24px; text-align: cen
     document.getElementById("ftCasinos").innerHTML = '<button type="button" class="opitem' + (!ui.ftOp ? " on" : "") + '" data-ftop=""><span class="avatar" style="background:var(--accent)">' + svg('<rect x="3" y="4" width="6" height="12" rx="1.5"/><rect x="11" y="4" width="6" height="12" rx="1.5"/>', "#FFFFFF") + '</span><span class="meta2"><b>All casinos</b><small>' + plural(cnt(""), "write-up", "write-ups") + "</small></span></button>" +
       ops.map(function (o) { return '<button type="button" class="opitem' + (ui.ftOp === o.id ? " on" : "") + '" data-ftop="' + o.id + '"><span class="avatar" style="background:' + opColor(o) + '">' + esc(o.name.charAt(0).toUpperCase()) + '</span><span class="meta2"><b>' + esc(o.name) + "</b><small>" + plural(cnt(o.id), "feature", "features") + "</small></span></button>"; }).join("");
     var op = ui.ftOp ? findOp(ui.ftOp) : null; if (ui.ftOp && !op) { ui.ftOp = null; }
-    var list = featuresOf(op), main = document.getElementById("ftMain"), order = state.operators.map(function (o) { return o.id; });
+    var fp = ui.ftPart || "", list = featuresOf(op).filter(function (x) { return !fp || (fp.indexOf("c:") === 0 ? x.part === "custom" && "c:" + squash(x.partLabel || "other") === fp : x.part === fp); }), main = document.getElementById("ftMain"), order = state.operators.map(function (o) { return o.id; });
     var busy = featBusy ? '<div class="rvprog"><b>' + esc(featBusy.title) + '</b><p class="small" style="margin:6px 0 0">' + esc(featBusy.text) + "</p></div>" : "";
-    if (!list.length) { main.innerHTML = busy + '<div class="panel empty-c">No features yet. Research ' + (op ? esc(op.name) : "a casino") + " with the extension: its loyalty / VIP, missions, tournaments, store and deposit pages are written up here.</div>"; return; }
+    if (!list.length) { main.innerHTML = busy + '<div class="panel empty-c">' + (fp ? "No " + esc(ui.ftPartLabel || "write-up") + " found" + (op ? " for " + esc(op.name) : "") + " yet. The research looks for it on the site; if " + (op ? esc(op.name) : "the casino") + " has one, research it again" + (fp === "deposit" ? " while logged in" : "") + "." : "No features yet. Research " + (op ? esc(op.name) : "a casino") + " with the extension.") + "</div>"; return; }
     // grouped by part: the standard ones, then each unique feature by its name
     var groups = FEATURE_PARTS.map(function (k) { return { label: k[1], items: list.filter(function (x) { return x.part === k[0]; }) }; });
     var customs = []; list.filter(function (x) { return x.part === "custom"; }).forEach(function (x) { var g = customs.filter(function (c) { return squash(c.label) === squash(x.partLabel); })[0]; if (!g) { g = { label: x.partLabel || "Other feature", items: [] }; customs.push(g); } g.items.push(x); });
     groups = groups.concat(customs).filter(function (g) { return g.items.length; });
-    main.innerHTML = busy + '<div class="sechead"><h3>' + (op ? "Features at " + esc(op.name) : "All features") + "</h3></div>" + groups.map(function (g) {
+    main.innerHTML = busy + (fp ? "" : '<div class="sechead"><h3>' + (op ? "Features at " + esc(op.name) : "All features") + "</h3></div>") + groups.map(function (g) {
       g.items.sort(function (a, b) { return order.indexOf(a.opId) - order.indexOf(b.opId); });
       return '<section class="pgroup"><h3 class="pgh">' + esc(g.label) + ' <span class="small">' + g.items.length + '</span></h3><div class="plist2">' + g.items.map(function (x) { return featurePreview(x, !op); }).join("") + "</div></section>";
     }).join("");
