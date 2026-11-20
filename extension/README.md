@@ -41,14 +41,16 @@ For the logged-in run, log in to the site yourself first, then scan again and ch
 
 Open the casino's website and click **Research this casino**. The scanner reads the homepage (including its footer, where the licence, company, payment and provider logos usually are), the site menu, the promotions page, loyalty / VIP, missions, tournaments, store, the bonus and general terms, payments, about, responsible-gambling, help and app pages, and the cashier when you're logged in, plus menu entries that fit no category. With **Open every promotion** ticked (the default) it also opens each promotion one by one, up to 30, to read its terms.
 
-In CRM Studio, under **Competitor review**, each casino gets a profile:
+In CRM Studio, under **Competitor review**, each casino gets a profile with these tabs:
 
-- **Overview**: a short summary, what stands out, and the facts found on the site: market and licence, products and games, payments, offers and retention, and support and responsible gambling. Anything the site didn't confirm is listed separately.
-- **Promotions**: every promotion grouped by type (welcome offer, 2nd deposit offer…), with how it works and its terms, plus any offers you added by hand.
-- **Loyalty / VIP**, **Missions**, **Tournaments**, **Store** and **Deposit**: each written up on its own tab. A tab is greyed out when it wasn't found on the site.
-- **Other**: everything that fits none of these, such as a wheel of fortune, refer a friend, a blog or sponsorships. The research opens up to 6 menu entries no category covers and writes each one up.
+- **Overview**: a short summary, the key facts (licence, markets, languages, currencies, products, deposits and withdrawals), the welcome offer per deposit with its terms, and which gamification features it has.
+- **Offers**: every promotion grouped by type, with how it works and its terms, plus any offers you added by hand.
+- **Bonus terms**: the terms of every offer side by side (min deposit, wagering, max bet, validity, max win, games, opt-in), and the general bonus rules.
+- **Gamification**: Loyalty / VIP, Missions, Tournaments and Store, each with its summary and write-up.
+- **Market** and **Payments**: the full details.
+- **Other**: features that fit no category, support and responsible gambling, and the pages that were read.
 
-**All casinos** at the top of the list compares the main facts of every casino side by side. Researching a casino again updates its profile.
+**All casinos** at the top of the list compares the main facts of every casino in one table. Researching a casino again updates its profile.
 
 The website review and the one-part scans are switched off for now; they can be turned back on later.
 
