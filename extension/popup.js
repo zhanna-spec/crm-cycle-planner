@@ -189,7 +189,7 @@ function partSwitch() {
 // One scan that researches the whole casino: market, products, payments, offers.
 function renderResearch() {
   main.innerHTML = "<h2>Research the casino</h2>" + runSwitch() +
-    '<p class="note">Reads the homepage and its footer (licence, company, payment and provider logos), the terms, payments, help and responsible-gambling pages, the promotions, loyalty / VIP, missions, tournaments and store, and the cashier when you are logged in. CRM Studio then builds the casino\'s profile: market and licence, products and games, payments, offers and retention.</p>' +
+    '<p class="note">Reads the homepage and its footer (licence, company, payment and provider logos), the terms, payments, help and responsible-gambling pages, the promotions, loyalty / VIP, missions, tournaments and store, the cashier when you are logged in, and menu entries that fit none of these (a wheel, refer a friend…). CRM Studio then builds the casino\'s profile: market and licence, products and games, payments, offers and retention.</p>' +
     '<label class="opt"><input type="checkbox" id="openCards"' + (prefs.cards !== false ? " checked" : "") + '><span><b>Open every promotion</b><small>Reads each promotion\'s terms and banner (up to 30). Adds about 10 seconds per promotion.</small></span></label>' +
     blurField() +
     '<button class="primary" id="go">Research this casino</button>' +
@@ -311,6 +311,9 @@ main.addEventListener("click", async (e) => {
     list.push(find(S("terms")));
     RESEARCH_EXTRA.forEach((sec) => list.push(find(sec, { details: false })));
     ["rg", "help", "app"].forEach((k) => list.push(find(S(k), { details: false })));
+    // menu entries none of the categories cover (a wheel, refer a friend, a blog…): read for the Other tab
+    const extraRe = RESEARCH_EXTRA.map((x) => new RegExp(x.words, "i"));
+    suggestions.filter((x) => !extraRe.some((r) => r.test(x.label))).slice(0, 6).forEach((x) => list.push({ type: "find", url: home, label: x.label, cat: "other", words: x.words, not: "", details: true }));
     await chrome.runtime.sendMessage({ type: "scan", kind: "research", tabId: target.id, pages: list, run, skip: [], blur: String(prefs.blur || "").split(",").map((w) => w.trim()).filter((w) => w.length >= 3), site: { host: target.info.host, title: target.info.title, url: target.info.url } });
     showProgress();
     return;

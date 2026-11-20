@@ -260,11 +260,12 @@ function readFeature(apiKey: string, body: Record<string, unknown>) {
 const LIST = { type: "array", items: { type: "string" } };
 const RESEARCH_SCHEMA = {
   type: "object", additionalProperties: false,
-  required: ["summary", "positioning", "stands_out", "market", "products", "payments", "offers", "support", "uncertain"],
+  required: ["summary", "positioning", "stands_out", "market", "products", "payments", "offers", "support", "other", "uncertain"],
   properties: {
     summary: { type: "string" },
     positioning: { type: "string" },
     stands_out: LIST,
+    other: { type: "array", items: { type: "object", additionalProperties: false, required: ["name", "what_it_is", "where"], properties: { name: { type: "string" }, what_it_is: { type: "string" }, where: { type: ["string", "null"] } } } },
     market: {
       type: "object", additionalProperties: false,
       required: ["markets", "licence", "operator", "languages", "currencies", "restricted_countries", "founded"],
@@ -301,6 +302,7 @@ const RESEARCH_SYSTEM = [
   "payments: methods for deposits and withdrawals (cards, e-wallets, bank, vouchers, crypto by name), crypto support, minimum deposit / withdrawal, maximum withdrawal, withdrawal time, fees, KYC / verification rules.",
   "offers: welcome offer in one line, ongoing promotions (one short line each), loyalty / VIP, missions, tournaments, store, other retention features (wheel, cashback, rakeback, drops…), and the general bonus rules (wagering, max bet, game weighting…), short.",
   "support: contact channels, hours, responsible-gambling tools, mobile app.",
+  "other: everything notable that fits none of the categories above: unique features (wheel of fortune, refer a friend, daily bonus, drops, bonus buy, social or community features, live events), sponsorships, partnerships, a blog, unusual site features. One entry each: its name as the site calls it, what it is in one or two sentences, and where it lives on the site. Empty list if nothing.",
   "Use only what the pages show; write values as the site writes them. Use null or an empty list when something isn't shown, and add the field names you couldn't confirm to uncertain.",
 ].join("\n");
 

@@ -39,13 +39,14 @@ For the logged-in run, log in to the site yourself first, then scan again and ch
 
 ## Research a casino
 
-Open the casino's website and click **Research this casino**. The scanner reads the homepage (including its footer, where the licence, company, payment and provider logos usually are), the site menu, the promotions page, loyalty / VIP, missions, tournaments, store, the bonus and general terms, payments, about, responsible-gambling, help and app pages, and the cashier when you're logged in. With **Open every promotion** ticked (the default) it also opens each promotion one by one, up to 30, to read its terms.
+Open the casino's website and click **Research this casino**. The scanner reads the homepage (including its footer, where the licence, company, payment and provider logos usually are), the site menu, the promotions page, loyalty / VIP, missions, tournaments, store, the bonus and general terms, payments, about, responsible-gambling, help and app pages, and the cashier when you're logged in, plus menu entries that fit no category. With **Open every promotion** ticked (the default) it also opens each promotion one by one, up to 30, to read its terms.
 
 In CRM Studio, under **Competitor review**, each casino gets a profile:
 
 - **Overview**: a short summary, what stands out, and the facts found on the site: market and licence, products and games, payments, offers and retention, and support and responsible gambling. Anything the site didn't confirm is listed separately.
 - **Promotions**: every promotion grouped by type (welcome offer, 2nd deposit offer…), with how it works and its terms, plus any offers you added by hand.
 - **Loyalty / VIP**, **Missions**, **Tournaments**, **Store** and **Deposit**: each written up on its own tab. A tab is greyed out when it wasn't found on the site.
+- **Other**: everything that fits none of these, such as a wheel of fortune, refer a friend, a blog or sponsorships. The research opens up to 6 menu entries no category covers and writes each one up.
 
 **All casinos** at the top of the list compares the main facts of every casino side by side. Researching a casino again updates its profile.
 

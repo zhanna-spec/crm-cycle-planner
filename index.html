@@ -1661,10 +1661,10 @@ footer { color: var(--muted); font-size: 12px; margin-top: 24px; text-align: cen
       var opC = curOp(); renderOpHead(opC);
       var tab = opC ? (ui.casTab || "overview") : "all";
       // one tab per part of the casino: promotions (with any offers added by hand), then each feature
-      var tabs = [["overview", "Overview"], ["promos", "Promotions"]].concat(FEATURE_TABS.map(function (k) { return ["f:" + k[0], k[1]]; }));
-      if (opC) featuresOf(opC).filter(function (x) { return x.part === "custom"; }).forEach(function (x) { var id = "f:c:" + squash(x.partLabel || "other"); if (!tabs.some(function (t) { return t[0] === id; })) tabs.push([id, x.partLabel || "Other feature"]); });
+      var tabs = [["overview", "Overview"], ["promos", "Promotions"]].concat(FEATURE_TABS.map(function (k) { return ["f:" + k[0], k[1]]; })).concat([["f:other", "Other"]]);
+      if (tab.indexOf("f:c:") === 0) tab = ui.casTab = "f:other";
       if (opC && !tabs.some(function (t) { return t[0] === tab; })) tab = ui.casTab = "overview";
-      var has = function (id) { if (id === "promos") return promosOf(opC).length || offersOf(opC).length; if (id.indexOf("f:") !== 0) return true; var k = id.slice(2); return featuresOf(opC).some(function (x) { return k.indexOf("c:") === 0 ? x.part === "custom" && "c:" + squash(x.partLabel || "other") === k : x.part === k; }); };
+      var has = function (id) { if (id === "promos") return promosOf(opC).length || offersOf(opC).length; if (id === "f:other") return featuresOf(opC).some(function (x) { return x.part === "custom"; }) || ((state.profiles[opC.id] || {}).other || []).length; if (id.indexOf("f:") !== 0) return true; var k = id.slice(2); return featuresOf(opC).some(function (x) { return x.part === k; }); };
       var tabsEl = document.getElementById("casTabs"); tabsEl.hidden = !opC;
       tabsEl.innerHTML = opC ? tabs.map(function (t) { return '<button type="button" class="' + (tab === t[0] ? "on" : "") + (has(t[0]) ? "" : " none") + '" data-castab="' + t[0] + '">' + esc(t[1]) + "</button>"; }).join("") : "";
       var isF = tab.indexOf("f:") === 0;
@@ -1780,7 +1780,7 @@ footer { color: var(--muted); font-size: 12px; margin-top: 24px; text-align: cen
     }).join("");
     el.innerHTML = busy + '<section class="pfsum"><p class="pflead">' + esc(p.summary || "") + "</p>" + (p.positioning ? "<p>" + esc(p.positioning) + "</p>" : "") +
       ((p.stands_out || []).length ? '<div class="pfchips">' + p.stands_out.map(function (x) { return "<span>" + esc(x) + "</span>"; }).join("") + "</div>" : "") + "</section>" +
-      '<div class="pfgrid">' + blocks + "</div>" +
+      '<div class="pfgrid">' + blocks + ((p.other || []).length ? '<section class="pfblock"><h3>Other</h3><dl>' + p.other.map(function (o) { return "<dt>" + esc(o.name) + "</dt><dd>" + esc(o.what_it_is || "") + "</dd>"; }).join("") + "</dl></section>" : "") + "</div>" +
       ((p.uncertain || []).length ? '<p class="small" style="color:var(--warn)">Not confirmed on the site: ' + esc(p.uncertain.map(function (u) { return String(u).replace(/^.*\./, "").replace(/_/g, " "); }).join(", ")) + ".</p>" : "") +
       '<details class="ptextbox"><summary>Pages read (' + (p.sources || []).length + ")</summary><ul class=\"small\">" + (p.sources || []).map(function (src) { return '<li>' + esc(src.label) + ' · <a href="' + esc(src.url) + '" target="_blank" rel="noopener">' + esc(src.url) + "</a></li>"; }).join("") + "</ul></details>" +
       '<p class="small">Researched ' + esc(new Date(p.at).toLocaleDateString()) + " while " + (p.run === "logged-in" ? "logged in" : "logged out") + ". Research again with the extension to update it.</p>";
@@ -1817,7 +1817,7 @@ footer { color: var(--muted); font-size: 12px; margin-top: 24px; text-align: cen
     var good = pages.filter(function (pg) { return (pg.shots && pg.shots.length) || pg.text; });
     var offerPages = good.filter(function (pg) { return /^Offer: /.test(pg.label || "") || /(^|,)terms(,|$)/.test(pg.hint || ""); });
     var PARTMAP = { vip: "Loyalty / VIP", missions: "Missions", tournaments: "Tournaments", shop: "Store", deposit: "Deposit / cashier" };
-    var featPages = good.filter(function (pg) { return !/^Offer: /.test(pg.label || "") && PARTMAP[String(pg.hint || "").split(",")[0]]; });
+    var featPages = good.filter(function (pg) { var h = String(pg.hint || "").split(",")[0]; return !/^Offer: /.test(pg.label || "") && (PARTMAP[h] || h === "other"); });
     var total = 1 + (offerPages.length ? 1 : 0) + featPages.length, step = 0;
     var tick = function (text) { researchBusy = { op: op.id, done: step, total: total, text: text }; renderCompetitors(); };
     try {
@@ -1830,12 +1830,12 @@ footer { color: var(--muted); font-size: 12px; margin-top: 24px; text-align: cen
       if (!op.market && d.market && d.market.markets && d.market.markets.length) op.market = d.market.markets.slice(0, 3).join(", ");
       save(); step++;
       for (var f = 0; f < featPages.length; f++) {
-        var key = String(featPages[f].hint || "").split(",")[0];
-        tick("Writing up " + PARTMAP[key] + "…");
-        await featuresFromScan(op, [featPages[f]], run, { key: key, label: PARTMAP[key] }, true); step++;
+        var key = String(featPages[f].hint || "").split(",")[0], plabel = key === "other" ? String(featPages[f].label || "Other").replace(/\s*\(found .*\)\s*$/, "") : PARTMAP[key];
+        tick("Writing up " + plabel + "…");
+        await featuresFromScan(op, [featPages[f]], run, key === "other" ? { key: "custom", label: plabel } : { key: key, label: plabel }, true); step++;
       }
       if (offerPages.length) { tick("Reading " + plural(offerPages.filter(function (pg) { return /^Offer: /.test(pg.label || ""); }).length, "promotion", "promotions") + "…"); await promosFromScan(op, offerPages, run, true); step++; }
-      researchBusy = null; save(); renderCompetitors(); toast(op.name + " is researched: see its Overview, Promotions and Features.");
+      researchBusy = null; save(); renderCompetitors(); toast(op.name + " is researched. Its profile tabs are filled in.");
     } catch (err) { researchBusy = null; renderCompetitors(); toast(err.message); }
   }
 
@@ -1845,7 +1845,7 @@ footer { color: var(--muted); font-size: 12px; margin-top: 24px; text-align: cen
   var featBusy = null;
   function featuresOf(op) { return (state.features || []).filter(function (x) { return (!op || x.opId === op.id) && runMatch(x); }); }
   async function featuresFromScan(op, pages, run, part, quiet) {
-    if (!quiet) { ui.opSel = op.id; ui.casTab = "f:" + (part.key === "custom" ? "c:" + squash(part.label || "other") : part.key); ui.ftOp = op.id; }
+    if (!quiet) { ui.opSel = op.id; ui.casTab = "f:" + (part.key === "custom" ? "other" : part.key); ui.ftOp = op.id; }
     var good = pages.filter(function (pg) { return pg.shots && pg.shots.length; });
     if (!good.length) { if (quiet) return; toast("The scanner couldn't find " + part.label + " on that site. Check the name, or open the page yourself and scan again."); renderCompetitors(); return; }
     var x = state.features.filter(function (f) { return f.opId === op.id && f.part === part.key && (f.run || "") === run && (part.key !== "custom" || squash(f.partLabel) === squash(part.label)); })[0];
@@ -1908,9 +1908,12 @@ footer { color: var(--muted); font-size: 12px; margin-top: 24px; text-align: cen
     document.getElementById("ftCasinos").innerHTML = '<button type="button" class="opitem' + (!ui.ftOp ? " on" : "") + '" data-ftop=""><span class="avatar" style="background:var(--accent)">' + svg('<rect x="3" y="4" width="6" height="12" rx="1.5"/><rect x="11" y="4" width="6" height="12" rx="1.5"/>', "#FFFFFF") + '</span><span class="meta2"><b>All casinos</b><small>' + plural(cnt(""), "write-up", "write-ups") + "</small></span></button>" +
       ops.map(function (o) { return '<button type="button" class="opitem' + (ui.ftOp === o.id ? " on" : "") + '" data-ftop="' + o.id + '"><span class="avatar" style="background:' + opColor(o) + '">' + esc(o.name.charAt(0).toUpperCase()) + '</span><span class="meta2"><b>' + esc(o.name) + "</b><small>" + plural(cnt(o.id), "feature", "features") + "</small></span></button>"; }).join("");
     var op = ui.ftOp ? findOp(ui.ftOp) : null; if (ui.ftOp && !op) { ui.ftOp = null; }
-    var fp = ui.ftPart || "", list = featuresOf(op).filter(function (x) { return !fp || (fp.indexOf("c:") === 0 ? x.part === "custom" && "c:" + squash(x.partLabel || "other") === fp : x.part === fp); }), main = document.getElementById("ftMain"), order = state.operators.map(function (o) { return o.id; });
+    var fp = ui.ftPart || "", list = featuresOf(op).filter(function (x) { return !fp || (fp === "other" ? x.part === "custom" : x.part === fp); }), main = document.getElementById("ftMain"), order = state.operators.map(function (o) { return o.id; });
     var busy = featBusy ? '<div class="rvprog"><b>' + esc(featBusy.title) + '</b><p class="small" style="margin:6px 0 0">' + esc(featBusy.text) + "</p></div>" : "";
-    if (!list.length) { main.innerHTML = busy + '<div class="panel empty-c">' + (fp ? "No " + esc(ui.ftPartLabel || "write-up") + " found" + (op ? " for " + esc(op.name) : "") + " yet. The research looks for it on the site; if " + (op ? esc(op.name) : "the casino") + " has one, research it again" + (fp === "deposit" ? " while logged in" : "") + "." : "No features yet. Research " + (op ? esc(op.name) : "a casino") + " with the extension.") + "</div>"; return; }
+    var others = fp === "other" && op && state.profiles[op.id] ? (state.profiles[op.id].other || []) : [];
+    var otherHtml = others.length ? '<section class="pgroup"><h3 class="pgh">Also on the site <span class="small">' + others.length + '</span></h3><div class="plist2">' + others.map(function (o) { return '<div class="prow" style="padding:12px 16px"><b>' + esc(o.name) + "</b><div class=\"small\" style=\"margin-top:2px\">" + esc(o.what_it_is || "") + (o.where ? " · " + esc(o.where) : "") + "</div></div>"; }).join("") + "</div></section>" : "";
+    if (fp === "other" && !list.length && others.length) { main.innerHTML = busy + otherHtml; return; }
+    if (!list.length) { main.innerHTML = busy + '<div class="panel empty-c">' + (fp === "other" ? "Nothing else found" + (op ? " for " + esc(op.name) : "") + " yet. Here go the things that fit none of the other tabs: a wheel of fortune, refer a friend, a blog, sponsorships… The research picks them up from the site's menu and pages." : fp ? "No " + esc(ui.ftPartLabel || "write-up") + " found" + (op ? " for " + esc(op.name) : "") + " yet. The research looks for it on the site; if " + (op ? esc(op.name) : "the casino") + " has one, research it again" + (fp === "deposit" ? " while logged in" : "") + "." : "No features yet. Research " + (op ? esc(op.name) : "a casino") + " with the extension.") + "</div>"; return; }
     // grouped by part: the standard ones, then each unique feature by its name
     var groups = FEATURE_PARTS.map(function (k) { return { label: k[1], items: list.filter(function (x) { return x.part === k[0]; }) }; });
     var customs = []; list.filter(function (x) { return x.part === "custom"; }).forEach(function (x) { var g = customs.filter(function (c) { return squash(c.label) === squash(x.partLabel); })[0]; if (!g) { g = { label: x.partLabel || "Other feature", items: [] }; customs.push(g); } g.items.push(x); });
@@ -1918,7 +1921,7 @@ footer { color: var(--muted); font-size: 12px; margin-top: 24px; text-align: cen
     main.innerHTML = busy + (fp ? "" : '<div class="sechead"><h3>' + (op ? "Features at " + esc(op.name) : "All features") + "</h3></div>") + groups.map(function (g) {
       g.items.sort(function (a, b) { return order.indexOf(a.opId) - order.indexOf(b.opId); });
       return '<section class="pgroup"><h3 class="pgh">' + esc(g.label) + ' <span class="small">' + g.items.length + '</span></h3><div class="plist2">' + g.items.map(function (x) { return featurePreview(x, !op); }).join("") + "</div></section>";
-    }).join("");
+    }).join("") + otherHtml;
   }
   document.getElementById("featuresApp").addEventListener("click", function (e) {
     var b;

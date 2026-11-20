@@ -4,7 +4,7 @@ A visual builder for iGaming CRM conversion cycles, plus competitor research.
 
 **Cycle builder.** Drag channels (email, SMS, push, popup, mission, call) onto a day-by-day timeline, set who gets each step and what offer it carries, and keep several cycles side by side. Start blank or from suggested steps.
 
-**Competitor review.** Organised by casino. Each casino has a profile with an Overview (market and licence, products and games, payments, offers and retention, support), its Promotions with their terms (and offers added by hand), and a tab each for Loyalty / VIP, Missions, Tournaments, Store and Deposit. **All casinos** compares the main facts side by side.
+**Competitor review.** Organised by casino. Each casino has a profile with an Overview (market and licence, products and games, payments, offers and retention, support), its Promotions with their terms (and offers added by hand), and a tab each for Loyalty / VIP, Missions, Tournaments, Store and Deposit, and Other for everything else. **All casinos** compares the main facts side by side.
 
 **Site scanner extension.** Researches a casino's website in your own browser (logged out or logged in, through your VPN): it reads the main pages and footer, opens every promotion, and CRM Studio builds the casino's profile from it. Install: [extension/README.md](extension/README.md).
 
