@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "CRM Studio Scanner",
-  "version": "3.5.0",
+  "version": "3.5.1",
   "description": "Scans a competitor's website in your own browser and sends the screenshots to CRM Studio.",
   "action": {
     "default_popup": "popup.html",

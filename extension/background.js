@@ -955,6 +955,8 @@ async function runScan({ tabId, pages, run: runLabel, site, skip, blur, kind, pa
     if (stopMode) break;
     const pg = pages[i];
     await chrome.storage.local.set({ scanStatus: { state: "running", done: i, total, current: pg.type === "find" ? "looking for " + pg.label : pg.label } });
+    // shows on the extension icon that a scan is running (the scanned tab reloads many times meanwhile)
+    chrome.action.setBadgeBackgroundColor({ color: "#6C5CE7" }).catch(() => {}); chrome.action.setBadgeText({ text: Math.round(100 * i / total) + "%" }).catch(() => {});
     const base = { url: pg.url, label: pg.label, hint: pg.cat || "", type: pg.type };
     try {
       if (pg.type === "menu") { results.push(Object.assign(base, await scanMenu(tabId, tab.windowId, pg))); continue; }
@@ -981,7 +983,7 @@ async function runScan({ tabId, pages, run: runLabel, site, skip, blur, kind, pa
       results.push(Object.assign(base, { error: String(err && err.message || err), shots: [] }));
     }
   }
-  } finally { scanning = false; }
+  } finally { scanning = false; chrome.action.setBadgeText({ text: "" }).catch(() => {}); }
   const mode = stopMode; stopMode = null;
   try { await navigate(tabId, startUrl); } catch (e) { /* ignore */ }
   // where elements were on each screenshot (for highlight boxes in the review)
