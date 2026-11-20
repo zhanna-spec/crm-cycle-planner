@@ -1088,6 +1088,21 @@ header.top .viewnav a.on .num { background: #FFFFFF; color: var(--accent); }
 .tls.cash .tlbody { background: linear-gradient(90deg, rgba(43,167,155,.10), rgba(43,167,155,.02)); }
 .tlhead { padding-top: 8px; }
 @media (max-width: 900px) { .tlbody { padding: 16px; } }
+
+.ovone { font-size: 19px; line-height: 1.4; max-width: 640px; }
+.ovhl { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 14px; }
+.ovhl span { display: inline-flex; align-items: center; gap: 7px; padding: 6px 12px 6px 9px; border-radius: 99px; background: #FFF6E5; color: #8A5A00; font-size: 13px; font-weight: 500; }
+.ovhl svg { width: 14px; height: 14px; flex: none; }
+.tl { max-width: 1000px; }
+.tls { grid-template-columns: 44px 160px minmax(0, 1fr); gap: 0 18px; }
+.tlbody { padding: 16px 20px; }
+.ovsum { max-width: 1000px; }
+
+.tl, .ovsum { max-width: 900px; }
+.tls { padding: 8px 0; } .tls + .tls { margin-top: 8px; }
+.tlbody { padding: 14px 18px; }
+.tlhead { padding-top: 4px; }
+.tlbody .lbar { width: 58px; }
 </style>
 
 <div class="wrap">
@@ -2168,8 +2183,9 @@ header.top .viewnav a.on .num { background: #FFFFFF; color: var(--accent); }
     var outs = arr(p.stands_out).slice(0, 3);
 
     // summary: what it is, its key points, and a small homepage picture
-    var summary = '<div class="ovsum"><div><p class="ovone">' + esc(g.one_liner || firstSentence(p.summary)) + "</p>" + (arr(g.tags).length ? chips(g.tags) : "") +
-      (outs.length ? '<ul class="ovpts">' + outs.map(function (x) { return "<li>" + esc(short(x, 110)) + "</li>"; }).join("") + "</ul>" : "") + "</div>" +
+    var hl = function (x) { x = String(x).split(/[:–—(]/)[0].trim(); return short(x.length > 8 ? x : String(x), 42); };
+    var summary = '<div class="ovsum"><div><p class="ovone">' + esc(short(g.one_liner || firstSentence(p.summary), 120)) + "</p>" + (arr(g.tags).length ? chips(g.tags) : "") +
+      (outs.length ? '<div class="ovhl">' + outs.map(function (x) { return '<span title="' + esc(x) + '">' + svg(RI.spark) + esc(hl(x)) + "</span>"; }).join("") + "</div>" : "") + "</div>" +
       (shot ? '<div class="ovshot scrframe"><div class="pbar"><i></i><i></i><i></i></div><img src="' + shot + '" alt=""></div>' : "") + "</div>";
 
     // basics: licence, where, languages, money in and out
